@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  mssql-db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: mssql-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=User@123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh -c SA_PASSWORD=$(echo $SA_PASSWORD) /opt/mssql-tools/bin/sqlcmd -Usa -P'$SA_PASSWORD' -Q 'select 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - poc-network
+
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo-db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ["CMD", "echo", 'db.runCommand("ping").ok', "|", mongosh localhost:27017/test --quiet || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - poc-network
+
+  dotnet-server:
+    build:
+      dockerfile: server.Dockerfile
+      context: .
+    image: dotnet-server
+    container_name: dotnet-server
+    depends_on:
+      mssql-db:
+        condition: service_healthy
+      mongo-db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://dotnet-server:80/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - poc-network
+
+  blazor-client:
+    build:
+      dockerfile: client.Dockerfile
+      context: .
+    image: blazor-client
+    container_name: blazor-client
+    depends_on:
+      dotnet-server:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    networks:
+      - poc-network
+
+networks:
+  poc-network:
+    driver: bridge
