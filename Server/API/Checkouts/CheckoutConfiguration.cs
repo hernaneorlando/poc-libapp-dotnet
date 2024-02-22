@@ -11,12 +11,16 @@ public class CheckoutConfiguration : IEntityTypeConfiguration<Checkout>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
-            .ValueGeneratedOnAdd()
-            .HasColumnName("id")
-            .IsRequired();
+            .HasDefaultValueSql("(newid())")
+            .HasColumnName("id");
 
-        builder.Property(e => e.UserAlias).HasColumnType("userAlias");
+        builder.Property(e => e.UserId).HasColumnName("userId");
         builder.Property(e => e.CreatedAt).HasColumnName("createdAt");
         builder.Property(e => e.UpdatedAt).HasColumnName("updatedAt");
+
+        builder.HasOne(e => e.Book)
+            .WithMany(e => e.Checkouts)
+            .HasForeignKey("bookId")
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

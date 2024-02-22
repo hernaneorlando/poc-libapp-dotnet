@@ -5,6 +5,6 @@ namespace LibraryApp.API.Checkouts;
 
 public class Checkout : BaseEntity
 {
-    public string UserAlias { get; set; }
-    public IList<Book> Books { get; set; }
+    public string UserId { get; set; }
+    public Book Book { get; set; }
 }

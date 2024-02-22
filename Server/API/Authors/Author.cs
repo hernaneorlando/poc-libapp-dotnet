@@ -5,8 +5,8 @@ namespace LibraryApp.API.Authors;
 
 public class Author : BaseEntity
 {
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public DateTime DateOfBirth { get; set; }
-    public IList<Book> Books { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; }  = string.Empty;
+    public DateOnly? DateOfBirth { get; set; }
+    public ICollection<Book> Books { get; set; }
 }

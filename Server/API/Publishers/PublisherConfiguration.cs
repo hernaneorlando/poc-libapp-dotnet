@@ -7,13 +7,12 @@ public class PublisherConfiguration : IEntityTypeConfiguration<Publisher>
 {
     public void Configure(EntityTypeBuilder<Publisher> builder)
     {
-        builder.ToTable("checkouts");
+        builder.ToTable("publishers");
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
-            .ValueGeneratedOnAdd()
-            .HasColumnName("id")
-            .IsRequired();
+            .HasDefaultValueSql("(newid())")
+            .HasColumnName("id");
 
         builder.Property(e => e.Name).HasColumnName("name");
         builder.Property(e => e.Location).HasColumnName("location");

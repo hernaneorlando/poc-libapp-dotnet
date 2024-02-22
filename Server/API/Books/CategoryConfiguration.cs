@@ -11,9 +11,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
-            .ValueGeneratedOnAdd()
-            .HasColumnName("id")
-            .IsRequired();
+            .HasDefaultValueSql("(newid())")
+            .HasColumnName("id");
 
         builder.Property(e => e.Name).HasColumnName("title");
         builder.Property(e => e.CreatedAt).HasColumnName("createdAt");

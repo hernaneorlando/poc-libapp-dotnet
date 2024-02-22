@@ -16,8 +16,8 @@ public class AuthorController : Controller
     [HttpGet]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(AuthorDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> GetAll()
     {
-        return Ok(await authorService.FindAll());
+        return Ok(await authorService.GetAll());
     }
 }

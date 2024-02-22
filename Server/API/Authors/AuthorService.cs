@@ -12,7 +12,7 @@ public class AuthorService : IAuthorService
         this.sqlDataContext = sqlDataContext;
     }
 
-    public async Task<IList<Author>> FindAll()
+    public async Task<IList<Author>> GetAll()
     {
         return await sqlDataContext.Authors
             .OrderBy(a => a.FirstName)
@@ -22,5 +22,5 @@ public class AuthorService : IAuthorService
 
 public interface IAuthorService
 {
-    Task<IList<Author>> FindAll();
+    Task<IList<Author>> GetAll();
 }

@@ -7,13 +7,14 @@ namespace LibraryApp.API.Books;
 
 public class Book : BaseEntity
 {
-    public string Title { get; set; }
-    public string Description { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string ISBN { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public int TotalPages { get; set; }
-    public string ISBN { get; set; }
-    public Category Category { get; set; }
-    public DateTime PublishedDate { get; set; }
+    public DateOnly? PublishedDate { get; set; }
+    public Category? Category { get; set; }
     public Publisher Publisher { get; set; }
-    public IList<Author> Authors { get; set; }
-    public IList<Checkout> Checkouts { get; set; }
+    public Author? MainAuthor { get; set; }
+    public ICollection<Author> Authors { get; set; }
+    public ICollection<Checkout> Checkouts { get; set; }
 }

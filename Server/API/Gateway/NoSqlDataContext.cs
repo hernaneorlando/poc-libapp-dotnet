@@ -13,7 +13,7 @@ public class NoSqlDataContext
     public NoSqlDataContext(MongoClientSettings mongoClientSettings)
     {
         mongoClient = new MongoClient(mongoClientSettings);
-        database = mongoClient.GetDatabase("BooksStore");
+        database = mongoClient.GetDatabase("library");
 
         Users = database.GetCollection<User>("Users");
     }
