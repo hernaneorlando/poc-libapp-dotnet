@@ -1,12 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
 
-namespace LibraryApp.API.Users
+namespace LibraryApp.API.Users;
+
+[Route("users")]
+public class UserController(IUserService userService) : Controller
 {
-    public class UserController : Controller
+    private readonly IUserService userService = userService;
+
+    [HttpGet]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> GetAll()
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        return Ok(await userService.GetAll());
     }
 }

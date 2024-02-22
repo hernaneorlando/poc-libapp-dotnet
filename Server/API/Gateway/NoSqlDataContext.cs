@@ -1,4 +1,5 @@
 ﻿using LibraryApp.API.Users;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace LibraryApp.API.Gateway;
@@ -10,11 +11,11 @@ public class NoSqlDataContext
 
     public IMongoCollection<User> Users { get; set; }
 
-    public NoSqlDataContext(MongoClientSettings mongoClientSettings)
+    public NoSqlDataContext(IOptions<MongoDbConfiguration> mongoDbConfiguration)
     {
-        mongoClient = new MongoClient(mongoClientSettings);
-        database = mongoClient.GetDatabase("library");
+        mongoClient = new MongoClient(mongoDbConfiguration.Value.ConnectionString);
+        database = mongoClient.GetDatabase(mongoDbConfiguration.Value.DatabaseName);
 
-        Users = database.GetCollection<User>("Users");
+        Users = database.GetCollection<User>(mongoDbConfiguration.Value.UserCollectionName);
     }
 }

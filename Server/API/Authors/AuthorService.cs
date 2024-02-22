@@ -3,14 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApp.API.Authors;
 
-public class AuthorService : IAuthorService
+public class AuthorService(SqlDataContext sqlDataContext) : IAuthorService
 {
-    private readonly SqlDataContext sqlDataContext;
-
-    public AuthorService(SqlDataContext sqlDataContext)
-    {
-        this.sqlDataContext = sqlDataContext;
-    }
+    private readonly SqlDataContext sqlDataContext = sqlDataContext;
 
     public async Task<IList<Author>> GetAll()
     {

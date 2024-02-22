@@ -1,9 +1,11 @@
 using LibraryApp.API.Authors;
 using LibraryApp.API.Gateway;
+using LibraryApp.API.Users;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,10 @@ builder.Services.AddDbContext<SqlDataContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnectionString"));
 });
+builder.Services.Configure<MongoDbConfiguration>(builder.Configuration.GetSection("MongoDbDatabase"));
+builder.Services.AddTransient<NoSqlDataContext>();
 builder.Services.AddTransient<IAuthorService, AuthorService>();
+builder.Services.AddTransient<IUserService, UserService>();
 
 // Liveness check
 builder.Services.AddHealthChecks().AddCheck("healthy", () => HealthCheckResult.Healthy());

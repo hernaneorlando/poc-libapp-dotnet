@@ -4,14 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace LibraryApp.API.Authors;
 
 [Route("author")]
-public class AuthorController : Controller
+public class AuthorController(IAuthorService authorService) : Controller
 {
-    private readonly IAuthorService authorService;
-
-    public AuthorController(IAuthorService authorService)
-    {
-        this.authorService = authorService;
-    }
+    private readonly IAuthorService authorService = authorService;
 
     [HttpGet]
     [Produces(MediaTypeNames.Application.Json)]
