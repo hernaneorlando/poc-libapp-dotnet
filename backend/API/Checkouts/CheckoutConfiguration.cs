@@ -14,7 +14,10 @@ public class CheckoutConfiguration : IEntityTypeConfiguration<Checkout>
             .HasDefaultValueSql("(newid())")
             .HasColumnName("id");
 
-        builder.Property(e => e.UserId).HasColumnName("userId");
+        builder.Property(e => e.UserId)
+            .HasColumnName("userId")
+            .IsRequired();
+            
         builder.Property(e => e.CreatedAt).HasColumnName("createdAt");
         builder.Property(e => e.UpdatedAt).HasColumnName("updatedAt");
 

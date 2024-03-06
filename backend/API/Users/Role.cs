@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace LibraryApp.API.Users;
 
-public sealed class Role
+public class Role
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
