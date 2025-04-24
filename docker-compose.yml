@@ -1,20 +1,22 @@
-version: '3'
+# Docker Compose configuration for LibraryApp
 
 services:
   mssql-db:
     image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: mssql-db
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=User@123
-      - MSSQL_PID=Developer
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "User@123"
+      MSSQL_PID: "Developer"
     ports:
       - "1433:1433"
     healthcheck:
-      test: ["CMD-SHELL", "/bin/sh -c SA_PASSWORD=$(echo $SA_PASSWORD) /opt/mssql-tools/bin/sqlcmd -Usa -P'$SA_PASSWORD' -Q 'select 1'"]
-      interval: 5s
+      test: |
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "User@123" -Q "SELECT 1" -C -N || (echo "SQL Server not ready" >&2 && exit 1)
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 45s
     networks:
       - poc-network
 
@@ -72,3 +74,4 @@ services:
 networks:
   poc-network:
     driver: bridge
+
