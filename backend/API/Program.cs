@@ -1,7 +1,8 @@
-using Application.CatalogManagement.Authors.Services;
-using Application.UserManagement.Users.Services;
+using Application;
+using FluentValidation;
+using Infrastructure;
 using Infrastructure.Persistence.Context;
-using Infrastructure.Services;
+using LibraryApp.API.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -10,8 +11,16 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+builder.Services
+    .AddEndpointsApiExplorer()
+    .AddApplicationDependencies()
+    .AddInfrastructureDependencies();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationExceptionFilter>();
+});
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Library App", Version = "v1" });
@@ -20,7 +29,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<SqlDataContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnectionString"),
-        sqlServerOptionsAction: sqlOptions => 
+        sqlServerOptionsAction: sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
@@ -28,10 +37,10 @@ builder.Services.AddDbContext<SqlDataContext>(options =>
                 errorNumbersToAdd: null);
         });
 });
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.Configure<MongoDbConfiguration>(builder.Configuration.GetSection("MongoDbDatabase"));
 builder.Services.AddTransient<NoSqlDataContext>();
-builder.Services.AddTransient<IAuthorService, AuthorService>();
-builder.Services.AddTransient<IUserService, UserService>();
 
 // Liveness check
 builder.Services.AddHealthChecks().AddCheck("healthy", () => HealthCheckResult.Healthy());
@@ -57,8 +66,10 @@ using (var scope = app.Services.CreateScope())
         try
         {
             Console.WriteLine($"Attempting to ensure database is created (Attempt {retryCount + 1}/{maxRetries})");
-            dbContext.Database.EnsureCreated();
-            Console.WriteLine("Database initialization completed successfully");
+            Console.WriteLine($"Attempting to run migrations");
+            dbContext.Database.Migrate();
+            Console.WriteLine("Database initialization/migration completed successfully");
+
             break;
         }
         catch (Exception ex)

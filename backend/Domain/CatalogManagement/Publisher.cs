@@ -1,9 +1,12 @@
-using Domain.Shared;
+using Domain.CatalogManagement.ValueObjects;
+using Domain.SeedWork;
 
 namespace Domain.CatalogManagement;
 
-public class Publisher : BaseEntity
+public class Publisher : RelationalDbBaseModel
 {
-    public string Name { get; set; } = string.Empty;
-    public string Location { get; set; } = string.Empty;
+    public required string Name { get; set; }
+    public DateOnly? FoundationDate { get; set; }
+    public Contact? Contact { get; set; }
+    public IList<Book> Books { get; set; } = [];
 }

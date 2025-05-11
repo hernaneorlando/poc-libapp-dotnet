@@ -10,4 +10,15 @@
     <ProjectReference Include="../Domain/Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentResults" Version="3.16.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UserManagement\Roles\Commands\" />
+    <Folder Include="UserManagement\Users\Commands\" />
+  </ItemGroup>
+
 </Project>

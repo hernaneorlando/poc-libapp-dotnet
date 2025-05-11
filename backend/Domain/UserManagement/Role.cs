@@ -1,16 +1,10 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using Domain.SeedWork;
 
 namespace Domain.UserManagement;
 
-public class Role
+public class Role(string name, string description) : DocumentDbModel
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = string.Empty;
-
-    [BsonElement("name")]
-    public string Name { get; set; } = string.Empty;
-
-    public override string ToString() => Name;
+    public string Name { get; set; } = name;
+    public string Description { get; set; } = description;
+    public List<Permission> Permissions { get; set; } = [];
 }

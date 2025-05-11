@@ -1,8 +1,10 @@
 using Domain.UserManagement;
+using FluentResults;
 
 namespace Application.UserManagement.Users.Services;
 
 public interface IUserService
 {
-    Task<IList<User>> GetAll();
+    Task<Result<IEnumerable<User>>> GetActiveUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken);
 }

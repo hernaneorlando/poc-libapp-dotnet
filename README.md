@@ -18,3 +18,6 @@ Client
 
 # Build and Test
 In the root folder run: `docker compose up -d --build`
+
+# Add new migrations in backend
+dotnet ef migrations add "migration name" --project Infrastructure --startup-project API --output-dir Persistence/Migrations

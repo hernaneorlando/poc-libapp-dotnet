@@ -1,8 +1,10 @@
-using Domain.Shared;
+using Domain.SeedWork;
 
 namespace Domain.CatalogManagement;
 
-public class Category : BaseEntity
+public class Category : RelationalDbBaseModel
 {
-    public string Name { get; set; }
+    public required string Name { get; set; }
+    public string? Description { get; set; }
+    public IList<Book> Books { get; set; } = [];
 }

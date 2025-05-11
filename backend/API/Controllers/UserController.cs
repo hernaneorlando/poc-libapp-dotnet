@@ -1,18 +1,36 @@
 ﻿using System.Net.Mime;
-using Application.UserManagement.Users.Services;
+using Application.UserManagement.Users.DTOs;
+using Application.UserManagement.Users.Queries;
+using LibraryApp.API.Extension;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LibraryApp.API.Users;
+namespace LibraryApp.API.Controllers;
 
-[Route("users")]
-public class UserController(IUserService userService) : Controller
+[Route("api/users")]
+public class UserController(IMediator mediator) : Controller
 {
-    private readonly IUserService userService = userService;
+    private readonly IMediator _mediator = mediator;
 
     [HttpGet]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActiveUsers([FromQuery] GetActiveUsersQuery query)
     {
-        return Ok(await userService.GetAll());
+        var userResults = await _mediator.Send(query);
+        return userResults.Match(
+            Ok,
+            errors =>
+            {
+                var error = errors.FirstOrDefault();
+                var resultError = new ResultError(
+                    Title: "Users Not Found",
+                    Details: error?.Message,
+                    StatusCode: StatusCodes.Status404NotFound
+                );
+
+                return NotFound(resultError);
+            }
+        );
     }
 }

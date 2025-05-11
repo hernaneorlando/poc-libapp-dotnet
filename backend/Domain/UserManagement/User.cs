@@ -1,26 +1,33 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using Domain.UserManagement.ValueObjects;
+using Domain.SeedWork;
 
 namespace Domain.UserManagement;
 
-public class User
+public class User : DocumentDbModel
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = string.Empty;
+    public string Username { get; private set; }
+    public string? PasswordHash { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string? DocumentIdentification { get; set; }
+    public UserContact Contact { get; set; }
+    public Role Role { get; set; }
 
-    [BsonElement("username")]
-    public string Username { get; set; } = string.Empty;
+    public User(string id)
+        : this(string.Empty, string.Empty, string.Empty, null!)
+    {
+        Id = id;
+    }
 
-    [BsonElement("firstName")]
-    public string FirstName { get; set; } = string.Empty;
+    public User(string firstName, string lastName, string email, Role role)
+        : this(firstName, lastName, new UserContact(email), role) { }
 
-    [BsonElement("lastName")]
-    public string LastName { get; set; } = string.Empty;
-
-    [BsonElement("email")]
-    public string Email { get; set; } = string.Empty;
-
-    [BsonElement("role")]
-    public Role Role { get; set; } = new Role();
+    public User(string firstName, string lastName, UserContact contact, Role role)
+    {
+        FirstName = firstName.Trim();
+        LastName = lastName.Trim();
+        Username = $"{FirstName.ToLower()}.{LastName.ToLower()}";
+        Contact = contact;
+        Role = role;
+    }
 }

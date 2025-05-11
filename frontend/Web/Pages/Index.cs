@@ -11,7 +11,7 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        authors = await httpClient.GetFromJsonAsync<IList<Author>>("http://dotnet-server:8080/author");
-        users = await httpClient.GetFromJsonAsync<IList<User>>("http://dotnet-server:8080/users");
+        authors = await httpClient.GetFromJsonAsync<IList<Author>>("http://dotnet-server:8080/api/contributors?PageNumber=1&PageSize=10");
+        // users = await httpClient.GetFromJsonAsync<IList<User>>("http://dotnet-server:8080/users?PageNumber=1&PageSize=10");
     }
 }

@@ -1,22 +1,29 @@
-using Domain.CatalogManagement;
+using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations;
 
-public class CategoryConfiguration : IEntityTypeConfiguration<Category>
+public class CategoryConfiguration : RelationalDbBaseEntityConfiguration<CategoryEntity>
 {
-    public void Configure(EntityTypeBuilder<Category> builder)
+    public override void Configure(EntityTypeBuilder<CategoryEntity> builder)
     {
         builder.ToTable("categories");
-        builder.HasKey(e => e.Id);
+        base.Configure(builder);
 
-        builder.Property(e => e.Id)
-            .HasDefaultValueSql("(newid())")
-            .HasColumnName("id");
-
-        builder.Property(e => e.Name).HasColumnName("name");
-        builder.Property(e => e.CreatedAt).HasColumnName("createdAt");
-        builder.Property(e => e.UpdatedAt).HasColumnName("updatedAt");
+        builder.Property(e => e.Name)
+            .HasColumnName("name")
+            .HasMaxLength(100)
+            .IsRequired();
+        
+        builder.Property(e => e.Description)
+            .HasColumnName("description")
+            .HasMaxLength(300)
+            .IsRequired(false);
+        
+        builder.HasMany(e => e.Books)
+            .WithOne(e => e.Category)
+            .HasForeignKey(e => e.CategoryId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
