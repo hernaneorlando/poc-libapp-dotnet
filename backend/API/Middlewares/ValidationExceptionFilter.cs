@@ -8,22 +8,13 @@ public class ValidationExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is ValidationException validationException)
+        context.Result = new BadRequestObjectResult(new
         {
-            var errors = validationException.Errors
-                .GroupBy(e => e.PropertyName)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => x.ErrorMessage).ToArray());
-                    
-            context.Result = new BadRequestObjectResult(new
-            {
-                Title = "Validation Error",
-                Status = 400,
-                Errors = errors
-            });
-            
-            context.ExceptionHandled = true;
-        }
+            Title = "Validation Error",
+            Status = 400,
+            Errors = context.Exception.Message,
+        });
+
+        context.ExceptionHandled = true;
     }
 }

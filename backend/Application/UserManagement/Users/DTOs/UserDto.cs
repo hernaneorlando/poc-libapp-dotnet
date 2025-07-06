@@ -21,16 +21,4 @@ public record UserDto(string Username, string FirstName, string LastName, string
         userDto.ConvertModelBaseProperties(user);
         return userDto;
     }
-
-    public static implicit operator User(UserDto userDto)
-    {
-        var user = new User(userDto.FirstName, userDto.LastName, userDto.Email, (Role)userDto.Role)
-        {
-            PasswordHash = userDto.PasswordHash,
-            DocumentIdentification = userDto.DocumentIdentification
-        };
-
-        user.ConvertDtoBaseProperties(userDto);
-        return user;
-    }
 }

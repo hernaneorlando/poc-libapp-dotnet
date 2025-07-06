@@ -1,3 +1,4 @@
+using Domain.SeedWork.Common.Util;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -16,6 +17,10 @@ public class CategoryConfiguration : RelationalDbBaseEntityConfiguration<Categor
             .HasMaxLength(100)
             .IsRequired();
         
+        builder.HasIndex(e => e.Name)
+            .IsUnique()
+            .HasDatabaseName($"ux_{typeof(CategoryEntity).Name.ToSnakeCaseFast()}_name");
+
         builder.Property(e => e.Description)
             .HasColumnName("description")
             .HasMaxLength(300)

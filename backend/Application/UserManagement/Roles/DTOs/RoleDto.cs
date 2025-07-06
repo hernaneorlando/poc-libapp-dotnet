@@ -19,15 +19,4 @@ public record RoleDto(string Name, string Description) : BaseDto
         roleDto.ConvertModelBaseProperties(role);
         return roleDto;
     }
-
-    public static implicit operator Role(RoleDto roleDto)
-    {
-        var role = new Role(roleDto.Name, roleDto.Description)
-        {
-            Permissions = [.. roleDto.Permissions.Select(p => (Permission)p)]
-        };
-
-        role.ConvertDtoBaseProperties(roleDto);
-        return role;
-    }
 }

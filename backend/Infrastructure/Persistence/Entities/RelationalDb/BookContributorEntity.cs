@@ -7,9 +7,9 @@ namespace Infrastructure.Persistence.Entities.RelationalDb;
 public class BookContributorEntity : RelationalDbAuditableEntity
 {
     public BookEntity Book { get; set; } = new();
-    public int BookId { get; set; }
+    public long BookId { get; set; }
     public ContributorEntity Contributor { get; set; } = new();
-    public int ContributorId { get; set; }
+    public long ContributorId { get; set; }
     public ContributorRoleEnum Role { get; set; } = ContributorRoleEnum.MainAuthor;
 
     public static implicit operator BookContributor(BookContributorEntity bookContributorEntity)

@@ -1,3 +1,5 @@
+using Application.UserManagement.Roles.DTOs;
+using Application.UserManagement.Users.DTOs;
 using Domain.UserManagement;
 using Domain.UserManagement.ValueObjects;
 using Infrastructure.Common;
@@ -14,6 +16,22 @@ public class UserEntity : DocumentDbEntity
     public string? DocumentIdentification { get; set; }
     public required ContactValueObject Contact { get; set; }
     public required RoleEntity Role { get; set; }
+
+    public static implicit operator UserDto(UserEntity userEntity)
+    {
+        return new UserDto(
+            userEntity.Username,
+            userEntity.FirstName,
+            userEntity.LastName,
+            userEntity.Contact.Email,
+            (RoleDto)userEntity.Role)
+        {
+            DocumentIdentification = userEntity.DocumentIdentification,
+            Active = userEntity.Active,
+            CreatedAt = userEntity.CreatedAt,
+            UpdatedAt = userEntity.UpdatedAt,
+        };
+    }
 
     public static implicit operator User(UserEntity userEntity)
     {

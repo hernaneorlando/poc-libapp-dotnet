@@ -2,8 +2,8 @@ using Domain.SeedWork;
 
 namespace Domain.UserManagement;
 
-public class Permission(string code, string description) : DocumentDbModel
+public class Permission : DocumentDbModel
 {
-    public string Code { get; set; } = code;
-    public string Description { get; set; } = description;
+    public required string Code { get; set; }
+    public string Description { get; set; } = string.Empty;
 }

@@ -7,7 +7,8 @@ public static class RelationalDbEntityMapping
 {
     public static void ConvertModelBaseProperties(this RelationalDbBaseBaseEntity entity, RelationalDbBaseModel model)
     {
-        entity.ExternalId = model.Id;
+        entity.Id = model.Id;
+        entity.ExternalId = model.ExternalId;
         entity.CreatedAt = model.CreatedAt;
         entity.UpdatedAt = model.UpdatedAt;
         entity.Active = model.Active;
@@ -15,7 +16,8 @@ public static class RelationalDbEntityMapping
 
     public static void ConvertEntityBaseProperties(this RelationalDbBaseModel model, RelationalDbBaseBaseEntity entity)
     {
-        model.Id = entity.ExternalId;
+        model.Id = entity.Id;
+        model.ExternalId = entity.ExternalId;
         model.CreatedAt = entity.CreatedAt;
         model.UpdatedAt = entity.UpdatedAt;
         model.Active = entity.Active;

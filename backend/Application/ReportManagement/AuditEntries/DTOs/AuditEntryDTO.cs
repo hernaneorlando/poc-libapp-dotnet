@@ -1,7 +1,5 @@
 using Application.UserManagement.Users.DTOs;
 using Domain.ReportManagement;
-using Domain.ReportManagement.Enums;
-using Domain.UserManagement;
 
 namespace Application.ReportManagement.AuditEntries.DTOs;
 
@@ -20,18 +18,5 @@ public record AuditEntryDTO(Guid ExternalId, DateTime Timestamp, string EntityNa
             auditEntry.Action.ToString(),
             (UserDto)auditEntry.User
         );
-    }
-
-    public static implicit operator AuditEntry(AuditEntryDTO auditEntryDto)
-    {
-        return new AuditEntry
-        {
-            ExternalId = auditEntryDto.ExternalId,
-            Timestamp = auditEntryDto.Timestamp,
-            EntityName = auditEntryDto.EntityName,
-            EntityId = auditEntryDto.EntityId,
-            Action = Enum.Parse<AuditActionEnum>(auditEntryDto.Action),
-            User = (User)auditEntryDto.User
-        };
     }
 }

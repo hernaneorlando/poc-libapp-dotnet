@@ -1,3 +1,4 @@
+using Domain.SeedWork.Common.Util;
 using Infrastructure.Common;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ public class BookCheckoutConfiguration : RelationalDbBaseEntityConfiguration<Boo
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.HasIndex(e => e.UserId, "idx_book_checkout_user_id")
+        builder.HasIndex(e => e.UserId)
+            .HasDatabaseName($"ux_{typeof(BookCheckoutEntity).Name.ToSnakeCaseFast()}_user_id")
             .IsUnique(false);
 
         builder.Property(e => e.CheckoutDate)

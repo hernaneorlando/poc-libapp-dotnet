@@ -1,3 +1,5 @@
+using Application.CatalogManagement.Books.DTOs;
+using Application.Common;
 using Domain.CatalogManagement;
 using Infrastructure.Common;
 using Infrastructure.Persistence.SeedWork;
@@ -10,11 +12,22 @@ public class CategoryEntity : RelationalDbBaseBaseEntity
     public string? Description { get; set; }
     public IList<BookEntity> Books { get; set; } = [];
 
+    public static implicit operator CategoryDto(CategoryEntity entity)
+    {
+        var dto = new CategoryDto(entity.Name)
+        {
+            Description = entity.Description,
+            Books = [.. entity.Books.Select(b => (BookDto)b)],
+        };
+
+        dto.ConvertModelBaseProperties(entity);
+        return dto;
+    }
+
     public static implicit operator Category(CategoryEntity entity)
     {
-        var model = new Category()
+        var model = new Category(entity.Name)
         {
-            Name = entity.Name,
             Description = entity.Description,
             Books = [.. entity.Books.Select(b => (Book)b)],
         };

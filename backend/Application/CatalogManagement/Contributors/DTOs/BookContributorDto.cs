@@ -14,17 +14,4 @@ public record BookContributorDto(BookDto Book, ContributorDto Contributor, Contr
         bookContributorDto.ConvertModelAuditableProperties(bookContributor);
         return bookContributorDto;
     }
-
-    public static implicit operator BookContributor(BookContributorDto bookContributorDto)
-    {
-        var bookContributor = new BookContributor
-        {
-            Book = (Book)bookContributorDto.Book,
-            Contributor = (Contributor)bookContributorDto.Contributor,
-            Role = bookContributorDto.Role
-        };
-
-        bookContributor.ConvertDtoAuditableProperties(bookContributorDto);
-        return bookContributor;
-    }
 }

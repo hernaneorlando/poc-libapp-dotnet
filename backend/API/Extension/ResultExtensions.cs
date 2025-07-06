@@ -10,8 +10,18 @@ public static class ResultExtensions
         Func<TValue, IActionResult> onSuccess,
         Func<IEnumerable<IError>, IActionResult> onFailure)
     {
+        return result.IsSuccess
+            ? onSuccess(result.Value)
+            : onFailure(result.Errors);
+    }
+    
+    public static IActionResult Match(
+        this Result result,
+        Func<IActionResult> onSuccess,
+        Func<IEnumerable<IError>, IActionResult> onFailure)
+    {
         return result.IsSuccess 
-            ? onSuccess(result.Value) 
+            ? onSuccess()
             : onFailure(result.Errors);
     }
 }

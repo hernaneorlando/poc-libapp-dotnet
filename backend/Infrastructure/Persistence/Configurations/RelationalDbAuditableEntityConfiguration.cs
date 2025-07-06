@@ -16,8 +16,6 @@ public abstract class RelationalDbAuditableEntityConfiguration<TEntity> : IEntit
             .IsRequired();
 
         builder.Property(e => e.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasDefaultValueSql("getdate()")
-            .ValueGeneratedOnUpdate();
+            .HasColumnName("updated_at");
     }
 }

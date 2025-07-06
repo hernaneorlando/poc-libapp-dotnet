@@ -20,17 +20,4 @@ public record CategoryDto(string Name) : BaseDto
         categoryDto.ConvertModelBaseProperties(category);
         return categoryDto;
     }
-
-    public static implicit operator Category(CategoryDto categoryDto)
-    {
-        var category = new Category()
-        {
-            Name = categoryDto.Name,
-            Description = categoryDto.Description,
-            Books = [.. categoryDto.Books.Select(b => (Book)b)]
-        };
-
-        category.ConvertDtoBaseProperties(categoryDto);
-        return category;
-    }
 }

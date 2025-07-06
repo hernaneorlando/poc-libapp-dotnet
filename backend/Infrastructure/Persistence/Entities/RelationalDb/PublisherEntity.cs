@@ -1,3 +1,6 @@
+using Application.CatalogManagement.Books.DTOs;
+using Application.CatalogManagement.Publishers.DTOs;
+using Application.Common;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.ValueObjects;
 using Infrastructure.Common;
@@ -14,11 +17,30 @@ public class PublisherEntity : RelationalDbBaseBaseEntity
     public string? Website { get; set; }
     public IList<BookEntity> Books { get; set; } = [];
 
-    public static implicit operator Publisher(PublisherEntity entity)
+    public static implicit operator PublisherDto(PublisherEntity entity)
     {
-        var model = new Publisher()
+        var dto = new PublisherDto(entity.Name)
         {
             Id = entity.ExternalId,
+            FoundationDate = entity.FoundationDate,
+            Contact = new ContactDto
+            {
+                PhoneNumber = entity.PhoneNumber,
+                Email = entity.Email,
+                Website = entity.Website,
+            },
+            Books = [.. entity.Books.Select(b => (BookDto)b)],
+        };
+
+        dto.ConvertModelBaseProperties(entity);
+        return dto;
+    }
+
+    public static implicit operator Publisher(PublisherEntity entity)
+    {
+        var model = new Publisher
+        {
+            ExternalId = entity.ExternalId,
             Name = entity.Name,
             FoundationDate = entity.FoundationDate,
             Contact = new Contact()
@@ -38,7 +60,7 @@ public class PublisherEntity : RelationalDbBaseBaseEntity
     {
         var entity = new PublisherEntity()
         {
-            ExternalId = publisher.Id,
+            ExternalId = publisher.ExternalId,
             Name = publisher.Name,
             FoundationDate = publisher.FoundationDate,
             PhoneNumber = publisher.Contact?.PhoneNumber,

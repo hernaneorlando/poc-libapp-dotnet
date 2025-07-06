@@ -16,7 +16,7 @@ public class BookCheckoutEntity : RelationalDbBaseBaseEntity
     public CheckoutStatusEnum Status { get; set; }
 
     public BookEntity Book { get; set; } = new();
-    public int BookId { get; set; }
+    public long BookId { get; set; }
 
     public static implicit operator BookCheckout(BookCheckoutEntity entity)
     {

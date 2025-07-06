@@ -15,7 +15,7 @@ public class ContributorEntity : RelationalDbBaseBaseEntity
     {
         var model = new Contributor()
         {
-            Id = entity.ExternalId,
+            ExternalId = entity.ExternalId,
             FirstName = entity.FirstName,
             LastName = entity.LastName,
             DateOfBirth = entity.DateOfBirth,
@@ -30,7 +30,7 @@ public class ContributorEntity : RelationalDbBaseBaseEntity
     {
         var entity = new ContributorEntity()
         {
-            ExternalId = contributor.Id,
+            ExternalId = contributor.ExternalId,
             FirstName = contributor.FirstName,
             LastName = contributor.LastName,
             DateOfBirth = contributor.DateOfBirth,

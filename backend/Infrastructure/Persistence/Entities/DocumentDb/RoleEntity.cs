@@ -1,3 +1,5 @@
+using Application.UserManagement.Permissions.DTOs;
+using Application.UserManagement.Roles.DTOs;
 using Domain.UserManagement;
 using Infrastructure.Common;
 using Infrastructure.Persistence.SeedWork;
@@ -9,6 +11,14 @@ public class RoleEntity : DocumentDbEntity
     public required string Name { get; set; }
     public required string Description { get; set; }
     public List<PermissionEntity> Permissions { get; set; } = [];
+
+    public static implicit operator RoleDto(RoleEntity roleEntity)
+    {
+        return new RoleDto(roleEntity.Name, roleEntity.Description)
+        {
+            Permissions = [.. roleEntity.Permissions.Select(x => (PermissionDto)x)]
+        };
+    }
 
     public static implicit operator Role(RoleEntity roleEntity)
     {

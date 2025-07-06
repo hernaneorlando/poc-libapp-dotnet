@@ -5,8 +5,6 @@ using Application.LoanManagement.BookCheckouts.DTOs;
 using Application.SeedWork.BaseDTO;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
-using Domain.CatalogManagement.ValueObjects;
-using Domain.LoanManagement;
 
 namespace Application.CatalogManagement.Books.DTOs;
 
@@ -39,27 +37,5 @@ public record BookDto(string Title, PublisherDto Publisher, BookStatusEnum Statu
 
         bookDto.ConvertModelBaseProperties(book);
         return bookDto;
-    }
-
-    public static implicit operator Book(BookDto bookDto)
-    {
-        var book = new Book
-        {
-            Title = bookDto.Title,
-            Publisher = (Publisher)bookDto.Publisher,
-            Status = bookDto.Status,
-            ISBN = bookDto.ISBN != null ? Isbn.Create(bookDto.ISBN) : null,
-            Description = bookDto.Description,
-            Edition = bookDto.Edition,
-            Language = bookDto.Language,
-            TotalPages = bookDto.TotalPages,
-            PublishedDate = bookDto.PublishedDate,
-            Category = bookDto.Category != null ? (Category)bookDto.Category : null,
-            Contributors = [.. bookDto.Contributors.Select(a => (BookContributor)a)],
-            Checkouts = [.. bookDto.Checkouts.Select(a => (BookCheckout)a)]
-        };
-
-        book.ConvertDtoBaseProperties(bookDto);
-        return book;
     }
 }

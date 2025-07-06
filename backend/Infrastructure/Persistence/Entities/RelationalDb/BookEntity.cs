@@ -1,3 +1,6 @@
+using Application.CatalogManagement.Books.DTOs;
+using Application.CatalogManagement.Publishers.DTOs;
+using Application.Common;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
 using Domain.CatalogManagement.ValueObjects;
@@ -18,11 +21,29 @@ public class BookEntity : RelationalDbBaseBaseEntity
     public BookStatusEnum Status { get; set; } = BookStatusEnum.Available;
 
     public CategoryEntity? Category { get; set; }
-    public int? CategoryId { get; set; }
+    public long? CategoryId { get; set; }
     public PublisherEntity Publisher { get; set; } = new();
-    public int? PublisherId { get; set; }
+    public long? PublisherId { get; set; }
     public IList<BookContributorEntity> Contributors { get; set; } = [];
     public IList<BookCheckoutEntity> Checkouts { get; set; } = [];
+
+    public static implicit operator BookDto(BookEntity entity)
+    {
+        var dto = new BookDto(entity.Title, (PublisherDto)entity.Publisher, entity.Status)
+        {
+            Id = entity.ExternalId,
+            ISBN = string.IsNullOrEmpty(entity.ISBN) ? string.Empty : Isbn.Create(entity.ISBN),
+            Description = entity.Description,
+            Edition = entity.Edition,
+            Language = entity.Language,
+            TotalPages = entity.TotalPages,
+            PublishedDate = entity.PublishedDate,
+            Category = entity.Category != null ? (CategoryDto)entity.Category : null,
+        };
+
+        dto.ConvertModelBaseProperties(entity);
+        return dto;
+    }
 
     public static implicit operator Book(BookEntity entity)
     {

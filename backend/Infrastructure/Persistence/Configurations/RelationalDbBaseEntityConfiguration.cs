@@ -11,7 +11,7 @@ public abstract class RelationalDbBaseEntityConfiguration<TEntity> : RelationalD
     public override void Configure(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasKey(e => e.Id)
-            .HasName("pk_" + typeof(TEntity).Name.ToSnakeCaseFast())
+            .HasName($"pk_{typeof(TEntity).Name.ToSnakeCaseFast()}")
             .IsClustered(false);
             
         builder.Property(e => e.Id)
@@ -23,6 +23,10 @@ public abstract class RelationalDbBaseEntityConfiguration<TEntity> : RelationalD
             .HasDefaultValueSql("(newid())")
             .HasColumnName("external_id")
             .IsRequired();
+
+        builder.HasIndex(e => e.ExternalId)
+            .HasDatabaseName($"ux_{typeof(TEntity).Name.ToSnakeCaseFast()}_external_id")
+            .IsUnique();
         
         builder.Property(e => e.Active)
             .HasColumnName("active")

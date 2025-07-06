@@ -2,10 +2,8 @@ using Application.CatalogManagement.Books.DTOs;
 using Application.Common;
 using Application.SeedWork.BaseDTO;
 using Application.UserManagement.Users.DTOs;
-using Domain.CatalogManagement;
 using Domain.LoanManagement;
 using Domain.LoanManagement.Enums;
-using Domain.UserManagement;
 
 namespace Application.LoanManagement.BookCheckouts.DTOs;
 
@@ -29,22 +27,5 @@ public record BookCheckoutDto(UserDto User, BookDto Book, DateTime CheckoutDate,
 
         bookCheckoutDto.ConvertModelBaseProperties(bookCheckout);
         return bookCheckoutDto;
-    }
-
-    public static implicit operator BookCheckout(BookCheckoutDto bookCheckoutDto)
-    {
-        var bookCheckout = new BookCheckout
-        {
-            User = (User)bookCheckoutDto.User,
-            Book = (Book)bookCheckoutDto.Book,
-            Status = bookCheckoutDto.Status,
-            CheckoutDate = bookCheckoutDto.CheckoutDate,
-            DueDate = bookCheckoutDto.DueDate,
-            ReturnDate = bookCheckoutDto.ReturnDate,
-            Notes = bookCheckoutDto.Notes
-        };
-
-        bookCheckout.ConvertDtoBaseProperties(bookCheckoutDto);
-        return bookCheckout;
     }
 }

@@ -1,3 +1,4 @@
+using Domain.SeedWork.Common.Util;
 using Infrastructure.Common;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,8 @@ public class BookConfiguration : RelationalDbBaseEntityConfiguration<BookEntity>
             .HasMaxLength(13)
             .IsRequired(false);
 
-        builder.HasIndex(e => e.ISBN, "ix_book_isbn")
+        builder.HasIndex(e => e.ISBN)
+            .HasDatabaseName($"ux_{typeof(BookEntity).Name.ToSnakeCaseFast()}_isbn")
             .IsUnique();
 
         builder.Property(e => e.Description)
@@ -68,7 +70,8 @@ public class BookConfiguration : RelationalDbBaseEntityConfiguration<BookEntity>
             .HasColumnName("category_id")
             .IsRequired(false);
 
-        builder.HasIndex(e => e.CategoryId, "ix_book_category_id")
+        builder.HasIndex(e => e.CategoryId)
+            .HasDatabaseName($"ix_{typeof(BookEntity).Name.ToSnakeCaseFast()}_category_id")
             .IsUnique(false);
 
         builder.HasOne(e => e.Publisher)

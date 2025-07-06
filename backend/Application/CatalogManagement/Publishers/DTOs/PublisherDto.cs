@@ -2,7 +2,6 @@ using Application.CatalogManagement.Books.DTOs;
 using Application.Common;
 using Application.SeedWork.BaseDTO;
 using Domain.CatalogManagement;
-using Domain.CatalogManagement.ValueObjects;
 
 namespace Application.CatalogManagement.Publishers.DTOs;
 
@@ -23,19 +22,5 @@ public record PublisherDto(string Name) : BaseDto
 
         publisherDto.ConvertModelBaseProperties(publisher);
         return publisherDto;
-    }
-
-    public static implicit operator Publisher(PublisherDto publisherDto)
-    {
-        var publisher = new Publisher
-        {
-            Name = publisherDto.Name,
-            FoundationDate = publisherDto.FoundationDate,
-            Contact = publisherDto.Contact != null ? (Contact)publisherDto.Contact : null,
-            Books = [.. publisherDto.Books.Select(b => (Book)b)]
-        };
-
-        publisher.ConvertDtoBaseProperties(publisherDto);
-        return publisher;
     }
 }

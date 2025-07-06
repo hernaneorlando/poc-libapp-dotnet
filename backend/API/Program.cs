@@ -4,6 +4,7 @@ using Infrastructure;
 using Infrastructure.Persistence.Context;
 using LibraryApp.API.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
@@ -24,6 +25,25 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Library App", Version = "v1" });
+    c.TagActionsBy(api =>
+    {
+        if (api.GroupName != null)
+        {
+            return [api.GroupName];
+        }
+
+        if (api.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+        {
+            return [controllerActionDescriptor.ControllerName];
+        }
+
+        throw new InvalidOperationException("Unable to determine tag for endpoint.");
+    });
+
+    // var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    // var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    // c.IncludeXmlComments(xmlPath);
+    c.DocInclusionPredicate((name, api) => true);
 });
 
 builder.Services.AddDbContext<SqlDataContext>(options =>

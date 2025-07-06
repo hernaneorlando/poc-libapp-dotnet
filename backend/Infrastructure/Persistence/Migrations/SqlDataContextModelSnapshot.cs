@@ -24,12 +24,12 @@ namespace Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.BookCheckoutEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .ValueGeneratedOnAdd()
@@ -37,8 +37,8 @@ namespace Infrastructure.Persistence.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("active");
 
-                    b.Property<int>("BookId")
-                        .HasColumnType("int")
+                    b.Property<long>("BookId")
+                        .HasColumnType("bigint")
                         .HasColumnName("book_id");
 
                     b.Property<DateTime>("CheckoutDate")
@@ -77,10 +77,8 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -93,21 +91,26 @@ namespace Infrastructure.Persistence.Migrations
 
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
 
-                    b.HasIndex(new[] { "BookId" }, "idx_book_checkout_book_id");
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_book_checkout_entity_external_id");
 
-                    b.HasIndex(new[] { "UserId" }, "idx_book_checkout_user_id");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ux_book_checkout_entity_user_id");
+
+                    b.HasIndex(new[] { "BookId" }, "idx_book_checkout_book_id");
 
                     b.ToTable("book_checkouts", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.BookContributorEntity", b =>
                 {
-                    b.Property<int>("BookId")
-                        .HasColumnType("int")
+                    b.Property<long>("BookId")
+                        .HasColumnType("bigint")
                         .HasColumnName("book_id");
 
-                    b.Property<int>("ContributorId")
-                        .HasColumnType("int")
+                    b.Property<long>("ContributorId")
+                        .HasColumnType("bigint")
                         .HasColumnName("contributor_id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -122,32 +125,32 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("role");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.HasKey("BookId", "ContributorId")
                         .HasName("pk_book_contributors_entity");
 
-                    b.HasIndex(new[] { "BookId" }, "ix_book_contributor_book_id");
+                    b.HasIndex("BookId")
+                        .HasDatabaseName("ix_book_contributor_entity_book_id");
+
+                    b.HasIndex("ContributorId")
+                        .HasDatabaseName("ix_book_contributor_entity_contributor_id");
 
                     b.HasIndex(new[] { "BookId", "ContributorId" }, "ix_book_contributor_book_id_contributor_id")
                         .IsUnique();
-
-                    b.HasIndex(new[] { "ContributorId" }, "ix_book_contributor_contributor_id");
 
                     b.ToTable("book_contributors", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.BookEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .ValueGeneratedOnAdd()
@@ -155,8 +158,8 @@ namespace Infrastructure.Persistence.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("active");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int")
+                    b.Property<long?>("CategoryId")
+                        .HasColumnType("bigint")
                         .HasColumnName("category_id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -194,8 +197,8 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("published_date");
 
-                    b.Property<int?>("PublisherId")
-                        .HasColumnType("int")
+                    b.Property<long?>("PublisherId")
+                        .HasColumnType("bigint")
                         .HasColumnName("publisher_id");
 
                     b.Property<string>("Status")
@@ -215,20 +218,24 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("total_pages");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("pk_book_entity");
 
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
 
-                    b.HasIndex(new[] { "CategoryId" }, "ix_book_category_id");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_book_entity_category_id");
 
-                    b.HasIndex(new[] { "ISBN" }, "ix_book_isbn")
+                    b.HasIndex("ExternalId")
                         .IsUnique()
+                        .HasDatabaseName("ux_book_entity_external_id");
+
+                    b.HasIndex("ISBN")
+                        .IsUnique()
+                        .HasDatabaseName("ux_book_entity_isbn")
                         .HasFilter("[isbn] IS NOT NULL");
 
                     b.HasIndex(new[] { "PublisherId" }, "ix_book_publisher_id");
@@ -238,12 +245,12 @@ namespace Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.CategoryEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .ValueGeneratedOnAdd()
@@ -275,27 +282,33 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("name");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("pk_category_entity");
 
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
 
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_category_entity_external_id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_category_entity_name");
+
                     b.ToTable("categories", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.ContributorEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .ValueGeneratedOnAdd()
@@ -332,15 +345,17 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("lastname");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("pk_contributor_entity");
 
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
+
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_contributor_entity_external_id");
 
                     b.HasIndex(new[] { "FirstName", "LastName" }, "idx_contributors_firstname_lastname")
                         .IsUnique();
@@ -350,12 +365,12 @@ namespace Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RelationalDb.PublisherEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .ValueGeneratedOnAdd()
@@ -396,10 +411,8 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnName("phone_number");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("getdate()");
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("Website")
                         .HasMaxLength(200)
@@ -410,6 +423,10 @@ namespace Infrastructure.Persistence.Migrations
                         .HasName("pk_publisher_entity");
 
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
+
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_publisher_entity_external_id");
 
                     b.ToTable("publishers", (string)null);
                 });

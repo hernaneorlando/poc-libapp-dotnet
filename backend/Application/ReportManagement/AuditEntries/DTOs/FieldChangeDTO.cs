@@ -8,16 +8,9 @@ public record FieldChangeDTO(string FieldName, string NewValue)
 
     public static implicit operator FieldChangeDTO(FieldChange fieldChange)
     {
-        return new FieldChangeDTO(fieldChange.FieldName, fieldChange.NewValue) { OldValue = fieldChange.OldValue };
-    }
-
-    public static implicit operator FieldChange(FieldChangeDTO fieldChangeDto)
-    {
-        return new FieldChange
+        return new FieldChangeDTO(fieldChange.FieldName, fieldChange.NewValue)
         {
-            FieldName = fieldChangeDto.FieldName,
-            OldValue = fieldChangeDto.OldValue,
-            NewValue = fieldChangeDto.NewValue
+            OldValue = fieldChange.OldValue
         };
     }
 }

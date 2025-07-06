@@ -7,7 +7,7 @@ public static class BaseDtoMapping
 {
     public static void ConvertDtoBaseProperties(this RelationalDbBaseModel model, BaseDto dto)
     {
-        model.Id = dto.Id;
+        model.ExternalId = dto.Id;
         model.Active = dto.Active;
 
         model.ConvertDtoAuditableProperties(dto);
@@ -15,7 +15,7 @@ public static class BaseDtoMapping
 
     public static void ConvertModelBaseProperties(this BaseDto dto, RelationalDbBaseModel model)
     {
-        dto.Id = model.Id;
+        dto.Id = model.ExternalId;
         dto.Active = model.Active;
 
         dto.ConvertModelAuditableProperties(model);

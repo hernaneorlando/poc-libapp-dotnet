@@ -1,4 +1,5 @@
 using Domain.CatalogManagement.Enums;
+using Domain.SeedWork.Common.Util;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,14 +21,16 @@ public class BookContributorConfiguration : RelationalDbAuditableEntityConfigura
             .HasColumnName("contributor_id")
             .IsRequired();
 
-        builder.HasIndex(e => e.ContributorId, "ix_book_contributor_contributor_id")
+        builder.HasIndex(e => e.ContributorId)
+            .HasDatabaseName($"ix_{typeof(BookContributorEntity).Name.ToSnakeCaseFast()}_contributor_id")
             .IsUnique(false);
 
         builder.Property(e => e.BookId)
             .HasColumnName("book_id")
             .IsRequired();
 
-        builder.HasIndex(e => e.BookId, "ix_book_contributor_book_id")
+        builder.HasIndex(e => e.BookId)
+            .HasDatabaseName($"ix_{typeof(BookContributorEntity).Name.ToSnakeCaseFast()}_book_id")
             .IsUnique(false);
 
         builder.Property(e => e.Role)

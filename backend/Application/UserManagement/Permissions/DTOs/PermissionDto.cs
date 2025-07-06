@@ -12,11 +12,4 @@ public record PermissionDto(string Code, string Description) : BaseDto
         permissionDto.ConvertModelBaseProperties(permission);
         return permissionDto;
     }
-
-    public static implicit operator Permission(PermissionDto permissionDto)
-    {
-        var permission = new Permission(permissionDto.Code, permissionDto.Description);
-        permission.ConvertDtoBaseProperties(permissionDto);
-        return permission;
-    }
 }

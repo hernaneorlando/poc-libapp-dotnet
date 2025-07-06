@@ -14,11 +14,4 @@ public record ContactDto
         Email = contact.Email,
         Website = contact.Website
     };
-
-    public static implicit operator Contact(ContactDto contactDto) => new()
-    {
-        PhoneNumber = contactDto.PhoneNumber,
-        Email = contactDto.Email,
-        Website = contactDto.Website
-    };
 }

@@ -1,5 +1,3 @@
-using Domain.Exceptions;
-
 namespace Domain.CatalogManagement.ValueObjects;
 
 public sealed class Isbn : IEquatable<Isbn>
@@ -10,15 +8,15 @@ public sealed class Isbn : IEquatable<Isbn>
 
     public static Isbn Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value)){
-            throw new DomainValidationException("ISBN não pode ser vazio");
-        }
+        // if (string.IsNullOrWhiteSpace(value)){
+        //     throw new DomainValidationException("ISBN não pode ser vazio");
+        // }
 
         var cleanValue = value.Replace("-", "").Replace(" ", "");
 
-        if (!IsValidIsbn(cleanValue)){
-            throw new DomainValidationException("ISBN inválido");
-        }
+        // if (!IsValidIsbn(cleanValue)){
+        //     throw new DomainValidationException("ISBN inválido");
+        // }
 
         return new Isbn(cleanValue);
     }
