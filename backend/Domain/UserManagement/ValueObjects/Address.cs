@@ -1,4 +1,4 @@
-using Domain.SeedWork.Enums;
+using Domain.Common.Enums;
 
 namespace Domain.UserManagement.ValueObjects;
 

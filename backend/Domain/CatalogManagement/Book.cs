@@ -1,11 +1,11 @@
 using Domain.CatalogManagement.Enums;
 using Domain.CatalogManagement.ValueObjects;
+using Domain.Common;
 using Domain.LoanManagement;
-using Domain.SeedWork;
 
 namespace Domain.CatalogManagement;
 
-public class Book : RelationalDbBaseModel
+public class Book : RelationalDbBaseModel<Book>
 {
     public required string Title { get; set; }
     public Isbn? ISBN { get; set; }

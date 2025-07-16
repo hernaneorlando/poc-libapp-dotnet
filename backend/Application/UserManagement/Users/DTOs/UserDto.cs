@@ -1,5 +1,4 @@
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Application.UserManagement.Roles.DTOs;
 using Domain.UserManagement;
 
@@ -18,7 +17,7 @@ public record UserDto(string Username, string FirstName, string LastName, string
             DocumentIdentification = user.DocumentIdentification
         };
 
-        userDto.ConvertModelBaseProperties(user);
+        userDto.ConvertBaseProperties(user);
         return userDto;
     }
 }

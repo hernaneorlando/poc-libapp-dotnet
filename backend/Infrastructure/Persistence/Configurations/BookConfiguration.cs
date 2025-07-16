@@ -1,4 +1,4 @@
-using Domain.SeedWork.Common.Util;
+using Domain.Common.Util;
 using Infrastructure.Common;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
@@ -91,7 +91,7 @@ public class BookConfiguration : RelationalDbBaseEntityConfiguration<BookEntity>
         builder.HasMany(e => e.Contributors)
             .WithOne(e => e.Book)
             .HasForeignKey(e => e.BookId)
-            .HasConstraintName("fk_book_contributors_books_book_id")
+            .HasConstraintName($"fk_{BookContributorsJoinTableName}_books_book_id")
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasMany(e => e.Checkouts)

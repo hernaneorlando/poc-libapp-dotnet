@@ -1,5 +1,5 @@
+using Application.Common.MediatR;
 using Application.ReportManagement.AuditEntries.DTOs;
-using Application.SeedWork.MediatR;
 
 namespace Application.ReportManagement.AuditEntries.Queries;
 

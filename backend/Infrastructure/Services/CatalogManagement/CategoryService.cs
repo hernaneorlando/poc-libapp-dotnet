@@ -1,7 +1,10 @@
 using Application.CatalogManagement.Books.DTOs;
 using Application.CatalogManagement.Books.Services;
 using Domain.CatalogManagement;
-using FluentResults;
+using Domain.CatalogManagement.Specifications;
+using Domain.Common;
+using Domain.Common.Interfaces;
+using Infrastructure.Common;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
@@ -12,20 +15,20 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
 {
     #region Query Methods
 
-    public async Task<Result<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken)
+    public async Task<ValidationResult<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken)
     {
         var categoryEntity = await GetByExternalId(guid, cancellationToken);
         return categoryEntity is not null
-            ? Result.Ok((CategoryDto)categoryEntity)
-            : Result.Fail<CategoryDto>($"Category with ID {guid} not found.");
+            ? ValidationResult.Ok((CategoryDto)categoryEntity)
+            : ValidationResult.Fail<CategoryDto>($"Category with ID {guid} not found.");
     }
 
-    public async Task<Result<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken)
     {
         var categoryEntity = await GetByExternalId(guid, cancellationToken);
         return categoryEntity is not null
-            ? Result.Ok((Category)categoryEntity)
-            : Result.Fail<Category>($"Category with ID {guid} not found.");
+            ? ValidationResult.Ok((Category)categoryEntity)
+            : ValidationResult.Fail<Category>($"Category with ID {guid} not found.");
     }
 
     private async Task<CategoryEntity?> GetByExternalId(Guid guid, CancellationToken cancellationToken)
@@ -36,8 +39,10 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Result<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<ValidationResult<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
+        var cats = await FindAsync(new ActiveCategoriesSpec(pageNumber, pageSize));
+
         var categories = await sqlDataContext.Categories
             .Where(c => c.Active)
             .OrderBy(c => c.Name)
@@ -47,48 +52,36 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
 
         if (categories is null || categories.Count == 0)
         {
-            return Result.Fail("No active categories found.");
+            return ValidationResult.Fail<IEnumerable<CategoryDto>>("No active categories found.");
         }
 
-        return Result.Ok(categories.Select(category => (CategoryDto)category));
+        return ValidationResult.Ok(categories.Select(category => (CategoryDto)category));
+    }
+
+    public async Task<IEnumerable<Category>> FindAsync(ISpecification<Category> spec)
+    {
+        return await SpecificationEvaluator.GetQuery(sqlDataContext.Set<Category>(), spec).ToListAsync();
     }
 
     #endregion
 
     #region Command Methods
 
-    public async Task<Result<Category>> CreateCategoryAsync(Category category, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Category>> CreateCategoryAsync(Category category, CancellationToken cancellationToken)
     {
         var entry = sqlDataContext.Categories.Add(category);
         await sqlDataContext.SaveChangesAsync(cancellationToken);
-        return Result.Ok((Category)entry.Entity);
+        return ValidationResult.Ok((Category)entry.Entity);
     }
 
-    public async Task<Result<Category>> UpdateCategoryAsync(Category category, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Category>> UpdateCategoryAsync(Category category, CancellationToken cancellationToken)
     {
         var categoryEntity = (CategoryEntity)category;
         sqlDataContext.Entry(categoryEntity).State = EntityState.Modified;
         var entry = sqlDataContext.Categories.Update(categoryEntity);
         await sqlDataContext.SaveChangesAsync(cancellationToken);
-        return Result.Ok((Category)entry.Entity);
+        return ValidationResult.Ok((Category)entry.Entity);
     }
 
-    public async Task<Result> DeleteCategoryAsync(Guid externalId, CancellationToken cancellationToken)
-    {
-        var persistedCategory = await sqlDataContext.Categories
-            .Where(c => c.ExternalId == externalId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (persistedCategory == null)
-        {
-            return Result.Fail("Category not found.");
-        }
-
-        persistedCategory.Active = false;
-        sqlDataContext.Categories.Update(persistedCategory);
-        await sqlDataContext.SaveChangesAsync(cancellationToken);
-        return Result.Ok();
-    }
-    
     #endregion
 }

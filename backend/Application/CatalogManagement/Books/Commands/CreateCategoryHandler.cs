@@ -1,23 +1,22 @@
 using Application.CatalogManagement.Books.DTOs;
 using Application.CatalogManagement.Books.Services;
 using Domain.CatalogManagement;
-using FluentResults;
+using Domain.Common;
 using MediatR;
 
 namespace Application.CatalogManagement.Books.Commands;
 
-public class CreateCategoryHandler(ICategoryService categoryCommandService) : IRequestHandler<CreateCategoryCommand, Result<CategoryDto>>
+public class CreateCategoryHandler(ICategoryService categoryCommandService) : IRequestHandler<CreateCategoryCommand, ValidationResult<CategoryDto>>
 {
-    public async Task<Result<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
+    public async Task<ValidationResult<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
-        var category = new Category();
-        var notification = category.Create(request.Name, request.Description);
-        if (notification.HasErrors)
-            return Result.Fail<CategoryDto>(notification.Errors.FirstOrDefault() ?? "Failed to create category.");
+        var result = Category.CreateCategory(request.Name, request.Description ?? string.Empty);
+        if (!result.IsSuccess)
+            return ValidationResult.Fail<CategoryDto>(result.Errors);
 
-        var categoryResult = await categoryCommandService.CreateCategoryAsync(category, cancellationToken);
+        var categoryResult = await categoryCommandService.CreateCategoryAsync(result.Value, cancellationToken);
         return categoryResult.IsSuccess
-            ? Result.Ok((CategoryDto)categoryResult.Value)
-            : Result.Fail<CategoryDto>(categoryResult.Errors.FirstOrDefault()?.Message ?? "Failed to create category.");
+            ? ValidationResult.Ok((CategoryDto)categoryResult.Value)
+            : ValidationResult.Fail<CategoryDto>(categoryResult.Errors);
     }
 }

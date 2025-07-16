@@ -1,8 +1,7 @@
 using Application.CatalogManagement.Contributors.DTOs;
 using Application.CatalogManagement.Publishers.DTOs;
-using Application.Common;
+using Application.Common.BaseDTO;
 using Application.LoanManagement.BookCheckouts.DTOs;
-using Application.SeedWork.BaseDTO;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
 
@@ -35,7 +34,7 @@ public record BookDto(string Title, PublisherDto Publisher, BookStatusEnum Statu
             Checkouts = [.. book.Checkouts.Select(a => (BookCheckoutDto)a)]
         };
 
-        bookDto.ConvertModelBaseProperties(book);
+        bookDto.ConvertBaseProperties(book);
         return bookDto;
     }
 }

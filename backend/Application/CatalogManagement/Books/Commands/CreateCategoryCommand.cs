@@ -1,10 +1,10 @@
 using Application.CatalogManagement.Books.DTOs;
-using FluentResults;
+using Domain.Common;
 using MediatR;
 
 namespace Application.CatalogManagement.Books.Commands;
 
-public record CreateCategoryCommand(string Name) : IRequest<Result<CategoryDto>>
+public record CreateCategoryCommand(string Name) : IRequest<ValidationResult<CategoryDto>>
 {
     public string? Description { get; set; }
 }

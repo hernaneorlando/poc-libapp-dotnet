@@ -1,4 +1,4 @@
-using Application.SeedWork.MediatR;
+using Application.Common.MediatR;
 using Application.UserManagement.Users.DTOs;
 
 namespace Application.UserManagement.Users.Queries;

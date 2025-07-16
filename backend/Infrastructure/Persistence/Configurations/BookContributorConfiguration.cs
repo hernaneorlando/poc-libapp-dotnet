@@ -1,5 +1,5 @@
 using Domain.CatalogManagement.Enums;
-using Domain.SeedWork.Common.Util;
+using Domain.Common.Util;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -10,12 +10,12 @@ public class BookContributorConfiguration : RelationalDbAuditableEntityConfigura
 {
     public override void Configure(EntityTypeBuilder<BookContributorEntity> builder)
     {
-        builder.ToTable("book_contributors");
+        builder.ToTable(BookConfiguration.BookContributorsJoinTableName);
 
         base.Configure(builder);
 
         builder.HasKey(e => new { e.BookId, e.ContributorId })
-            .HasName("pk_book_contributors_entity");
+            .HasName($"pk_{BookConfiguration.BookContributorsJoinTableName}_entity");
 
         builder.Property(e => e.ContributorId)
             .HasColumnName("contributor_id")

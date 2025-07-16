@@ -1,4 +1,4 @@
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

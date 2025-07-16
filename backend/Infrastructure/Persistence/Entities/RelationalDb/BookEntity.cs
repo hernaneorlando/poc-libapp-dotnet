@@ -5,7 +5,7 @@ using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
 using Domain.CatalogManagement.ValueObjects;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.RelationalDb;
 
@@ -41,7 +41,7 @@ public class BookEntity : RelationalDbBaseBaseEntity
             Category = entity.Category != null ? (CategoryDto)entity.Category : null,
         };
 
-        dto.ConvertModelBaseProperties(entity);
+        dto.ConvertEntityBaseProperties(entity);
         return dto;
     }
 

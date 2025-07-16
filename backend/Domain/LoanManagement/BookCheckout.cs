@@ -1,11 +1,11 @@
 using Domain.CatalogManagement;
+using Domain.Common;
 using Domain.LoanManagement.Enums;
-using Domain.SeedWork;
 using Domain.UserManagement;
 
 namespace Domain.LoanManagement;
 
-public class BookCheckout : RelationalDbBaseModel
+public class BookCheckout : RelationalDbBaseModel<BookCheckout>
 {
     public required User User {get;set;}
     public required Book Book { get; set; }

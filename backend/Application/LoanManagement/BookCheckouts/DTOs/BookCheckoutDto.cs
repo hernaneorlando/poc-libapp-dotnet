@@ -1,6 +1,5 @@
 using Application.CatalogManagement.Books.DTOs;
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Application.UserManagement.Users.DTOs;
 using Domain.LoanManagement;
 using Domain.LoanManagement.Enums;
@@ -25,7 +24,7 @@ public record BookCheckoutDto(UserDto User, BookDto Book, DateTime CheckoutDate,
             Notes = bookCheckout.Notes
         };
 
-        bookCheckoutDto.ConvertModelBaseProperties(bookCheckout);
+        bookCheckoutDto.ConvertBaseProperties(bookCheckout);
         return bookCheckoutDto;
     }
 }

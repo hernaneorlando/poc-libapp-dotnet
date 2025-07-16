@@ -26,7 +26,7 @@ public class CategoryController(IMediator mediator) : Controller
                 var error = errors.FirstOrDefault();
                 var resultError = new ResultError(
                     Title: "Category Creation Failed",
-                    Details: error?.Message,
+                    Details: error,
                     StatusCode: StatusCodes.Status400BadRequest
                 );
 

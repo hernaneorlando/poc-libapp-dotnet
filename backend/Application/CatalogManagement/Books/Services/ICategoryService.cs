@@ -1,16 +1,15 @@
 using Application.CatalogManagement.Books.DTOs;
 using Domain.CatalogManagement;
-using FluentResults;
+using Domain.Common;
 
 namespace Application.CatalogManagement.Books.Services;
 
 public interface ICategoryService
 {
-    Task<Result<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
-    Task<Result<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken);
-    Task<Result<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken);
+    Task<ValidationResult<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<ValidationResult<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken);
+    Task<ValidationResult<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken);
 
-    Task<Result<Category>> CreateCategoryAsync(Category category, CancellationToken cancellationToken);
-    Task<Result<Category>> UpdateCategoryAsync(Category category, CancellationToken cancellationToken);
-    Task<Result> DeleteCategoryAsync(Guid externalId, CancellationToken cancellationToken);
+    Task<ValidationResult<Category>> CreateCategoryAsync(Category category, CancellationToken cancellationToken);
+    Task<ValidationResult<Category>> UpdateCategoryAsync(Category category, CancellationToken cancellationToken);
 }

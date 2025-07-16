@@ -1,5 +1,5 @@
 using Domain.UserManagement.ValueObjects;
-using Domain.SeedWork;
+using Domain.Common;
 
 namespace Domain.UserManagement;
 

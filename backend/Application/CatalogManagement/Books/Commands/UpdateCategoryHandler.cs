@@ -10,26 +10,23 @@ public class UpdateCategoryHandler(ICategoryService categoryService) : IRequestH
 {
     public async Task<Result<CategoryDto>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
-        var (externalId, notification) = Category.ParseExternalId(request.Id);
-        if (notification.HasErrors)
-            return Result.Fail<CategoryDto>(notification.Errors);
+        var category = new Category();
+        var result = category.UpdateCategory(request.Id, request.Name, request.Description);
+        if (!result.IsSuccess)
+            return Result.Fail<CategoryDto>(result.Errors);
 
-        var persistedCategoryResult = await categoryService.GetCategoryByIdAsync(externalId, cancellationToken);
-        if (persistedCategoryResult.IsFailed)
+        var persistedCategoryResult = await categoryService.GetCategoryByIdAsync(category.ExternalId, cancellationToken);
+        if (!persistedCategoryResult.IsSuccess)
             return Result.Fail<CategoryDto>(persistedCategoryResult.Errors);
-
+            
         var persistedCategory = persistedCategoryResult.Value;
-        notification = persistedCategory.Update(request.Name, request.Description);
-        if (notification.HasErrors)
-            return Result.Fail<CategoryDto>(notification.Errors);
-
-        notification = persistedCategory.ValidateModel();
-        if (notification.HasErrors)
-            return Result.Fail<CategoryDto>(notification.Errors);
+        result = persistedCategory.UpdateCategory(category);
+        if (!result.IsSuccess)
+            return Result.Fail<CategoryDto>(result.Errors);
 
         var categoryResult = await categoryService.UpdateCategoryAsync(persistedCategory, cancellationToken);
         return categoryResult.IsSuccess
             ? Result.Ok((CategoryDto)categoryResult.Value)
-            : Result.Fail<CategoryDto>(categoryResult.Errors.FirstOrDefault()?.Message ?? "Failed to update category.");
+            : Result.Fail<CategoryDto>(categoryResult.Errors);
     }
 }

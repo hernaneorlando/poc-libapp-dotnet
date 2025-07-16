@@ -3,7 +3,7 @@ using Application.UserManagement.Users.DTOs;
 using Domain.UserManagement;
 using Domain.UserManagement.ValueObjects;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.DocumentDb;
 

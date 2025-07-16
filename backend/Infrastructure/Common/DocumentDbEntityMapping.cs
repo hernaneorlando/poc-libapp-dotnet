@@ -1,5 +1,5 @@
-using Domain.SeedWork;
-using Infrastructure.Persistence.SeedWork;
+using Domain.Common;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Common;
 

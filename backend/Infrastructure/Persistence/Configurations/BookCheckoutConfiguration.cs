@@ -1,4 +1,4 @@
-using Domain.SeedWork.Common.Util;
+using Domain.Common.Util;
 using Infrastructure.Common;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;

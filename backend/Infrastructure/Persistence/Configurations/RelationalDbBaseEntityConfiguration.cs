@@ -1,5 +1,5 @@
-using Domain.SeedWork.Common.Util;
-using Infrastructure.Persistence.SeedWork;
+using Domain.Common.Util;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

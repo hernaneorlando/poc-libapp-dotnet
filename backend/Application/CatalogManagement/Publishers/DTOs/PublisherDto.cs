@@ -1,6 +1,5 @@
 using Application.CatalogManagement.Books.DTOs;
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Domain.CatalogManagement;
 
 namespace Application.CatalogManagement.Publishers.DTOs;
@@ -20,7 +19,7 @@ public record PublisherDto(string Name) : BaseDto
             Books = [.. publisher.Books.Select(b => (BookDto)b)]
         };
 
-        publisherDto.ConvertModelBaseProperties(publisher);
+        publisherDto.ConvertBaseProperties(publisher);
         return publisherDto;
     }
 }

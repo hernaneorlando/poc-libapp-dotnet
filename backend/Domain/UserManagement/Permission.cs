@@ -1,4 +1,4 @@
-using Domain.SeedWork;
+using Domain.Common;
 
 namespace Domain.UserManagement;
 

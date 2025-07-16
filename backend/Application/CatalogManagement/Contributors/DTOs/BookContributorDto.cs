@@ -1,6 +1,5 @@
 using Application.CatalogManagement.Books.DTOs;
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
 
@@ -11,7 +10,7 @@ public record BookContributorDto(BookDto Book, ContributorDto Contributor, Contr
     public static implicit operator BookContributorDto(BookContributor bookContributor)
     {
         var bookContributorDto = new BookContributorDto((BookDto)bookContributor.Book, (ContributorDto)bookContributor.Contributor, bookContributor.Role);
-        bookContributorDto.ConvertModelAuditableProperties(bookContributor);
+        bookContributorDto.ConvertAuditableProperties(bookContributor);
         return bookContributorDto;
     }
 }

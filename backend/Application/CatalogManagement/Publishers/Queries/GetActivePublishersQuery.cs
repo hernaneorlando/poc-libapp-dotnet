@@ -1,5 +1,5 @@
 using Application.CatalogManagement.Publishers.DTOs;
-using Application.SeedWork.MediatR;
+using Application.Common.MediatR;
 
 namespace Application.CatalogManagement.Publishers.Queries;
 

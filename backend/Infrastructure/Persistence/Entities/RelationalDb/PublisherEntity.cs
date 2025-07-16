@@ -1,10 +1,9 @@
 using Application.CatalogManagement.Books.DTOs;
 using Application.CatalogManagement.Publishers.DTOs;
-using Application.Common;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.ValueObjects;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.RelationalDb;
 
@@ -32,7 +31,7 @@ public class PublisherEntity : RelationalDbBaseBaseEntity
             Books = [.. entity.Books.Select(b => (BookDto)b)],
         };
 
-        dto.ConvertModelBaseProperties(entity);
+        dto.ConvertBaseProperties<Publisher>(entity);
         return dto;
     }
 
@@ -43,7 +42,7 @@ public class PublisherEntity : RelationalDbBaseBaseEntity
             ExternalId = entity.ExternalId,
             Name = entity.Name,
             FoundationDate = entity.FoundationDate,
-            Contact = new Contact()
+            Contact = new PublisherContact()
             {
                 PhoneNumber = entity.PhoneNumber,
                 Email = entity.Email,

@@ -1,6 +1,6 @@
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.Enums;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.RelationalDb;
 

@@ -9,13 +9,23 @@ public class DeleteCategoryHandler(ICategoryService categoryService) : IRequestH
 {
     public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
     {
-        var (externalId, notification) = Category.ParseExternalId(request.Id);
-        if (notification.HasErrors)
-            return Result.Fail(notification.Errors);
+        var category = new Category();
+        var result = category.Deactivate(request.Id);
+        if (!result.IsSuccess)
+            return Result.Fail(result.Errors);
 
-        var result = await categoryService.DeleteCategoryAsync(externalId, cancellationToken);
-        return result.IsSuccess
-           ? Result.Ok()
-           : Result.Fail(result.Errors.FirstOrDefault()?.Message ?? "Failed to delete category.");
+        var persistedCategoryResult = await categoryService.GetCategoryByIdAsync(category.ExternalId, cancellationToken);
+        if (!persistedCategoryResult.IsSuccess)
+            return Result.Fail(persistedCategoryResult.Errors);
+
+        var persistedCategory = persistedCategoryResult.Value;
+        result = persistedCategory.Deactivate(category);
+        if (!result.IsSuccess)
+            return Result.Fail(result.Errors);
+
+        var categoryResult = await categoryService.UpdateCategoryAsync(persistedCategory, cancellationToken);
+        return categoryResult.IsSuccess
+            ? Result.Ok()
+            : Result.Fail(categoryResult.Errors);
     }
 }

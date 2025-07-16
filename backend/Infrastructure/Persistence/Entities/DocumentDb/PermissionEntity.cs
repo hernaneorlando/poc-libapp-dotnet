@@ -1,7 +1,7 @@
 using Application.UserManagement.Permissions.DTOs;
 using Domain.UserManagement;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.DocumentDb;
 

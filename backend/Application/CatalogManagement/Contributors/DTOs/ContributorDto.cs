@@ -1,5 +1,4 @@
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Domain.CatalogManagement;
 
 namespace Application.CatalogManagement.Contributors.DTOs;
@@ -17,7 +16,7 @@ public record ContributorDto(string FirstName, string LastName) : BaseDto
             Books = [.. contributor.Books.Select(b => (BookContributorDto)b)]
         };
 
-        contributorDto.ConvertModelBaseProperties(contributor);
+        contributorDto.ConvertBaseProperties(contributor);
         return contributorDto;
     }
 }

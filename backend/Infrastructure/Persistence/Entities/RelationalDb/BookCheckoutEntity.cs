@@ -2,7 +2,7 @@ using Domain.LoanManagement;
 using Domain.LoanManagement.Enums;
 using Domain.UserManagement;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.RelationalDb;
 

@@ -1,5 +1,5 @@
 using Application.CatalogManagement.Publishers.DTOs;
-using Application.SeedWork.FluentValidation;
+using Application.Common.FluentValidation;
 
 namespace Application.CatalogManagement.Publishers.Queries;
 

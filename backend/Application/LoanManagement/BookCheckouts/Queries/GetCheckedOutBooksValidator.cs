@@ -1,5 +1,5 @@
+using Application.Common.FluentValidation;
 using Application.LoanManagement.BookCheckouts.DTOs;
-using Application.SeedWork.FluentValidation;
 
 namespace Application.LoanManagement.BookCheckouts.Queries;
 

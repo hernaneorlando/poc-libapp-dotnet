@@ -12,6 +12,6 @@ public class GetActiveCategoriesHandler(ICategoryService categoryService) : IReq
         var categoryResults = await categoryService.GetActiveCategoriesAsync(request.PageNumber, request.PageSize, cancellationToken);
         return categoryResults.IsSuccess
             ? Result.Ok(categoryResults.Value)
-            : Result.Fail<IEnumerable<CategoryDto>>(categoryResults.Errors.FirstOrDefault()?.Message ?? "Failed to retrieve categories.");
+            : Result.Fail<IEnumerable<CategoryDto>>(categoryResults.Errors);
     }
 }

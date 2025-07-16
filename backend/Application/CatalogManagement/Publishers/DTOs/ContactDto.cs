@@ -8,7 +8,7 @@ public record ContactDto
     public string? Email { get; set; }
     public string? Website { get; set; }
 
-    public static implicit operator ContactDto(Contact contact) => new()
+    public static implicit operator ContactDto(PublisherContact contact) => new()
     {
         PhoneNumber = contact.PhoneNumber,
         Email = contact.Email,

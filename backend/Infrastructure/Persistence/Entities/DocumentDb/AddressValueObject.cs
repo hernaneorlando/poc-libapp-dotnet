@@ -1,4 +1,4 @@
-using Domain.SeedWork.Enums;
+using Domain.Common.Enums;
 using Domain.UserManagement.ValueObjects;
 
 namespace Infrastructure.Persistence.Entities.DocumentDb;

@@ -1,5 +1,5 @@
 using Domain.CatalogManagement.Enums;
-using Domain.SeedWork;
+using Domain.Common;
 
 namespace Domain.CatalogManagement;
 

@@ -1,5 +1,5 @@
+using Application.Common.FluentValidation;
 using Application.ReportManagement.AuditEntries.DTOs;
-using Application.SeedWork.FluentValidation;
 
 namespace Application.ReportManagement.AuditEntries.Queries;
 

@@ -1,4 +1,4 @@
-using Domain.SeedWork.Common.Util;
+using Domain.Common.Util;
 using FluentValidation;
 
 namespace Application.UserManagement.Permissions.Commands;

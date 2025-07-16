@@ -1,5 +1,4 @@
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Application.UserManagement.Permissions.DTOs;
 using Domain.UserManagement;
 
@@ -16,7 +15,7 @@ public record RoleDto(string Name, string Description) : BaseDto
             Permissions = [.. role.Permissions.Select(p => (PermissionDto)p)]
         };
 
-        roleDto.ConvertModelBaseProperties(role);
+        roleDto.ConvertBaseProperties(role);
         return roleDto;
     }
 }

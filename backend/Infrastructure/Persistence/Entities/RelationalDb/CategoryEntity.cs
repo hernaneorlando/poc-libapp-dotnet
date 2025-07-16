@@ -1,8 +1,7 @@
 using Application.CatalogManagement.Books.DTOs;
-using Application.Common;
 using Domain.CatalogManagement;
 using Infrastructure.Common;
-using Infrastructure.Persistence.SeedWork;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Persistence.Entities.RelationalDb;
 
@@ -20,7 +19,7 @@ public class CategoryEntity : RelationalDbBaseBaseEntity
             Books = [.. entity.Books.Select(b => (BookDto)b)],
         };
 
-        dto.ConvertModelBaseProperties(entity);
+        dto.ConvertEntityBaseProperties(entity);
         return dto;
     }
 
@@ -28,7 +27,7 @@ public class CategoryEntity : RelationalDbBaseBaseEntity
     {
         var model = new Category(entity.Name)
         {
-            Description = entity.Description,
+            Description = entity.Description ?? string.Empty,
             Books = [.. entity.Books.Select(b => (Book)b)],
         };
 

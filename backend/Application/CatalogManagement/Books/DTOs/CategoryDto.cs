@@ -1,5 +1,4 @@
-using Application.Common;
-using Application.SeedWork.BaseDTO;
+using Application.Common.BaseDTO;
 using Domain.CatalogManagement;
 
 namespace Application.CatalogManagement.Books.DTOs;
@@ -17,7 +16,7 @@ public record CategoryDto(string Name) : BaseDto
             Books = [.. category.Books.Select(b => (BookDto)b)]
         };
 
-        categoryDto.ConvertModelBaseProperties(category);
+        categoryDto.ConvertBaseProperties(category);
         return categoryDto;
     }
 }

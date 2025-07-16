@@ -1,11 +1,21 @@
-using Domain.SeedWork;
-using Infrastructure.Persistence.SeedWork;
+using Application.Common.BaseDTO;
+using Domain.Common;
+using Infrastructure.Persistence.Common;
 
 namespace Infrastructure.Common;
 
-public static class RelationalDbEntityMapping
+internal static class RelationalDbEntityMapping
 {
-    public static void ConvertModelBaseProperties(this RelationalDbBaseBaseEntity entity, RelationalDbBaseModel model)
+    internal static void ConvertEntityBaseProperties(this BaseDto dto, RelationalDbBaseBaseEntity entity)
+    {
+        dto.Id = entity.ExternalId;
+        dto.CreatedAt = entity.CreatedAt;
+        dto.UpdatedAt = entity.UpdatedAt;
+        dto.Active = entity.Active;
+    }
+
+    internal static void ConvertModelBaseProperties<TModel>(this RelationalDbBaseBaseEntity entity, RelationalDbBaseModel<TModel> model)
+        where TModel : RelationalDbBaseModel<TModel>
     {
         entity.Id = model.Id;
         entity.ExternalId = model.ExternalId;
@@ -14,7 +24,8 @@ public static class RelationalDbEntityMapping
         entity.Active = model.Active;
     }
 
-    public static void ConvertEntityBaseProperties(this RelationalDbBaseModel model, RelationalDbBaseBaseEntity entity)
+    internal static void ConvertEntityBaseProperties<TModel>(this TModel model, RelationalDbBaseBaseEntity entity)
+        where TModel : RelationalDbBaseModel<TModel>
     {
         model.Id = entity.Id;
         model.ExternalId = entity.ExternalId;

@@ -31,7 +31,7 @@ public class ContributorConfiguration : RelationalDbBaseEntityConfiguration<Cont
         builder.HasMany(e => e.Books)
             .WithOne(e => e.Contributor)
             .HasForeignKey(e => e.ContributorId)
-            .HasConstraintName("fk_book_contributors_contributors_contributor_id")
+            .HasConstraintName($"fk_{BookConfiguration.BookContributorsJoinTableName}_contributors_contributor_id")
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasIndex(e => new { e.FirstName, e.LastName}, "idx_contributors_firstname_lastname")

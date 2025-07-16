@@ -1,8 +1,8 @@
-using Domain.SeedWork;
+using Domain.Common;
 
 namespace Domain.CatalogManagement;
 
-public class Contributor : RelationalDbBaseModel
+public class Contributor : RelationalDbBaseModel<Contributor>
 {
     public required string FirstName { get; set; }
     public required string LastName { get; set; } 

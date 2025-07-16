@@ -1,0 +1,11 @@
+[*.cs]
+
+# IDE0021: Use block body for constructor
+csharp_style_expression_bodied_constructors = true
+[*.cs]
+
+# IDE0021: Use block body for constructor
+dotnet_diagnostic.IDE0021.severity = silent
+
+# Supress warning CS8618 (Non-nullable property must contain a non-null value when exiting constructor)
+dotnet_diagnostic.CS8618.severity = none
