@@ -21,7 +21,7 @@ public abstract class BaseApiTests(WebApplicationFactory<Program> factory)
                 services.AddDbContext<SqlDataContext>(options =>
                 {
                     options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString());
-                });
+                }, ServiceLifetime.Singleton);
             });
         });
 }

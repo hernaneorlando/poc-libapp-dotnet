@@ -17,10 +17,10 @@ public sealed class CategoryName(string value) : ValueObject
         var result = ValidationResult.Create<CategoryName>();
 
         if (string.IsNullOrWhiteSpace(Value))
-            result.AddError("Category name cannot be empty.");
+            result.AddError("Category name cannot be empty");
 
         if (Value?.Length > 50)
-            result.AddError("Category Name must not exceed 50 characters.");
+            result.AddError("Category Name must not exceed 50 characters");
 
         if (result.IsSuccess)
             result.AddValue(this);

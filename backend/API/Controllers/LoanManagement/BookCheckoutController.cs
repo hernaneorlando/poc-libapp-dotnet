@@ -25,14 +25,11 @@ public class BookCheckoutController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Checked Out Books Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Checked Out Books not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }

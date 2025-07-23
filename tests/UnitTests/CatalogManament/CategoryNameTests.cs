@@ -20,10 +20,10 @@ public class CategoryNameTests
     }
 
     [Theory]
-    [InlineData(null, "Category name cannot be empty.")]
-    [InlineData("", "Category name cannot be empty.")]
-    [InlineData("  ", "Category name cannot be empty.")]
-    [InlineData("A very long category name that exceeds the maximum length", "Category Name must not exceed 50 characters.")]
+    [InlineData(null, "Category name cannot be empty")]
+    [InlineData("", "Category name cannot be empty")]
+    [InlineData("  ", "Category name cannot be empty")]
+    [InlineData("A very long category name that exceeds the maximum length", "Category Name must not exceed 50 characters")]
     public void Create_InvalidName_ReturnsFailure(string? emptyName, string expectedError)
     {
         // Act

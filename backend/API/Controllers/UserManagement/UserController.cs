@@ -23,14 +23,11 @@ public class UserController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
+                return NotFound(new ResultError(
                     Title: "User Not Found",
-                    Details: error?.Message,
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }
@@ -45,14 +42,11 @@ public class UserController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Users Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Users not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }

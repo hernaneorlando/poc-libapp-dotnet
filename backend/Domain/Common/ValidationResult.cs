@@ -16,6 +16,15 @@ public class ValidationResult
         return new ValidationResult<TValue>();
     }
 
+    public static ValidationResult<TValue> Create<TValue>(IEnumerable<string> errors)
+    {
+        var result = new ValidationResult<TValue>();
+        if (errors.Any())
+            result.AddErrors(errors);
+
+        return result;
+    }
+
     public static ValidationResult<TValue> Ok<TValue>(TValue value)
     {
         var result = new ValidationResult<TValue>();

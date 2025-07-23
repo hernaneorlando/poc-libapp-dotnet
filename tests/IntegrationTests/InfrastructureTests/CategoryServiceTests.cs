@@ -1,16 +1,9 @@
-﻿using System.Net.Http.Json;
-using Application.CatalogManagement.Books.DTOs;
-using Application.CatalogManagement.Books.Services;
+﻿using Application.CatalogManagement.Books.Services;
 using Domain.CatalogManagement;
 using Domain.CatalogManagement.ValueObjects;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Services.CatalogManagement;
-using LibraryApp.API;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace IntegrationTests.InfrastructureTests;
 
@@ -39,11 +32,12 @@ public class CategoryServiceTests
         };
 
         // Act
-        var result = await _service.CreateCategoryAsync(category, CancellationToken.None);
+        var newCategory = await _service.CreateCategoryAsync(category, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        var savedCategory = await _sqlContext.Categories.FindAsync(result.Value.Id);
+        Assert.NotNull(newCategory);
+        Assert.NotNull(newCategory.Value);
+        var savedCategory = await _sqlContext.Categories.FindAsync(newCategory.Value.Id);
         Assert.NotNull(savedCategory);
         Assert.True(savedCategory.Active);
         Assert.True(savedCategory.ExternalId != default);

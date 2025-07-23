@@ -1,0 +1,20 @@
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <CodeCoverage>
+            <ModulePaths>
+              <Exclude>
+                <ModulePath>.*UnitTests.dll</ModulePath>
+                <ModulePath>.*IntegrationTests.dll</ModulePath>
+                <ModulePath>.*FluentValidation.dll</ModulePath>
+                <ModulePath>.*FluentValidation.DependencyInjectionExtensions.dll</ModulePath>
+              </Exclude>
+            </ModulePaths>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

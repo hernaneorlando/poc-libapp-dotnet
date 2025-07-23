@@ -1,10 +1,7 @@
 using Application.CatalogManagement.Books.DTOs;
 using Application.CatalogManagement.Books.Services;
 using Domain.CatalogManagement;
-using Domain.CatalogManagement.Specifications;
 using Domain.Common;
-using Domain.Common.Interfaces;
-using Infrastructure.Common;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Entities.RelationalDb;
 using Microsoft.EntityFrameworkCore;
@@ -34,15 +31,13 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
     private async Task<CategoryEntity?> GetByExternalId(Guid guid, CancellationToken cancellationToken)
     {
         return await sqlDataContext.Categories
-            .Where(c => c.Active && c.ExternalId.ToString() == guid.ToString())
             .AsNoTracking()
+            .Where(c => c.Active && c.ExternalId == guid)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<ValidationResult<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
-        var cats = await FindAsync(new ActiveCategoriesSpec(pageNumber, pageSize));
-
         var categories = await sqlDataContext.Categories
             .Where(c => c.Active)
             .OrderBy(c => c.Name)
@@ -50,17 +45,9 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        if (categories is null || categories.Count == 0)
-        {
-            return ValidationResult.Fail<IEnumerable<CategoryDto>>("No active categories found.");
-        }
-
-        return ValidationResult.Ok(categories.Select(category => (CategoryDto)category));
-    }
-
-    public async Task<IEnumerable<Category>> FindAsync(ISpecification<Category> spec)
-    {
-        return await SpecificationEvaluator.GetQuery(sqlDataContext.Set<Category>(), spec).ToListAsync();
+        return categories.Count != 0
+            ? ValidationResult.Ok(categories.Select(category => (CategoryDto)category))
+            : ValidationResult.Fail<IEnumerable<CategoryDto>>("No active categories found.");
     }
 
     #endregion
@@ -70,8 +57,10 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
     public async Task<ValidationResult<Category>> CreateCategoryAsync(Category category, CancellationToken cancellationToken)
     {
         var entry = sqlDataContext.Categories.Add(category);
-        await sqlDataContext.SaveChangesAsync(cancellationToken);
-        return ValidationResult.Ok((Category)entry.Entity);
+        var entriesCount = await sqlDataContext.SaveChangesAsync(cancellationToken);
+        return entriesCount == 1
+            ? ValidationResult.Ok((Category)entry.Entity)
+            : ValidationResult.Fail<Category>("Failed to create Category.");
     }
 
     public async Task<ValidationResult<Category>> UpdateCategoryAsync(Category category, CancellationToken cancellationToken)
@@ -79,8 +68,10 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
         var categoryEntity = (CategoryEntity)category;
         sqlDataContext.Entry(categoryEntity).State = EntityState.Modified;
         var entry = sqlDataContext.Categories.Update(categoryEntity);
-        await sqlDataContext.SaveChangesAsync(cancellationToken);
-        return ValidationResult.Ok((Category)entry.Entity);
+        var entriesCount = await sqlDataContext.SaveChangesAsync(cancellationToken);
+        return entriesCount == 1
+            ? ValidationResult.Ok((Category)entry.Entity)
+            : ValidationResult.Fail<Category>("Failed to update Category.");
     }
 
     #endregion

@@ -45,14 +45,11 @@ public class PermissionController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Permission Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Permission not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }
@@ -67,14 +64,11 @@ public class PermissionController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Permissions Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Permissions not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }

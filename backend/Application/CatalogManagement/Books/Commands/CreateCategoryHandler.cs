@@ -14,9 +14,9 @@ public class CreateCategoryHandler(ICategoryService categoryCommandService) : IR
         if (!result.IsSuccess)
             return ValidationResult.Fail<CategoryDto>(result.Errors);
 
-        var categoryResult = await categoryCommandService.CreateCategoryAsync(result.Value, cancellationToken);
-        return categoryResult.IsSuccess
-            ? ValidationResult.Ok((CategoryDto)categoryResult.Value)
-            : ValidationResult.Fail<CategoryDto>(categoryResult.Errors);
+        var categoryAddedResult = await categoryCommandService.CreateCategoryAsync(result.Value, cancellationToken);
+        return categoryAddedResult.IsSuccess
+            ? ValidationResult.Ok((CategoryDto)categoryAddedResult.Value)
+            : ValidationResult.Fail<CategoryDto>(categoryAddedResult.Errors);
     }
 }

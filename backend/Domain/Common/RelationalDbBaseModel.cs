@@ -14,18 +14,15 @@ public abstract class RelationalDbBaseModel<TModel> : RelationalDbAuditableModel
         result ??= ValidationResult.Create<TModel>();
 
         if (string.IsNullOrWhiteSpace(externalId))
-            result.AddError("External Id must not be empty.");
+            result.AddError("External Id must not be empty");
         else if (!ValidatorUtil.IsValidGuid(externalId))
-            result.AddError("External Id must be a valid GUID.");
+            result.AddError("External Id must be a valid GUID");
 
-        if (result.IsSuccess)
-        {
-            var guidResult = ValidationResult.Create<Guid>();
-            guidResult.AddValue(Guid.Parse(externalId));
-            return guidResult;
-        }
-
-        return ValidationResult.Fail<Guid>(result.Errors);
+        var guidResult = ValidationResult.Create<Guid>(result.Errors);
+        if (Guid.TryParse(externalId, out var guid))
+            guidResult.AddValue(guid);
+        
+        return guidResult;
     }
 
     public ValidationResult<TModel> Deactivate(string externalId, ValidationResult<TModel>? result = null)
@@ -48,19 +45,19 @@ public abstract class RelationalDbBaseModel<TModel> : RelationalDbAuditableModel
         var result = ValidationResult.Create<TModel>();
         if (model is null)
         {
-            result.AddError($"{typeof(TModel).Name} cannot be null.");
+            result.AddError($"{typeof(TModel).Name} cannot be null");
             return result;
         }
 
         if (model.ExternalId != ExternalId)
         {
-            result.AddError($"{typeof(TModel).Name} must have the same External Id.");
+            result.AddError($"{typeof(TModel).Name} must have the same External Id");
             return result;
         }
 
         if (!Active)
         {
-            result.AddError($"{typeof(TModel).Name} is alredy deactivated.");
+            result.AddError($"{typeof(TModel).Name} is alredy archived");
             return result;
         }
 

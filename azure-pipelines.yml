@@ -33,11 +33,11 @@ steps:
   inputs:
     command: 'test'
     projects: '**/tests/UnitTests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"'
+    arguments: '--configuration $(buildConfiguration) --no-build --collect:"Code Coverage" --settings "./coverage.runsettings"'
 
 - task: DotNetCoreCLI@2
   displayName: 'Run Integration Tests'
   inputs:
     command: 'test'
     projects: '**/tests/IntegrationTests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"'
+    arguments: '--configuration $(buildConfiguration) --no-build --collect:"Code Coverage" --settings "./coverage.runsettings"'

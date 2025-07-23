@@ -28,7 +28,7 @@ public class Category : RelationalDbBaseModel<Category>
         var result = ValidationResult.Create<Category>();
         if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(description))
         {
-            result.AddError("At least one field must be set to be created.");
+            result.AddError("At least one field must be set to be created");
             return result;
         }
 
@@ -47,7 +47,7 @@ public class Category : RelationalDbBaseModel<Category>
 
         if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(description))
         {
-            result.AddError("At least one field must be set to be updated.");
+            result.AddError("At least one field must be set to be updated");
             return result;
         }
 
@@ -58,11 +58,9 @@ public class Category : RelationalDbBaseModel<Category>
         Description = description;
         UpdatedAt = DateTime.UtcNow;
 
-        if (!result.IsSuccess)
-            return result;
-
+        ValidateModel(result);
         result.AddValue(this);
-        return ValidateModel(result);
+        return result;
     }
 
     public ValidationResult<Category> UpdateCategory(Category category)
@@ -70,7 +68,7 @@ public class Category : RelationalDbBaseModel<Category>
         var result = ValidationResult.Create<Category>();
         if (category is null)
         {
-            result.AddError("Category cannot be null.");
+            result.AddError("Category cannot be null");
             return result;
         }
 
@@ -87,11 +85,8 @@ public class Category : RelationalDbBaseModel<Category>
     {
         result ??= ValidationResult.Create<Category>();
 
-        if (ExternalId == Guid.Empty)
-            result.AddError("External Id must not be empty.");
-
         if (Description is not null && Description.Length > 200)
-            result.AddError("Category Description must not exceed 200 characters.");
+            result.AddError("Category Description must not exceed 200 characters");
 
         return result;
     }

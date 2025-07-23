@@ -66,7 +66,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("At least one field must be set to be created.", result.Errors);
+        Assert.Contains("At least one field must be set to be created", result.Errors);
     }
 
     [Theory]
@@ -80,7 +80,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category name cannot be empty.", result.Errors);
+        Assert.Contains("Category name cannot be empty", result.Errors);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category Name must not exceed 50 characters.", result.Errors);
+        Assert.Contains("Category Name must not exceed 50 characters", result.Errors);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category Description must not exceed 200 characters.", result.Errors);
+        Assert.Contains("Category Description must not exceed 200 characters", result.Errors);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("At least one field must be set to be updated.", result.Errors);
+        Assert.Contains("At least one field must be set to be updated", result.Errors);
     }
 
     [Fact]
@@ -219,9 +219,9 @@ public class CategoryTests
         // Assert
         Assert.False(result1.IsSuccess);
         Assert.False(result2.IsSuccess);
-        Assert.Contains("External Id must not be empty.", result1.Errors);
-        Assert.Contains("Category Name must not exceed 50 characters.", result1.Errors);
-        Assert.Contains("External Id must be a valid GUID.", result2.Errors);
+        Assert.Contains("External Id must not be empty", result1.Errors);
+        Assert.Contains("Category Name must not exceed 50 characters", result1.Errors);
+        Assert.Contains("External Id must be a valid GUID", result2.Errors);
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category cannot be null.", result.Errors);
+        Assert.Contains("Category cannot be null", result.Errors);
     }
 
     [Fact]
@@ -337,8 +337,8 @@ public class CategoryTests
 
         // Assert
         Assert.False(result1.IsSuccess);
-        Assert.Contains("External Id must not be empty.", result1.Errors);
-        Assert.Contains("External Id must be a valid GUID.", result2.Errors);
+        Assert.Contains("External Id must not be empty", result1.Errors);
+        Assert.Contains("External Id must be a valid GUID", result2.Errors);
     }
 
     [Fact]
@@ -356,7 +356,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category cannot be null.", result.Errors);
+        Assert.Contains("Category cannot be null", result.Errors);
     }
 
     [Fact]
@@ -380,7 +380,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category must have the same External Id.", result.Errors);
+        Assert.Contains("Category must have the same External Id", result.Errors);
     }
 
     [Fact]
@@ -406,7 +406,7 @@ public class CategoryTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Category is alredy deactivated.", result.Errors);
+        Assert.Contains("Category is alredy archived", result.Errors);
     }
 
     [Fact]

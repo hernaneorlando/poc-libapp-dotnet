@@ -22,14 +22,11 @@ public class RoleController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Roles Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Roles not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }

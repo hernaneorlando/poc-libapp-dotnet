@@ -23,14 +23,11 @@ public class CategoryController(IMediator mediator) : Controller
             category => CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category),
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Category Creation Failed",
-                    Details: error,
+                return BadRequest(new ResultError(
+                    Title: "Category creation failed",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status400BadRequest
-                );
-
-                return BadRequest(resultError);
+                ));
             }
         );
     }
@@ -46,14 +43,11 @@ public class CategoryController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Category Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Category not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }
@@ -69,14 +63,11 @@ public class CategoryController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Categories Not Found",
-                    Details: error?.Message,
+                return NotFound(new ResultError(
+                    Title: "Categories not found",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status404NotFound
-                );
-
-                return NotFound(resultError);
+                ));
             }
         );
     }
@@ -93,14 +84,11 @@ public class CategoryController(IMediator mediator) : Controller
             Ok,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Category Update Failed",
-                    Details: error?.Message,
+                return BadRequest(new ResultError(
+                    Title: "Category update failed",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status400BadRequest
-                );
-
-                return BadRequest(resultError);
+                ));
             }
         );
     }
@@ -115,14 +103,11 @@ public class CategoryController(IMediator mediator) : Controller
             NoContent,
             errors =>
             {
-                var error = errors.FirstOrDefault();
-                var resultError = new ResultError(
-                    Title: "Category Deletion Failed",
-                    Details: error?.Message,
+                return BadRequest(new ResultError(
+                    Title: "Category deletion failed",
+                    Details: string.Join($",{Environment.NewLine}", errors),
                     StatusCode: StatusCodes.Status400BadRequest
-                );
-
-                return BadRequest(resultError);
+                ));
             }
         );
     }
