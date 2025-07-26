@@ -5,7 +5,7 @@ using Domain.UserManagement;
 
 namespace Domain.LoanManagement;
 
-public class BookCheckout : RelationalDbBaseModel<BookCheckout>
+public class BookCheckout : RelationalDbModel<BookCheckout>
 {
     public required User User {get;set;}
     public required Book Book { get; set; }

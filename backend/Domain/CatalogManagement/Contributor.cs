@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.CatalogManagement;
 
-public class Contributor : RelationalDbBaseModel<Contributor>
+public class Contributor : RelationalDbModel<Contributor>
 {
     public required string FirstName { get; set; }
     public required string LastName { get; set; } 

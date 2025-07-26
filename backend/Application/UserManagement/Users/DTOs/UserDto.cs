@@ -11,7 +11,7 @@ public record UserDto(string Username, string FirstName, string LastName, string
 
     public static implicit operator UserDto(User user)
     {
-        var userDto = new UserDto(user.Username, user.FirstName, user.LastName, user.Contact.Email, (RoleDto)user.Role)
+        var userDto = new UserDto(user.Username, user.FirstName, user.LastName, user.Contact.Email, (RoleDto)user.Roles)
         {
             PasswordHash = user.PasswordHash,
             DocumentIdentification = user.DocumentIdentification

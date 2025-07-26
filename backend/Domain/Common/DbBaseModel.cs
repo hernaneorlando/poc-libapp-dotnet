@@ -1,12 +1,15 @@
+using System;
+using Domain.Common.Interfaces;
 using Domain.Common.Util;
 
 namespace Domain.Common;
 
-public abstract class RelationalDbBaseModel<TModel> : RelationalDbAuditableModel
-    where TModel : RelationalDbBaseModel<TModel>
+public abstract class DbBaseModel<TModel> : IAuditableModel
+    where TModel : DbBaseModel<TModel>
 {
-    public long Id { get; set; }
     public Guid ExternalId { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
     public bool Active { get; set; } = true;
 
     public static ValidationResult<Guid> ParseExternalId(string externalId, ValidationResult<TModel>? result = null)
@@ -21,7 +24,7 @@ public abstract class RelationalDbBaseModel<TModel> : RelationalDbAuditableModel
         var guidResult = ValidationResult.Create<Guid>(result.Errors);
         if (Guid.TryParse(externalId, out var guid))
             guidResult.AddValue(guid);
-        
+
         return guidResult;
     }
 
@@ -33,13 +36,13 @@ public abstract class RelationalDbBaseModel<TModel> : RelationalDbAuditableModel
         Active = false;
         UpdatedAt = DateTime.UtcNow;
 
-        if (!result.IsSuccess)
+        if (result.IsFailure)
             return result;
 
         result.AddValue((TModel)this);
         return result;
     }
-
+    
     public ValidationResult<TModel> Deactivate(TModel model)
     {
         var result = ValidationResult.Create<TModel>();

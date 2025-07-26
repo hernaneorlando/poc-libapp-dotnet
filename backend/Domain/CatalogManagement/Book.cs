@@ -5,7 +5,7 @@ using Domain.LoanManagement;
 
 namespace Domain.CatalogManagement;
 
-public class Book : RelationalDbBaseModel<Book>
+public class Book : RelationalDbModel<Book>
 {
     public required string Title { get; set; }
     public Isbn? ISBN { get; set; }

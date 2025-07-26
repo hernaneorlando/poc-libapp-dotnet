@@ -1,7 +1,7 @@
 using Application.UserManagement.Permissions.DTOs;
 using Application.UserManagement.Permissions.Services;
+using Domain.Common;
 using Domain.UserManagement;
-using FluentResults;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Entities.DocumentDb;
 using MongoDB.Driver;
@@ -12,41 +12,48 @@ public class PermissionService(NoSqlDataContext noSqlDataContext) : IPermissionS
 {
     #region Query Methods
 
-    public async Task<Result<PermissionDto>> GetPermissionByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<ValidationResult<PermissionDto>> GetPermissionDtoByIdAsync(Guid externalId, CancellationToken cancellationToken)
     {
-        var permission = await noSqlDataContext.Permissions
-            .Find(x => x.ExternalId.ToString() == id.ToString())
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (permission is null)
-        {
-            return Result.Fail($"Permission with ID {id} not found.");
-        }
-
-        return Result.Ok((PermissionDto)permission);
+        var permissionEntity = await GetByExternalId(externalId, cancellationToken);
+        return permissionEntity is not null
+            ? ValidationResult.Ok((PermissionDto)permissionEntity)
+            : ValidationResult.Fail<PermissionDto>($"Permission with ID {externalId} not found.");
     }
 
-    public async Task<Result<IEnumerable<PermissionDto>>> GetActivePermissionsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Permission>> GetPermissionByIdAsync(Guid externalId, CancellationToken cancellationToken)
+    {
+        var permissionEntity = await GetByExternalId(externalId, cancellationToken);
+        return permissionEntity is not null
+            ? ValidationResult.Ok((Permission)permissionEntity)
+            : ValidationResult.Fail<Permission>($"Permission with ID {externalId} not found.");
+    }
+
+    private async Task<PermissionEntity?> GetByExternalId(Guid externalId, CancellationToken cancellationToken)
+    {
+        return await noSqlDataContext.Permissions
+            .Find(x => x.Active && x.ExternalId == externalId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<ValidationResult<IEnumerable<PermissionDto>>> GetActivePermissionsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         var permissions = await noSqlDataContext.Permissions
             .Find(x => x.Active)
+            .SortBy(x => x.Code)
             .Skip((pageNumber - 1) * pageSize)
             .Limit(pageSize)
             .ToListAsync(cancellationToken);
 
-        if (permissions is null || permissions.Count == 0)
-        {
-            return Result.Fail("No active permissions found.");
-        }
-
-        return Result.Ok(permissions.Select(permission => (PermissionDto)permission));
+        return permissions.Count != 0
+            ? ValidationResult.Ok(permissions.Select(permission => (PermissionDto)permission))
+            : ValidationResult.Fail<IEnumerable<PermissionDto>>("No active permissions found.");
     }
 
     #endregion
 
     #region Command Methods
 
-    public async Task<Result<Permission>> CreatePermissionAsync(Permission permission, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Permission>> CreatePermissionAsync(Permission permission, CancellationToken cancellationToken)
     {
         var permissionEntity = new PermissionEntity
         {
@@ -57,13 +64,13 @@ public class PermissionService(NoSqlDataContext noSqlDataContext) : IPermissionS
         };
 
         await noSqlDataContext.Permissions.InsertOneAsync(permissionEntity, null, cancellationToken);
-        return Result.Ok((Permission)permissionEntity);
+        return ValidationResult.Ok((Permission)permissionEntity);
     }
 
-    public async Task<Result<Permission>> UpdatePermissionAsync(Permission permission, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Permission>> UpdatePermissionAsync(Permission permission, CancellationToken cancellationToken)
     {
         var filter = Builders<PermissionEntity>.Filter
-            .Where(p => p.Active && p.ExternalId.ToString() == permission.ExternalId.ToString());
+            .Where(p => p.Active && p.ExternalId == permission.ExternalId);
         var update = Builders<PermissionEntity>.Update
             .Set(p => p.Description, permission.Description)
             .Set(p => p.UpdatedAt, DateTime.UtcNow);
@@ -72,31 +79,13 @@ public class PermissionService(NoSqlDataContext noSqlDataContext) : IPermissionS
         var result = await noSqlDataContext.Permissions.UpdateOneAsync(filter, update, options, cancellationToken);
         if (result.ModifiedCount == 0)
         {
-            return Result.Fail("Permission not found or no changes made.");
+            return ValidationResult.Fail<Permission>("Permission not found or no changes made.");
         }
 
         var updatedPermission = await noSqlDataContext.Permissions
-            .Find(p => p.ExternalId.ToString() == permission.ExternalId.ToString())
+            .Find(p => p.ExternalId == permission.ExternalId)
             .FirstOrDefaultAsync(cancellationToken);
-        return Result.Ok((Permission)updatedPermission);
-    }
-
-    public async Task<Result> DeletePermissionAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var filter = Builders<PermissionEntity>.Filter
-            .Where(p => p.Active && p.ExternalId.ToString() == id.ToString());
-        var update = Builders<PermissionEntity>.Update
-            .Set(p => p.Active, false)
-            .Set(p => p.UpdatedAt, DateTime.UtcNow);
-        var options = new UpdateOptions { IsUpsert = false, };
-
-        var result = await noSqlDataContext.Permissions.UpdateOneAsync(filter, update, options, cancellationToken);
-        if (result.ModifiedCount == 0)
-        {
-            return Result.Fail("Permission not found or no changes made.");
-        }
-
-        return Result.Ok();
+        return ValidationResult.Ok((Permission)updatedPermission);
     }
 
     #endregion

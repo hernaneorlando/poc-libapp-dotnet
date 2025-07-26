@@ -1,6 +1,6 @@
 using Domain.CatalogManagement.ValueObjects;
 
-namespace UnitTests.CatalogManament;
+namespace UnitTests.CatalogManagement;
 
 public class CategoryNameTests
 {

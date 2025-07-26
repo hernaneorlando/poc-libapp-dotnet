@@ -9,7 +9,7 @@ public class DeleteCategoryHandler(ICategoryService categoryService) : IRequestH
 {
     public async Task<ValidationResult> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
     {
-        var category = new Category();
+        var category = Category.Create();
         var result = category.Deactivate(request.Id);
         if (!result.IsSuccess)
             return result;

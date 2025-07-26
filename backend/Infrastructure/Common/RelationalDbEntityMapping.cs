@@ -14,8 +14,8 @@ internal static class RelationalDbEntityMapping
         dto.Active = entity.Active;
     }
 
-    internal static void ConvertModelBaseProperties<TModel>(this RelationalDbBaseBaseEntity entity, RelationalDbBaseModel<TModel> model)
-        where TModel : RelationalDbBaseModel<TModel>
+    internal static void ConvertModelBaseProperties<TModel>(this RelationalDbBaseBaseEntity entity, RelationalDbModel<TModel> model)
+        where TModel : RelationalDbModel<TModel>
     {
         entity.Id = model.Id;
         entity.ExternalId = model.ExternalId;
@@ -25,7 +25,7 @@ internal static class RelationalDbEntityMapping
     }
 
     internal static void ConvertEntityBaseProperties<TModel>(this TModel model, RelationalDbBaseBaseEntity entity)
-        where TModel : RelationalDbBaseModel<TModel>
+        where TModel : RelationalDbModel<TModel>
     {
         model.Id = entity.Id;
         model.ExternalId = entity.ExternalId;

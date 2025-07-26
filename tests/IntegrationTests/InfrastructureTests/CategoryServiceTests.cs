@@ -1,6 +1,5 @@
 ﻿using Application.CatalogManagement.Books.Services;
 using Domain.CatalogManagement;
-using Domain.CatalogManagement.ValueObjects;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Services.CatalogManagement;
 using Microsoft.EntityFrameworkCore;
@@ -26,10 +25,7 @@ public class CategoryServiceTests
     public async Task AddAsync_ValidCategory_SavesToDatabase()
     {
         // Arrange
-        var category = new Category(new CategoryName("Fantasy"))
-        {
-            Description = "Some fantasy book."
-        };
+        var category = Category.Create("Fantasy", "Some fantasy book.").Value;
 
         // Act
         var newCategory = await _service.CreateCategoryAsync(category, CancellationToken.None);

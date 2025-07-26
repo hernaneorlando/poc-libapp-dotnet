@@ -10,18 +10,17 @@ public class UpdateCategoryHandler(ICategoryService categoryService) : IRequestH
 {
     public async Task<ValidationResult<CategoryDto>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
-        var category = new Category();
-        var result = category.UpdateCategory(request.Id, request.Name, request.Description);
-        if (!result.IsSuccess)
-            return ValidationResult.Fail<CategoryDto>(result.Errors);
+        var categoryIdResult = Category.ParseExternalId(request.Id);
+        if (categoryIdResult.IsFailure)
+            return ValidationResult.Fail<CategoryDto>(categoryIdResult.Errors);
 
-        var persistedCategoryResult = await categoryService.GetCategoryByIdAsync(category.ExternalId, cancellationToken);
-        if (!persistedCategoryResult.IsSuccess)
+        var persistedCategoryResult = await categoryService.GetCategoryByIdAsync(categoryIdResult.Value, cancellationToken);
+        if (persistedCategoryResult.IsFailure)
             return ValidationResult.Fail<CategoryDto>(persistedCategoryResult.Errors);
             
         var persistedCategory = persistedCategoryResult.Value;
-        result = persistedCategory.UpdateCategory(category);
-        if (!result.IsSuccess)
+        var result = persistedCategory.Update(categoryIdResult.Value, request.Name, request.Description);
+        if (result.IsFailure)
             return ValidationResult.Fail<CategoryDto>(result.Errors);
 
         var categoryUpdatedResult = await categoryService.UpdateCategoryAsync(result.Value, cancellationToken);

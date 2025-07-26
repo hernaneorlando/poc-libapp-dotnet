@@ -59,7 +59,7 @@ public class UserEntity : DocumentDbEntity
             LastName = user.LastName,
             DocumentIdentification = user.DocumentIdentification,
             Contact = (ContactValueObject)user.Contact,
-            Role = (RoleEntity)user.Role,
+            Role = (RoleEntity)user.Roles,
         };
 
         entity.ConvertModelBaseProperties(user);

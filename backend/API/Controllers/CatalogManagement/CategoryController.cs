@@ -35,7 +35,6 @@ public class CategoryController(IMediator mediator) : Controller
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultError), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ResultError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCategoryById(string id)
     {
         var categoryResult = await mediator.Send(new GetCategoryByIdQuery { Id = id });
@@ -55,7 +54,6 @@ public class CategoryController(IMediator mediator) : Controller
     [HttpGet]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultError), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ResultError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCategories([FromQuery] GetActiveCategoriesQuery query)
     {
         var categoryResults = await mediator.Send(query);
@@ -74,7 +72,6 @@ public class CategoryController(IMediator mediator) : Controller
 
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResultError), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ResultError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateCategory(string id, [FromBody] UpdateCategoryCommand command)
     {

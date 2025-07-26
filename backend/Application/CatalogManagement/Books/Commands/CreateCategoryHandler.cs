@@ -10,7 +10,7 @@ public class CreateCategoryHandler(ICategoryService categoryCommandService) : IR
 {
     public async Task<ValidationResult<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
-        var result = Category.CreateCategory(request.Name, request.Description ?? string.Empty);
+        var result = Category.Create(request.Name, request.Description ?? string.Empty);
         if (!result.IsSuccess)
             return ValidationResult.Fail<CategoryDto>(result.Errors);
 

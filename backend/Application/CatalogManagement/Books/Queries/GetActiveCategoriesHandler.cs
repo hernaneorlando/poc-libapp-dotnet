@@ -9,9 +9,6 @@ public class GetActiveCategoriesHandler(ICategoryService categoryService) : IReq
 {
     public async Task<ValidationResult<IEnumerable<CategoryDto>>> Handle(GetActiveCategoriesQuery request, CancellationToken cancellationToken)
     {
-        var categoryResults = await categoryService.GetActiveCategoriesAsync(request.PageNumber, request.PageSize, cancellationToken);
-        return categoryResults.IsSuccess
-            ? ValidationResult.Ok(categoryResults.Value)
-            : ValidationResult.Fail<IEnumerable<CategoryDto>>(categoryResults.Errors);
+        return await categoryService.GetActiveCategoriesAsync(request.PageNumber, request.PageSize, cancellationToken);
     }
 }

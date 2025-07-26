@@ -11,7 +11,7 @@ public class GetCategoryByIdHandler(ICategoryService categoryService) : IRequest
     public async Task<ValidationResult<CategoryDto>> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
     {
         var externalIdResult = Category.ParseExternalId(request.Id);
-        if (!externalIdResult.IsSuccess)
+        if (externalIdResult.IsFailure)
             return ValidationResult.Fail<CategoryDto>(externalIdResult.Errors);
 
         var categoryResult = await categoryService.GetCategoryDtoByIdAsync(externalIdResult.Value, cancellationToken);

@@ -5,7 +5,8 @@ namespace Infrastructure.Common;
 
 public static class DocumentDbEntityMapping
 {
-    public static void ConvertModelBaseProperties(this DocumentDbEntity entity, DocumentDbModel model)
+    public static void ConvertModelBaseProperties<TModel>(this DocumentDbEntity entity, DocumentDbModel<TModel> model)
+        where TModel : DbBaseModel<TModel>
     {
         entity.Id = model.Id;
         entity.ExternalId = model.ExternalId;
@@ -14,7 +15,8 @@ public static class DocumentDbEntityMapping
         entity.Active = model.Active;
     }
 
-    public static void ConvertEntityBaseProperties(this DocumentDbModel model, DocumentDbEntity entity)
+    public static void ConvertEntityBaseProperties<TModel>(this DocumentDbModel<TModel> model, DocumentDbEntity entity)
+        where TModel : DbBaseModel<TModel>
     {
         model.Id = entity.Id;
         model.ExternalId = entity.ExternalId;

@@ -1,6 +1,7 @@
 using Application.UserManagement.Permissions.DTOs;
 using Application.UserManagement.Permissions.Services;
 using Domain.Common;
+using Domain.UserManagement;
 using MediatR;
 
 namespace Application.UserManagement.Permissions.Queries;
@@ -9,9 +10,10 @@ public class GetPermissionByIdHandler(IPermissionService permissionService) : IR
 {
     public async Task<ValidationResult<PermissionDto>> Handle(GetPermissionByIdQuery request, CancellationToken cancellationToken)
     {
-        var permissionResult = await permissionService.GetPermissionByIdAsync(Guid.Parse(request.Id), cancellationToken);
-        return permissionResult.IsSuccess
-            ? ValidationResult.Ok(permissionResult.Value)
-            : ValidationResult.Fail<PermissionDto>(permissionResult.Errors.FirstOrDefault()?.Message ?? $"Permission with ID {request.Id} not found.");
+        var externalIdResult = Permission.ParseExternalId(request.Id);
+        if (externalIdResult.IsFailure)
+            return ValidationResult.Fail<PermissionDto>(externalIdResult.Errors);
+
+        return await permissionService.GetPermissionDtoByIdAsync(Guid.Parse(request.Id), cancellationToken);
     }
 }

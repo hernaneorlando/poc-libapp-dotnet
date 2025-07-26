@@ -12,27 +12,27 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
 {
     #region Query Methods
 
-    public async Task<ValidationResult<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken)
+    public async Task<ValidationResult<CategoryDto>> GetCategoryDtoByIdAsync(Guid externalId, CancellationToken cancellationToken)
     {
-        var categoryEntity = await GetByExternalId(guid, cancellationToken);
+        var categoryEntity = await GetByExternalId(externalId, cancellationToken);
         return categoryEntity is not null
             ? ValidationResult.Ok((CategoryDto)categoryEntity)
-            : ValidationResult.Fail<CategoryDto>($"Category with ID {guid} not found.");
+            : ValidationResult.Fail<CategoryDto>($"Category with ID {externalId} not found.");
     }
 
-    public async Task<ValidationResult<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken)
+    public async Task<ValidationResult<Category>> GetCategoryByIdAsync(Guid externalId, CancellationToken cancellationToken)
     {
-        var categoryEntity = await GetByExternalId(guid, cancellationToken);
+        var categoryEntity = await GetByExternalId(externalId, cancellationToken);
         return categoryEntity is not null
             ? ValidationResult.Ok((Category)categoryEntity)
-            : ValidationResult.Fail<Category>($"Category with ID {guid} not found.");
+            : ValidationResult.Fail<Category>($"Category with ID {externalId} not found.");
     }
 
-    private async Task<CategoryEntity?> GetByExternalId(Guid guid, CancellationToken cancellationToken)
+    private async Task<CategoryEntity?> GetByExternalId(Guid externalId, CancellationToken cancellationToken)
     {
         return await sqlDataContext.Categories
             .AsNoTracking()
-            .Where(c => c.Active && c.ExternalId == guid)
+            .Where(c => c.Active && c.ExternalId == externalId)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

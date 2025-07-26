@@ -103,7 +103,7 @@ public class CategoryCreateTests(WebApplicationFactory<Program> factory) : BaseA
         var request = new
         {
             Name = new string('n', 51),
-            Description = new string('d', 201)
+            Description = new string('d', 257)
         };
 
         // Act
@@ -115,7 +115,7 @@ public class CategoryCreateTests(WebApplicationFactory<Program> factory) : BaseA
         var result = await response.Content.ReadFromJsonAsync<ResultError>();
         Assert.NotNull(result);
         Assert.Equal("Category creation failed", result.Title);
-        Assert.Equal("Category Name must not exceed 50 characters,\r\nCategory Description must not exceed 200 characters", result.Details);
+        Assert.Equal("Category Name must not exceed 50 characters,\r\nCategory Description must not exceed 256 characters", result.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
     }
 }
@@ -130,24 +130,21 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
             .CreateScope()
             .ServiceProvider.GetService<SqlDataContext>()!;
 
-        var newCategory = new Category("Science Fiction")
-        {
-            Description = "Books about sci-fi."
-        };
+        var newEntity = Category.Create("Science Fiction", "Books about sci-fi.").Value;
 
-        dbContext.Set<CategoryEntity>().Add(newCategory);
+        dbContext.Set<CategoryEntity>().Add(newEntity);
         await dbContext.SaveChangesAsync();
 
         var client = _webFactory.CreateClient();
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories/{newCategory.ExternalId}");
+        var getResponse = await client.GetAsync($"/api/categories/{newEntity.ExternalId}");
 
         // Assert
         getResponse.EnsureSuccessStatusCode();
         var category = await getResponse.Content.ReadFromJsonAsync<CategoryDto>();
         Assert.NotNull(category);
-        Assert.Equal(newCategory.ExternalId, category.Id);
+        Assert.Equal(newEntity.ExternalId, category.Id);
         Assert.Equal("Science Fiction", category.Name);
         Assert.Equal("Books about sci-fi.", category.Description);
         Assert.True(category.Active);
@@ -203,25 +200,30 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
             .ServiceProvider.GetService<SqlDataContext>()!;
 
         var newCategoryList = new[] {
-            new Category("Inactive"){
+            new CategoryEntity
+            {
+                Name = "Inactive",
                 Description = "Some inactive category",
                 Active = false,
                 CreatedAt = DateTime.UtcNow.AddMonths(-3)
             },
-            new Category("Science Fiction")
+            new CategoryEntity
             {
+                Name = "Science Fiction",
                 Description = "Books about sci-fi.",
                 Active = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-1)
             },
-            new Category("Fantasy"){
+            new CategoryEntity
+            {
+                Name = "Fantasy",
                 Description = "Some fantasy book.",
                 Active = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-2)
             }
         };
 
-        await dbContext.Set<CategoryEntity>().AddRangeAsync(newCategoryList.Select(c => (CategoryEntity)c));
+        await dbContext.Set<CategoryEntity>().AddRangeAsync(newCategoryList);
         await dbContext.SaveChangesAsync();
 
         var client = _webFactory.CreateClient();
@@ -329,11 +331,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
             .CreateScope()
             .ServiceProvider.GetService<SqlDataContext>()!;
 
-        var newCategory = new Category("Science Fiction")
-        {
-            Description = "Books about sci-fi."
-        };
-
+        var newCategory = Category.Create("Science Fiction", "Books about sci-fi.").Value;
         var newEntity = (CategoryEntity)newCategory;
         dbContext.Set<CategoryEntity>().Add(newEntity);
         await dbContext.SaveChangesAsync();
@@ -347,7 +345,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         };
 
         // Act
-        var response = await client.PutAsJsonAsync($"/api/categories/{newCategory.ExternalId}", request);
+        var response = await client.PutAsJsonAsync($"/api/categories/{newEntity.ExternalId}", request);
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -397,10 +395,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
             .ServiceProvider.GetService<SqlDataContext>()!;
 
         var categoryName = "Science Fiction";
-        var newCategory = new Category(categoryName)
-        {
-            Description = "Books about sci-fi."
-        };
+        var newCategory = Category.Create(categoryName, "Books about sci-fi.").Value;
 
         var newEntity = (CategoryEntity)newCategory;
         dbContext.Set<CategoryEntity>().Add(newEntity);
@@ -441,16 +436,13 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
             .ServiceProvider.GetService<SqlDataContext>()!;
 
         var categoryName = "Science Fiction";
-        var newCategory = new Category(categoryName)
-        {
-            Description = "Books about sci-fi."
-        };
+        var newCategory = Category.Create(categoryName, "Books about sci-fi.").Value;
 
         var newEntity = (CategoryEntity)newCategory;
         dbContext.Set<CategoryEntity>().Add(newEntity);
         await dbContext.SaveChangesAsync();
         dbContext.Entry(newEntity).State = EntityState.Detached;
-
+        
         var client = _webFactory.CreateClient();
         var request = new
         {
@@ -459,7 +451,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         };
 
         // Act
-        var response = await client.PutAsJsonAsync($"/api/categories/{newCategory.ExternalId}", request);
+        var response = await client.PutAsJsonAsync($"/api/categories/{newEntity.ExternalId}", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -480,10 +472,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
             .ServiceProvider.GetService<SqlDataContext>()!;
 
         var categoryName = "Science Fiction";
-        var newCategory = new Category(categoryName)
-        {
-            Description = "Books about sci-fi."
-        };
+        var newCategory = Category.Create(categoryName, "Books about sci-fi.").Value;
 
         var newEntity = (CategoryEntity)newCategory;
         dbContext.Set<CategoryEntity>().Add(newEntity);
@@ -494,11 +483,11 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         var request = new
         {
             Name = new string('n', 51),
-            Description = new string('d', 201)
+            Description = new string('d', 257)
         };
 
         // Act
-        var response = await client.PutAsJsonAsync($"/api/categories/{newCategory.ExternalId}", request);
+        var response = await client.PutAsJsonAsync($"/api/categories/{newEntity.ExternalId}", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -506,7 +495,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         var result = await response.Content.ReadFromJsonAsync<ResultError>();
         Assert.NotNull(result);
         Assert.Equal("Category update failed", result.Title);
-        Assert.Equal("Category Name must not exceed 50 characters,\r\nCategory Description must not exceed 200 characters", result.Details);
+        Assert.Equal("Category Name must not exceed 50 characters,\r\nCategory Description must not exceed 256 characters", result.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
     }
 
@@ -547,10 +536,7 @@ public class CategoryDeleteTests(WebApplicationFactory<Program> factory) : BaseA
             .CreateScope()
             .ServiceProvider.GetService<SqlDataContext>()!;
 
-        var newCategory = new Category("Science Fiction")
-        {
-            Description = "Books about sci-fi."
-        };
+        var newCategory = Category.Create("Science Fiction", "Books about sci-fi.").Value;
 
         var newEntity = (CategoryEntity)newCategory;
         dbContext.Set<CategoryEntity>().Add(newEntity);

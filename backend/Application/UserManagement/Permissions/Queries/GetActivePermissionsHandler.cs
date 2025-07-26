@@ -9,9 +9,6 @@ public class GetActivePermissionsHandler(IPermissionService permissionService) :
 {
     public async Task<ValidationResult<IEnumerable<PermissionDto>>> Handle(GetActivePermissionsQuery request, CancellationToken cancellationToken)
     {
-        var permissionResults = await permissionService.GetActivePermissionsAsync(request.PageNumber, request.PageSize, cancellationToken);
-        return permissionResults.IsSuccess
-            ? ValidationResult.Ok(permissionResults.Value.Select(permission => permission))
-            : ValidationResult.Fail<IEnumerable<PermissionDto>>(permissionResults.Errors.FirstOrDefault()?.Message ?? "Failed to retrieve permissions.");
+        return await permissionService.GetActivePermissionsAsync(request.PageNumber, request.PageSize, cancellationToken);
     }
 }

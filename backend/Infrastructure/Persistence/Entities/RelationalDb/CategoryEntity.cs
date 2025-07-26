@@ -1,5 +1,6 @@
 using Application.CatalogManagement.Books.DTOs;
 using Domain.CatalogManagement;
+using Domain.Common;
 using Infrastructure.Common;
 using Infrastructure.Persistence.Common;
 
@@ -25,12 +26,12 @@ public class CategoryEntity : RelationalDbBaseBaseEntity
 
     public static implicit operator Category(CategoryEntity entity)
     {
-        var model = new Category(entity.Name)
-        {
-            Description = entity.Description ?? string.Empty,
-            Books = [.. entity.Books.Select(b => (Book)b)],
-        };
+        var modelResult = Category.Create(entity.Name, entity.Description ?? string.Empty);
+        if (!modelResult.IsSuccess)
+            throw new ValidationException(modelResult.Errors);
 
+        var model = modelResult.Value;
+        model.Books = [.. entity.Books.Select(b => (Book)b)];
         model.ConvertEntityBaseProperties(entity);
         return model;
     }

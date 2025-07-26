@@ -21,15 +21,10 @@ public class PermissionEntity : DocumentDbEntity
         };
     }
 
-    public static implicit operator Permission(PermissionEntity permissionEntity)
+    public static implicit operator Permission(PermissionEntity entity)
     {
-        var model = new Permission
-        {
-            Code = permissionEntity.Code,
-            Description = permissionEntity.Description
-        };
-
-        model.ConvertEntityBaseProperties(permissionEntity);
+        var model = Permission.Create(entity.Code, entity.Description).Value;
+        model.ConvertEntityBaseProperties(entity);
         return model;
     }
 
