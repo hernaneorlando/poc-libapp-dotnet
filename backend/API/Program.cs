@@ -54,22 +54,24 @@ public class Program
 
         if (builder.Environment.IsDevelopment() || builder.Environment.IsProduction())
         {
-            builder.Services.AddDbContext<SqlDataContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnectionString"),
-                    sqlServerOptionsAction: sqlOptions =>
-                    {
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(30),
-                            errorNumbersToAdd: null);
-                    });
-            });
+            builder.Services.AddSqlDbContext(builder.Configuration.GetConnectionString("SqlConnectionString"));
         }
 
+        builder.Services.AddNoSqlDbContext(builder.Configuration.GetSection("MongoDbDatabase"));
         builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-        builder.Services.Configure<MongoDbConfiguration>(builder.Configuration.GetSection("MongoDbDatabase"));
-        builder.Services.AddTransient<NoSqlDataContext>();
+
+        // Add CORS policy
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowBlazorOrigin", policy =>
+            {
+                var origins = builder.Configuration.GetSection("BlazorWasmOrigins").Get<string[]>();
+                policy.WithOrigins(origins)
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
 
         // Liveness check
         builder.Services.AddHealthChecks().AddCheck("healthy", () => HealthCheckResult.Healthy());
@@ -91,6 +93,9 @@ public class Program
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Library App v1"));
 
         // app.UseHttpsRedirection();
+
+        // Enable CORS
+        app.UseCors("AllowBlazorOrigin");
 
         app.UseAuthorization();
         app.MapControllers();

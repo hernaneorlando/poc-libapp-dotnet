@@ -1,3 +1,4 @@
+using Application.Common.BaseDTO;
 using Application.UserManagement.Permissions.DTOs;
 using Application.UserManagement.Permissions.Services;
 using Domain.Common;
@@ -35,18 +36,18 @@ public class PermissionService(NoSqlDataContext noSqlDataContext) : IPermissionS
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<ValidationResult<IEnumerable<PermissionDto>>> GetActivePermissionsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<ValidationResult<PagedResponseDTO<PermissionDto>>> GetActiveEntitiesAsync(int pageNumber, int pageSize, string? orderBy = null, bool? isDescending = null, CancellationToken?  cancellationToken = null)
     {
         var permissions = await noSqlDataContext.Permissions
             .Find(x => x.Active)
             .SortBy(x => x.Code)
             .Skip((pageNumber - 1) * pageSize)
             .Limit(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken ?? CancellationToken.None);
 
         return permissions.Count != 0
-            ? ValidationResult.Ok(permissions.Select(permission => (PermissionDto)permission))
-            : ValidationResult.Fail<IEnumerable<PermissionDto>>("No active permissions found.");
+            ? ValidationResult.Ok(new PagedResponseDTO<PermissionDto> { Data = [..permissions.Select(permission => (PermissionDto)permission)] })
+            : ValidationResult.Fail<PagedResponseDTO<PermissionDto>>("No active permissions found.");
     }
 
     #endregion

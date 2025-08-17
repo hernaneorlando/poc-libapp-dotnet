@@ -1,7 +1,7 @@
 using System.Net.Mime;
 using Application.CatalogManagement.Publishers.DTOs;
 using Application.CatalogManagement.Publishers.Queries;
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

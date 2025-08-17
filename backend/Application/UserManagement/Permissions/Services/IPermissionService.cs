@@ -1,12 +1,12 @@
+using Application.Common;
 using Application.UserManagement.Permissions.DTOs;
 using Domain.Common;
 using Domain.UserManagement;
 
 namespace Application.UserManagement.Permissions.Services;
 
-public interface IPermissionService
+public interface IPermissionService : IPagerResponseService<PermissionDto>
 {
-    Task<ValidationResult<IEnumerable<PermissionDto>>> GetActivePermissionsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
     Task<ValidationResult<PermissionDto>> GetPermissionDtoByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<ValidationResult<Permission>> GetPermissionByIdAsync(Guid guid, CancellationToken cancellationToken);
 

@@ -1,26 +1,20 @@
-using Microsoft.AspNetCore.Components;
+using LibraryApp.Web.Services.CatalogManagement;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
+using LibraryApp.Web;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddHttpClient();
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var app = builder.Build();
+builder.Services.AddMudServices();
 
-if (!app.Environment.IsDevelopment())
-{
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+builder.Services.AddTransient<ICategoryService, CategoryService>();
 
-// app.UseHttpsRedirection();
+builder.Services.AddHttpClient("API", client => {
+    client.BaseAddress = new Uri(builder.Configuration["APIServer:Url"]!);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
-
-app.Run();
+await builder.Build().RunAsync();

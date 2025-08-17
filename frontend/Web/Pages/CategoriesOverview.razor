@@ -1,0 +1,57 @@
+﻿@page "/categories"
+@using MudBlazor.Extensions
+
+@inject ICategoryService categoryService
+
+<h3>Categories</h3>
+
+<MudTable T="CategoryDto" ServerData="ServerReload" FixedHeader="true" Hover="true" Striped="true"
+    LoadingProgressColor="Color.Info" SortLabel="Sort By">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel SortLabel="@nameof(CategoryDto.Name)" T="CategoryDto">Name</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortLabel="@nameof(CategoryDto.Description)" T="CategoryDto"> Description
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>Active</MudTh>
+        <MudTh>Created At</MudTh>
+        <MudTh>Updated At</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Description">@context.Description</MudTd>
+        <MudTd DataLabel="Active">@context.Active</MudTd>
+        <MudTd DataLabel="Created At">@context.CreatedAt.ToIsoDateString()</MudTd>
+        <MudTd DataLabel="Updated At">@context.UpdatedAt.ToIsoDateString()</MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" RowsPerPageString="Rows per page:"
+            InfoFormat="{first_item}-{last_item} of {all_items}" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private PagedResponseDTO<CategoryDto> pagedData = new();
+
+    private async Task<TableData<CategoryDto>> ServerReload(TableState state, CancellationToken token)
+    {
+        var pagedRequest = new PagedRequest(state.Page + 1, state.PageSize)
+        {
+            OrderBy = state.SortLabel,
+            IsDescending = state.SortDirection == SortDirection.Ascending
+        };
+
+        pagedData = await categoryService.GetCategories(pagedRequest, token);
+
+        return new TableData<CategoryDto>
+        {
+            Items = pagedData.Data,
+            TotalItems = pagedData.TotalRecords
+        };
+    }
+}

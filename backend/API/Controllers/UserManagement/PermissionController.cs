@@ -2,7 +2,7 @@ using System.Net.Mime;
 using Application.UserManagement.Permissions.Commands;
 using Application.UserManagement.Permissions.DTOs;
 using Application.UserManagement.Permissions.Queries;
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

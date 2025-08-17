@@ -1,7 +1,7 @@
 ﻿using System.Net.Mime;
 using Application.UserManagement.Users.DTOs;
 using Application.UserManagement.Users.Queries;
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

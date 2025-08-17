@@ -1,7 +1,7 @@
 using System.Net.Mime;
 using Application.ReportManagement.AuditEntries.DTOs;
 using Application.ReportManagement.AuditEntries.Queries;
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

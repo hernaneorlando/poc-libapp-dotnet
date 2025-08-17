@@ -1,4 +1,4 @@
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

@@ -1,5 +1,6 @@
 using Application.CatalogManagement.Books.DTOs;
 using Application.CatalogManagement.Books.Services;
+using Application.Common.BaseDTO;
 using Domain.CatalogManagement;
 using Domain.Common;
 using Infrastructure.Persistence.Context;
@@ -36,18 +37,35 @@ public class CategoryService(SqlDataContext sqlDataContext) : ICategoryService
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<ValidationResult<IEnumerable<CategoryDto>>> GetActiveCategoriesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<ValidationResult<PagedResponseDTO<CategoryDto>>> GetActiveEntitiesAsync(int pageNumber, int pageSize, string? orderBy = null, bool? isDescending = null, CancellationToken? cancellationToken = null)
     {
-        var categories = await sqlDataContext.Categories
-            .Where(c => c.Active)
-            .OrderBy(c => c.Name)
+        var query = sqlDataContext.Categories
+            .Where(c => c.Active);
+
+        query = isDescending == true
+            ? query.OrderByDescending(c => string.IsNullOrWhiteSpace(orderBy) ? c.Name : EF.Property<object>(c, orderBy!) ?? c.Name)
+            : query.OrderBy(c => string.IsNullOrWhiteSpace(orderBy) ? c.Name : EF.Property<object>(c, orderBy!) ?? c.Name);
+
+        var totalRecords = await query.CountAsync();
+
+        var categories = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken ?? CancellationToken.None);
 
-        return categories.Count != 0
-            ? ValidationResult.Ok(categories.Select(category => (CategoryDto)category))
-            : ValidationResult.Fail<IEnumerable<CategoryDto>>("No active categories found.");
+        if (categories.Count == 0)
+            return ValidationResult.Fail<PagedResponseDTO<CategoryDto>>("No active categories found.");
+
+        var response = new PagedResponseDTO<CategoryDto>
+        {
+            Data = [..categories.Select(category => (CategoryDto)category)],
+            TotalRecords = totalRecords,
+            TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
+            CurrentPage = pageNumber,
+            PageSize = pageSize
+        };
+
+        return ValidationResult.Ok(response);
     }
 
     #endregion

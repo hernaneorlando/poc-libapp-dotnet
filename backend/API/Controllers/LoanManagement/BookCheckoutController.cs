@@ -1,7 +1,7 @@
 using System.Net.Mime;
 using Application.LoanManagement.BookCheckouts.DTOs;
 using Application.LoanManagement.BookCheckouts.Queries;
-using LibraryApp.API.Extension;
+using LibraryApp.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
