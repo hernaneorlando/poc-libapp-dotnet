@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Application.CatalogManagement.Books.DTOs;
 using Application.Common.MediatR;
 

@@ -26,7 +26,7 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
 
         if (failures.Count != 0)
         {
-            throw new ValidationException(failures);
+            throw new Domain.Common.ValidationException(failures.Select(f => f.ErrorMessage));
         }
 
         return await next(cancellationToken);

@@ -5,7 +5,7 @@ using Domain.Common;
 
 namespace Application.CatalogManagement.Books.Services;
 
-public interface ICategoryService : IPagerResponseService<CategoryDto>
+public interface ICategoryService : IPagedResponseService<CategoryDto>
 {
     Task<ValidationResult<CategoryDto>> GetCategoryDtoByIdAsync(Guid guid, CancellationToken cancellationToken);
     Task<ValidationResult<Category>> GetCategoryByIdAsync(Guid guid, CancellationToken cancellationToken);

@@ -1,6 +1,5 @@
-using Domain.Common;
-using MediatR;
+using Application.Common;
 
 namespace Application.CatalogManagement.Books.Commands;
 
-public record DeleteCategoryCommand(string Id) : IRequest<ValidationResult>;
+public record DeleteCategoryCommand(string Id) : DeleteEntityBaseCommand(Id);

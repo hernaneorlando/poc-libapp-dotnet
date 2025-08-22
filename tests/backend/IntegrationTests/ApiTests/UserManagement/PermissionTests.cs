@@ -182,10 +182,7 @@ public class PermissionReadTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.NotNull(permissionResult);
         Assert.Equal("Validation Error", permissionResult.Title);
 
-        var errorMessage = @"Validation failed: 
- -- PageNumber: Page number must be greater than 0. Severity: Error
- -- PageSize: Page size must be between 1 and 100. Severity: Error";
-
+        var errorMessage = "Page number must be greater than 0.,\r\nPage size must be between 1 and 100.";
         Assert.Equal(errorMessage, permissionResult.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, permissionResult.StatusCode);
     }
@@ -208,10 +205,7 @@ public class PermissionReadTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.NotNull(permissionResult);
         Assert.Equal("Validation Error", permissionResult.Title);
 
-        var errorMessage = @"Validation failed: 
- -- PageNumber: Page number must be greater than 0. Severity: Error
- -- PageSize: Page size must be between 1 and 100. Severity: Error";
-
+        var errorMessage = "Page number must be greater than 0.,\r\nPage size must be between 1 and 100.";
         Assert.Equal(errorMessage, permissionResult.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, permissionResult.StatusCode);
     }

@@ -2,6 +2,7 @@ using Application;
 using FluentValidation;
 using Infrastructure;
 using Infrastructure.Persistence.Context;
+using LibraryApp.API.Endpoints.CatalogManagement;
 using LibraryApp.API.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -17,16 +18,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
         builder.Services
             .AddEndpointsApiExplorer()
             .AddApplicationDependencies()
             .AddInfrastructureDependencies();
 
-        builder.Services.AddControllers(options =>
-        {
-            options.Filters.Add<ValidationExceptionFilter>();
-        });
+        builder.Services.AddControllers();
+
+        // Add custom exception handler
+        builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+        builder.Services.AddProblemDetails();
 
         builder.Services.AddSwaggerGen(c =>
         {
@@ -78,11 +79,14 @@ public class Program
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
-        }
+        // Use the exception handler middleware
+        app.UseExceptionHandler();
+
+        app
+            .AddCategoryEndpoints()
+            .AddContributorsEndpoints()
+            .AddPublisherEndpoints()
+            .AddBookEndpoints();
 
         if (app.Environment.IsDevelopment() || app.Environment.IsDevelopment())
         {

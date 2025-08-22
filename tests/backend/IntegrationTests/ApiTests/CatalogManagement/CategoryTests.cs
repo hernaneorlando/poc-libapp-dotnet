@@ -38,7 +38,6 @@ public class CategoryCreateTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.True(category.Id != default);
         Assert.Equal("Fantasy", category.Name);
         Assert.Equal("Some fantasy book.", category.Description);
-        Assert.Empty(category.Books);
         Assert.True(category.CreatedAt != default);
         Assert.Null(category.UpdatedAt);
     }
@@ -64,7 +63,6 @@ public class CategoryCreateTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.True(category.Id != default);
         Assert.Equal("Fantasy", category.Name);
         Assert.Empty(category.Description!);
-        Assert.Empty(category.Books);
         Assert.True(category.CreatedAt != default);
         Assert.Null(category.UpdatedAt);
     }
@@ -149,7 +147,6 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
         Assert.Equal("Science Fiction", category.Name);
         Assert.Equal("Books about sci-fi.", category.Description);
         Assert.True(category.Active);
-        Assert.Empty(category.Books);
         Assert.True(category.CreatedAt != default);
         Assert.Null(category.UpdatedAt);
     }
@@ -228,15 +225,20 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
         await dbContext.SaveChangesAsync();
 
         var client = _webFactory.CreateClient();
+        var request = new
+        {
+            PageNumber = 1,
+            PageSize = 10
+        };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories?pagenumber=1&pagesize=10");
+        var postResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
-        getResponse.EnsureSuccessStatusCode();
-        var response = await getResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
+        postResponse.EnsureSuccessStatusCode();
+        var response = await postResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
         Assert.NotNull(response?.Data);
-        
+
         var categories = response!.Data.ToArray();
         Assert.NotEmpty(categories);
         Assert.All(categories, x => Assert.True(x.Active));
@@ -293,15 +295,21 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
         await dbContext.SaveChangesAsync();
 
         var client = _webFactory.CreateClient();
+        var request = new
+        {
+            PageNumber = 1,
+            PageSize = 10,
+            OrderBy = nameof(CategoryDto.Description)
+        };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories?pagenumber=1&pagesize=10&orderby={nameof(CategoryDto.Description)}");
+        var postResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
-        getResponse.EnsureSuccessStatusCode();
-        var response = await getResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
+        postResponse.EnsureSuccessStatusCode();
+        var response = await postResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
         Assert.NotNull(response?.Data);
-        
+
         var categories = response!.Data.ToArray();
         Assert.NotEmpty(categories);
         Assert.All(categories, x => Assert.True(x.Active));
@@ -358,15 +366,22 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
         await dbContext.SaveChangesAsync();
 
         var client = _webFactory.CreateClient();
+        var request = new
+        {
+            PageNumber = 1,
+            PageSize = 10,
+            OrderBy = nameof(CategoryDto.Description),
+            IsDescending = true
+        };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories?pagenumber=1&pagesize=10&orderby={nameof(CategoryDto.Description)}&isdescending=true");
+        var postResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
-        getResponse.EnsureSuccessStatusCode();
-        var response = await getResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
+        postResponse.EnsureSuccessStatusCode();
+        var response = await postResponse.Content.ReadFromJsonAsync<PagedResponseDTO<CategoryDto>>();
         Assert.NotNull(response?.Data);
-        
+
         var categories = response!.Data.ToArray();
         Assert.NotEmpty(categories);
         Assert.All(categories, x => Assert.True(x.Active));
@@ -392,13 +407,18 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
     {
         // Arrange
         var client = _webFactory.CreateClient();
+        var request = new
+        {
+            PageNumber = 1,
+            PageSize = 10
+        };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories?pagenumber=1&pagesize=10");
+        var postResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
-        var categoryResult = await getResponse.Content.ReadFromJsonAsync<ResultError>();
+        Assert.Equal(HttpStatusCode.NotFound, postResponse.StatusCode);
+        var categoryResult = await postResponse.Content.ReadFromJsonAsync<ResultError>();
         Assert.NotNull(categoryResult);
         Assert.Equal("Categories not found", categoryResult.Title);
         Assert.Equal("No active categories found.", categoryResult.Details);
@@ -410,20 +430,18 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
     {
         // Arrange
         var client = _webFactory.CreateClient();
+        var request = new { };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories");
+        var postResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, getResponse.StatusCode);
-        var categoryResult = await getResponse.Content.ReadFromJsonAsync<ResultError>();
+        Assert.Equal(HttpStatusCode.BadRequest, postResponse.StatusCode);
+        var categoryResult = await postResponse.Content.ReadFromJsonAsync<ResultError>();
         Assert.NotNull(categoryResult);
         Assert.Equal("Validation Error", categoryResult.Title);
 
-        var errorMessage = @"Validation failed: 
- -- PageNumber: Page number must be greater than 0. Severity: Error
- -- PageSize: Page size must be between 1 and 100. Severity: Error";
-
+        var errorMessage = "Page number must be greater than 0.,\r\nPage size must be between 1 and 100.";
         Assert.Equal(errorMessage, categoryResult.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, categoryResult.StatusCode);
     }
@@ -436,9 +454,14 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
     {
         // Arrange
         var client = _webFactory.CreateClient();
+        var request = new
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         // Act
-        var getResponse = await client.GetAsync($"/api/categories?pagenumber={pageNumber}&pagesize={pageSize}");
+        var getResponse = await client.PostAsJsonAsync($"/api/categories/query", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, getResponse.StatusCode);
@@ -446,10 +469,7 @@ public class CategoryReadTests(WebApplicationFactory<Program> factory) : BaseApi
         Assert.NotNull(categoryResult);
         Assert.Equal("Validation Error", categoryResult.Title);
 
-        var errorMessage = @"Validation failed: 
- -- PageNumber: Page number must be greater than 0. Severity: Error
- -- PageSize: Page size must be between 1 and 100. Severity: Error";
-
+        var errorMessage = "Page number must be greater than 0.,\r\nPage size must be between 1 and 100.";
         Assert.Equal(errorMessage, categoryResult.Details);
         Assert.Equal((int)HttpStatusCode.BadRequest, categoryResult.StatusCode);
     }
@@ -489,7 +509,6 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.True(category.Id != default);
         Assert.Equal("Fantasy", category.Name);
         Assert.Equal("Some fantasy book.", category.Description);
-        Assert.Empty(category.Books);
         Assert.True(category.CreatedAt != default);
         Assert.True(category.UpdatedAt != default);
     }
@@ -553,7 +572,6 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         Assert.True(category.Id != default);
         Assert.Equal(categoryName, category.Name);
         Assert.Empty(category.Description!);
-        Assert.Empty(category.Books);
         Assert.True(category.CreatedAt != default);
         Assert.True(category.UpdatedAt != default);
     }
@@ -576,7 +594,7 @@ public class CategoryUpdateTests(WebApplicationFactory<Program> factory) : BaseA
         dbContext.Set<CategoryEntity>().Add(newEntity);
         await dbContext.SaveChangesAsync();
         dbContext.Entry(newEntity).State = EntityState.Detached;
-        
+
         var client = _webFactory.CreateClient();
         var request = new
         {

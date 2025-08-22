@@ -16,8 +16,7 @@ public class CategoryEntity : RelationalDbBaseBaseEntity
     {
         var dto = new CategoryDto(entity.Name)
         {
-            Description = entity.Description,
-            Books = [.. entity.Books.Select(b => (BookDto)b)],
+            Description = entity.Description
         };
 
         dto.ConvertEntityBaseProperties(entity);

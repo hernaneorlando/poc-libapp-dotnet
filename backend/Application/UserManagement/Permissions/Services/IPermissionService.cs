@@ -5,7 +5,7 @@ using Domain.UserManagement;
 
 namespace Application.UserManagement.Permissions.Services;
 
-public interface IPermissionService : IPagerResponseService<PermissionDto>
+public interface IPermissionService : IPagedResponseService<PermissionDto>
 {
     Task<ValidationResult<PermissionDto>> GetPermissionDtoByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<ValidationResult<Permission>> GetPermissionByIdAsync(Guid guid, CancellationToken cancellationToken);
