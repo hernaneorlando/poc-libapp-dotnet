@@ -38,7 +38,7 @@ services:
 
   dotnet-server:
     build:
-      dockerfile: server.Dockerfile
+      dockerfile: backend/Dockerfile
       context: .
     image: dotnet-server
     container_name: dotnet-server
@@ -59,7 +59,7 @@ services:
 
   blazor-client:
     build:
-      dockerfile: client.Dockerfile
+      dockerfile: frontend/Dockerfile
       context: .
     image: blazor-client
     container_name: blazor-client

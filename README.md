@@ -20,5 +20,6 @@ Client
 In the root folder run: `docker compose up -d --build`
 
 # Add (or remove last) new migrations in backend
-`dotnet-ef migrations add "migration name" --project Infrastructure --startup-project API --output-dir Persistence/Migrations` <br>
-`dotnet-ef migrations remove --project Infrastructure --startup-project API`
+`dotnet ef migrations add "migration name" --project src/Auth/Auth.Infrastructure --startup-project src/API --output-dir Migrations` <br>
+`dotnet ef migrations remove --project src/Auth/Auth.Infrastructure --startup-project src/API` <br>
+`dotnet ef database update --project src/Auth/Auth.Infrastructure --startup-project src/API`

@@ -29,15 +29,10 @@ steps:
     configuration: '$(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Run Unit Tests'
+  displayName: 'Run Auth Tests'
   inputs:
     command: 'test'
-    projects: '**/tests/backend/Server.UnitTests/*.csproj'
+    projects: '**/tests/backend/Auth/Auth.Tests.csproj'
     arguments: '--configuration $(buildConfiguration) --no-build --collect:"Code Coverage" --settings "./coverage.runsettings"'
-
-- task: DotNetCoreCLI@2
-  displayName: 'Run Integration Tests'
-  inputs:
-    command: 'test'
-    projects: '**/tests/backend/IntegrationTests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build --collect:"Code Coverage" --settings "./coverage.runsettings"'
+    publishTestResults: true
+    testRunTitle: 'Auth Tests - $(Build.BuildNumber)'
