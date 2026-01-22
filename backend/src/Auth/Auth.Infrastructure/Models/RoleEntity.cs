@@ -41,12 +41,13 @@ public sealed class RoleEntity
             Id = RoleId.From(entity.Id),
             Name = entity.Name,
             Description = entity.Description ?? string.Empty,
-            Permissions = DeserializePermissions(entity.PermissionsJson),
             Version = entity.Version,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive
         };
+
+        role.AssignPermission(DeserializePermissions(entity.PermissionsJson));
 
         return role;
     }

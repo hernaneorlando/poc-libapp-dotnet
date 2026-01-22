@@ -11,7 +11,7 @@ public sealed class Role : AggregateRoot<RoleId>
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public List<Permission> Permissions { get; set; } = [];
+    public List<Permission> Permissions { get; private set; } = [];
 
     public Role() { }
 
@@ -20,23 +20,7 @@ public sealed class Role : AggregateRoot<RoleId>
     /// </summary>
     public static Role Create(string name, string description)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ValidationException("Name cannot be empty");
-
-        if (string.IsNullOrWhiteSpace(description))
-            throw new ValidationException("Description cannot be empty");
-
-        if (name.Length < 3)
-            throw new ValidationException("Name must be at least 3 characters");
-
-        if (name.Length > 50)
-            throw new ValidationException("Name must not exceed 50 characters");
-
-        if (description.Length < 10)
-            throw new ValidationException("Description must be at least 10 characters");
-
-        if (description.Length > 500)
-            throw new ValidationException("Description must not exceed 500 characters");
+        Validate(name, description);        
             
         var role = new Role
         {
@@ -54,11 +38,7 @@ public sealed class Role : AggregateRoot<RoleId>
     /// </summary>
     public void Update(string name, string description)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ValidationException("Name cannot be empty");
-
-        if (string.IsNullOrWhiteSpace(description))
-            throw new ValidationException("Description cannot be empty");
+        Validate(name, description);
 
         Name = name.Trim();
         Description = description.Trim();
@@ -82,6 +62,15 @@ public sealed class Role : AggregateRoot<RoleId>
     }
 
     /// <summary>
+    /// Assigns permissions to the role.
+    /// </summary>
+    public void AssignPermission(IEnumerable<Permission> permissions)
+    {
+        foreach (var permission in permissions)
+            AssignPermission(permission);
+    }
+
+    /// <summary>
     /// Removes a permission from the role.
     /// </summary>
     public void RemovePermission(Permission permission)
@@ -102,5 +91,26 @@ public sealed class Role : AggregateRoot<RoleId>
     {
         base.Deactivate();
         RaiseDomainEvent(new RoleDeactivatedEvent(Id));
+    }
+
+    private static void Validate(string name, string description)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ValidationException("Name cannot be empty");
+
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ValidationException("Description cannot be empty");
+
+        if (name.Length < 3)
+            throw new ValidationException("Name must be at least 3 characters");
+
+        if (name.Length > 50)
+            throw new ValidationException("Name must not exceed 50 characters");
+
+        if (description.Length < 10)
+            throw new ValidationException("Description must be at least 10 characters");
+
+        if (description.Length > 256)
+            throw new ValidationException("Description must not exceed 256 characters");
     }
 }

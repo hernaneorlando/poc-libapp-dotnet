@@ -24,59 +24,50 @@ public sealed class LoginCommandHandler(
     {
         _logger.LogInformation("Login attempt for user: {Username}", request.Username);
 
-        try
+        // Step 1: Find user by username
+        var user = await _userRepository.GetByUsernameAsync(request.Username, cancellationToken);
+        if (user is null)
         {
-            // Step 1: Find user by username
-            var user = await _userRepository.GetByUsernameAsync(request.Username, cancellationToken);
-
-            if (user is null)
-            {
-                _logger.LogWarning("Login failed: User not found - {Username}", request.Username);
-                return Result<LoginResponse>.Error("Invalid username or password");
-            }
-
-            // Step 2: Verify password
-            if (user.PasswordHash is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
-            {
-                _logger.LogWarning("Login failed: Invalid password for user - {Username}", request.Username);
-                return Result<LoginResponse>.Error("Invalid username or password");
-            }
-
-            // Step 3: Generate JWT access token
-            var accessToken = _tokenService.GenerateAccessToken(user);
-
-            // Step 4: Generate refresh token
-            var refreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
-            var refreshToken = RefreshToken.Create(
-                refreshTokenString,
-                DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays));
-
-            // Step 5: Add refresh token to user
-            user.AddRefreshToken(refreshToken);
-
-            // Step 6: Persist changes
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Login successful for user: {Username}", request.Username);
-
-            // Step 7: Build response
-            var response = new LoginResponse(
-                AccessToken: accessToken,
-                RefreshToken: refreshTokenString,
-                ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60,
-                User: new UserLoginInfo(
-                    Id: user.Id.Value,
-                    Username: user.Username.Value,
-                    Email: user.Contact.Email,
-                    FullName: user.GetFullName(),
-                    Roles: user.Roles.Select(r => r.Name).ToList()));
-
-            return Result<LoginResponse>.Ok(response);
+            _logger.LogWarning("Login failed: User not found - {Username}", request.Username);
+            throw new InvalidOperationException("Invalid username or password");
         }
-        catch (Exception ex)
+
+        // Step 2: Verify password
+        if (user.PasswordHash is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            _logger.LogError(ex, "Error during login for user: {Username}", request.Username);
-            return Result<LoginResponse>.Error("An error occurred during login");
+            _logger.LogWarning("Login failed: Invalid password for user - {Username}", request.Username);
+            throw new InvalidOperationException("Invalid username or password");
         }
+
+        // Step 3: Generate JWT access token
+        var accessToken = _tokenService.GenerateAccessToken(user);
+
+        // Step 4: Generate refresh token
+        var refreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
+        var refreshToken = RefreshToken.Create(
+            refreshTokenString,
+            DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays));
+
+        // Step 5: Add refresh token to user
+        user.AddRefreshToken(refreshToken);
+
+        // Step 6: Persist changes
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Login successful for user: {Username}", request.Username);
+
+        // Step 7: Build response
+        var response = new LoginResponse(
+            AccessToken: accessToken,
+            RefreshToken: refreshTokenString,
+            ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60,
+            User: new UserLoginInfo(
+                Id: user.Id.Value,
+                Username: user.Username.Value,
+                Email: user.Contact.Email,
+                FullName: user.GetFullName(),
+                Roles: user.Roles.Select(r => r.Name).ToList()));
+
+        return Result<LoginResponse>.Ok(response);
     }
 }

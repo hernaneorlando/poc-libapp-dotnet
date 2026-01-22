@@ -1,19 +1,16 @@
 using Auth.Application.Roles.Commands.CreateRole;
 using Auth.Application.Common;
-using Auth.Domain.Aggregates.Role;
 using Auth.Domain;
 using Auth.Domain.Repositories;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
-using FluentAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
-using Xunit;
+using Core.Validation;
 
-namespace IntegrationTests.Auth.IntegrationTests.ApplicationHandlerTests.Roles;
+namespace Auth.Tests.IntegrationTests.ApplicationHandlerTests.Roles;
 
 /// <summary>
 /// Integration tests for the CreateRoleCommandHandler.
@@ -61,19 +58,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
     /// <summary>
     /// Simple mediator implementation to avoid MediatR licensing issues
     /// </summary>
-    private class SimpleMediator : IMediator
+    private class SimpleMediator(IRoleRepository _roleRepository, ILogger<CreateRoleCommandHandler> _logger, IUnitOfWork _unitOfWork) : IMediator
     {
-        private readonly IRoleRepository _roleRepository;
-        private readonly ILogger<CreateRoleCommandHandler> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public SimpleMediator(IRoleRepository roleRepository, ILogger<CreateRoleCommandHandler> logger, IUnitOfWork unitOfWork)
-        {
-            _roleRepository = roleRepository;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
-
         public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             // Handle CreateRoleCommand specifically
@@ -121,11 +107,6 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         {
             return Task.CompletedTask;
         }
-    }
-
-    private static void RegisterMediatRManually(IServiceCollection services)
-    {
-        // This method is no longer used
     }
 
     #region Success Scenarios
@@ -227,109 +208,108 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
     #region Validation Error Scenarios
 
     [Fact]
-    public async Task Handle_EmptyName_ReturnsValidationError()
+    public async Task Handle_EmptyName_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithEmptyName();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
-        var validationError = (Result<RoleResponse>.ValidationError)result;
-        validationError.Errors.Should().NotBeEmpty();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>()
+            .WithMessage("Name cannot be empty");
     }
 
     [Fact]
-    public async Task Handle_ShortName_ReturnsValidationError()
+    public async Task Handle_ShortName_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithShortName();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>()
+            .WithMessage("Name must be at least 3 characters");
     }
 
     [Fact]
-    public async Task Handle_LongName_ReturnsValidationError()
+    public async Task Handle_LongName_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithLongName();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>()
+            .WithMessage("Name must not exceed 50 characters");
     }
 
     [Fact]
-    public async Task Handle_EmptyDescription_ReturnsValidationError()
+    public async Task Handle_EmptyDescription_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithEmptyDescription();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        var result = await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>();
+        
+        result.WithMessage("Description cannot be empty");
     }
 
     [Fact]
-    public async Task Handle_ShortDescription_ReturnsValidationError()
+    public async Task Handle_ShortDescription_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithShortDescription();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>()
+            .WithMessage("Description must be at least 10 characters");
     }
 
     [Fact]
-    public async Task Handle_LongDescription_ReturnsValidationError()
+    public async Task Handle_LongDescription_ThrowsValidationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithLongDescription();
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<ValidationException>()
+            .WithMessage("Description must not exceed 256 characters");
     }
 
     [Fact]
-    public async Task Handle_InvalidPermissionFeature_ReturnsValidationError()
+    public async Task Handle_InvalidPermissionFeature_ThrowsInvalidOperationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithInvalidFeature("InvalidFeature");
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Invalid permission feature*");
     }
 
     [Fact]
-    public async Task Handle_InvalidPermissionAction_ReturnsValidationError()
+    public async Task Handle_InvalidPermissionAction_ThrowsInvalidOperationException()
     {
         // Arrange
         var command = RoleTestDataBuilder.GenerateCreateRoleCommandWithInvalidAction("InvalidAction");
 
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        result.Should().BeOfType<Result<RoleResponse>.ValidationError>();
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _mediator.Send(command))
+            .Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Invalid permission action*");
     }
 
     #endregion

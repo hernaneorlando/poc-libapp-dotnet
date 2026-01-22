@@ -1,8 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Auth.Application.Roles.DTOs;
-using IntegrationTests.ApiTests.Common;
-using IntegrationTests.Auth.IntegrationTests.ApiTests;
+using Common;
 using LibraryApp.API.Endpoints.Auth;
 
 namespace Auth.Tests.IntegrationTests.ApiTests.Roles;

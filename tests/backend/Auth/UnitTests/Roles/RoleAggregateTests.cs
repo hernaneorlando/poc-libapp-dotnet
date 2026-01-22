@@ -19,7 +19,7 @@ public class RoleAggregateTests
         // Arrange
         var name = "Administrator";
         var description = "Administrator role with full access";
-
+        
         // Act
         var role = Role.Create(name, description);
 
@@ -39,70 +39,6 @@ public class RoleAggregateTests
 
         // Assert
         role1.Id.Should().NotBe(role2.Id);
-    }
-
-    [Fact]
-    public void Create_WithValidData_InitializesEmptyPermissions()
-    {
-        // Act
-        var role = Role.Create("User", "Standard user role");
-
-        // Assert
-        role.Permissions.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Create_WithNullName_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create(null!, "Test description");
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Name*empty*");
-    }
-
-    [Fact]
-    public void Create_WithEmptyName_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create(string.Empty, "Test description");
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Name*empty*");
-    }
-
-    [Fact]
-    public void Create_WithWhitespaceName_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create("   ", "Test description");
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Name*empty*");
-    }
-
-    [Fact]
-    public void Create_WithNullDescription_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create("Admin", null!);
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Description*empty*");
-    }
-
-    [Fact]
-    public void Create_WithEmptyDescription_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create("Admin", string.Empty);
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Description*empty*");
-    }
-
-    [Fact]
-    public void Create_WithWhitespaceDescription_ThrowsValidationException()
-    {
-        // Act & Assert
-        var action = () => Role.Create("Admin", "   ");
-        action.Should().Throw<ValidationException>()
-            .WithMessage("*Description*empty*");
     }
 
     #endregion
@@ -137,8 +73,7 @@ public class RoleAggregateTests
         };
 
         // Act
-        foreach (var perm in permissions)
-            role.AssignPermission(perm);
+        role.AssignPermission(permissions);
 
         // Assert
         role.Permissions.Should().HaveCount(3);
@@ -174,6 +109,7 @@ public class RoleAggregateTests
         // Assert
         role.Permissions.Should().Contain(perm1);
         role.Permissions.Should().Contain(perm2);
+        role.Permissions.Should().HaveCount(2);
     }
 
     #endregion
@@ -248,11 +184,12 @@ public class RoleAggregateTests
         role.AssignPermission(permission);
 
         // Act
-        System.Threading.Thread.Sleep(10); // Pequeno delay para garantir que o tempo mudou
+        System.Threading.Thread.Sleep(10); // Small delay to ensure the time has changed
         role.RemovePermission(permission);
 
         // Assert
         role.UpdatedAt.Should().NotBeNull();
+        role.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
     #endregion
@@ -485,6 +422,122 @@ public class RoleAggregateTests
     #endregion
 
     #region Business Rules
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Create_WithNullOrWhiteSpaceName_ThrowsValidationException(string? name)
+    {
+        // Act & Assert
+        var action = () => Role.Create(name!, "Test description");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("Name cannot be empty");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Create_WithNullOrWhiteSpaceDescription_ThrowsValidationException(string? description)
+    {
+        // Act & Assert
+        var action = () => Role.Create("Admin", description!);
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Description*empty*");
+    }
+
+    [Fact]
+    public void Create_WithNameTooShort_ThrowsValidationException()
+    {
+        // Act & Assert
+        var action = () => Role.Create("AB", "Valid description for testing");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Name*at least 3 characters*");
+    }
+
+    [Fact]
+    public void Create_WithNameTooLong_ThrowsValidationException()
+    {
+        // Arrange
+        var longName = new string('A', 51);
+
+        // Act & Assert
+        var action = () => Role.Create(longName, "Valid description for testing");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Name*not exceed 50 characters*");
+    }
+
+    [Fact]
+    public void Create_WithDescriptionTooShort_ThrowsValidationException()
+    {
+        // Act & Assert
+        var action = () => Role.Create("Admin", "Short");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Description*at least 10 characters*");
+    }
+
+    [Fact]
+    public void Create_WithDescriptionTooLong_ThrowsValidationException()
+    {
+        // Arrange
+        var longDescription = new string('A', 501);
+
+        // Act & Assert
+        var action = () => Role.Create("Admin", longDescription);
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Description*not exceed 256 characters*");
+    }
+
+    [Fact]
+    public void Update_WithNameTooShort_ThrowsValidationException()
+    {
+        // Arrange
+        var role = Role.Create("Admin", "Valid description for testing");
+
+        // Act & Assert
+        var action = () => role.Update("AB", "Updated description");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Name*at least 3 characters*");
+    }
+
+    [Fact]
+    public void Update_WithNameTooLong_ThrowsValidationException()
+    {
+        // Arrange
+        var role = Role.Create("Admin", "Valid description for testing");
+        var longName = new string('A', 51);
+
+        // Act & Assert
+        var action = () => role.Update(longName, "Updated description");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Name*not exceed 50 characters*");
+    }
+
+    [Fact]
+    public void Update_WithDescriptionTooShort_ThrowsValidationException()
+    {
+        // Arrange
+        var role = Role.Create("Admin", "Valid description for testing");
+
+        // Act & Assert
+        var action = () => role.Update("UpdatedAdmin", "Short");
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Description*at least 10 characters*");
+    }
+
+    [Fact]
+    public void Update_WithDescriptionTooLong_ThrowsValidationException()
+    {
+        // Arrange
+        var role = Role.Create("Admin", "Valid description for testing");
+        var longDescription = new string('A', 257);
+
+        // Act & Assert
+        var action = () => role.Update("UpdatedAdmin", longDescription);
+        action.Should().Throw<ValidationException>()
+            .WithMessage("*Description*not exceed 256 characters*");
+    }
 
     [Fact]
     public void Role_ValidWithoutPermissions()

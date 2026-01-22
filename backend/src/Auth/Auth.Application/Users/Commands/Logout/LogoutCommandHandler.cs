@@ -20,44 +20,35 @@ public sealed class LogoutCommandHandler(
     {
         _logger.LogInformation("Logout attempt for user: {UserId}", request.UserId);
 
+        // Step 1: Find user by ID
+        var user = await _userRepository.GetByIdAsync(UserId.From(request.UserId), cancellationToken);
+        if (user is null)
+        {
+            _logger.LogWarning("Logout failed: User not found - {UserId}", request.UserId);
+            throw new InvalidOperationException("User not found");
+        }
+
+        // Step 2: Revoke the refresh token
         try
         {
-            // Step 1: Find user by ID
-            var user = await _userRepository.GetByIdAsync(UserId.From(request.UserId), cancellationToken);
-
-            if (user is null)
-            {
-                _logger.LogWarning("Logout failed: User not found - {UserId}", request.UserId);
-                return Result<LogoutResponse>.Error("User not found");
-            }
-
-            // Step 2: Revoke the refresh token
-            try
-            {
-                user.RevokeRefreshToken(request.RefreshToken);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex, "Logout failed: Token not found for user - {UserId}", request.UserId);
-                return Result<LogoutResponse>.Error("Refresh token not found or already revoked");
-            }
-
-            // Step 3: Persist changes
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Logout successful for user: {UserId}", request.UserId);
-
-            // Step 4: Build response
-            var response = new LogoutResponse(
-                Success: true,
-                Message: "Logout successful. Refresh token has been revoked.");
-
-            return Result<LogoutResponse>.Ok(response);
+            user.RevokeRefreshToken(request.RefreshToken);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Error during logout for user: {UserId}", request.UserId);
-            return Result<LogoutResponse>.Error("An error occurred during logout");
+            _logger.LogWarning(ex, "Logout failed: Token not found for user - {UserId}", request.UserId);
+            throw;
         }
+
+        // Step 3: Persist changes
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Logout successful for user: {UserId}", request.UserId);
+
+        // Step 4: Build response
+        var response = new LogoutResponse(
+            Success: true,
+            Message: "Logout successful. Refresh token has been revoked.");
+
+        return Result<LogoutResponse>.Ok(response);
     }
 }

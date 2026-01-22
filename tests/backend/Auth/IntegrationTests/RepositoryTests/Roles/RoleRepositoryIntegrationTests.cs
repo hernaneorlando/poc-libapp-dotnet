@@ -3,11 +3,9 @@ using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Enums;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
-namespace IntegrationTests.Auth.IntegrationTests.RepositoryTests.Roles;
+namespace Auth.Tests.IntegrationTests.RepositoryTests.Roles;
 
 /// <summary>
 /// Integration tests for the RoleRepository.
@@ -37,7 +35,8 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
     public async Task AddAsync_ValidRole_PersistsSuccessfully()
     {
         // Arrange
-        var role = Role.Create("Administrator", "Full system access");
+        var name = "Administrator";
+        var role = Role.Create(name, "Full system access");
 
         // Act
         await _roleRepository.AddAsync(role);
@@ -46,14 +45,16 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         // Assert
         var savedRole = await _dbContext.Roles.FindAsync(role.Id.Value);
         savedRole.Should().NotBeNull();
-        savedRole!.Name.Should().Be("Administrator");
+        savedRole!.Name.Should().Be(name);
     }
 
     [Fact]
     public async Task AddAsync_RoleWithPermissions_PersistsWithPermissions()
     {
         // Arrange
-        var role = Role.Create("Editor", "Can edit content");
+        var name = "Editor";
+        var description = "Can edit content";
+        var role = Role.Create(name, description);
         var permission1 = new Permission(
             PermissionFeature.Book,
             PermissionAction.Update
@@ -70,10 +71,14 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         // Assert
-        var savedRole = await _dbContext.Roles.FirstAsync(r => r.Id == role.Id.Value);
+        var savedRoleEntity = await _dbContext.Roles.FirstAsync(r => r.Id == role.Id.Value);
         
-        savedRole.Name.Should().Be("Editor");
-        savedRole.Description.Should().Contain("Can edit content");
+        savedRoleEntity.Name.Should().Be(name);
+        savedRoleEntity.Description.Should().Contain(description);
+        savedRoleEntity.PermissionsJson.Should().NotBeNullOrEmpty();
+        
+        var savedRole = (Role)savedRoleEntity;
+        savedRole.Permissions.Should().HaveCount(2);
     }
 
     #endregion
@@ -114,16 +119,17 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
     public async Task GetByNameAsync_ExistingRole_ReturnsRole()
     {
         // Arrange
-        var role = Role.Create("Manager", "Management access");
+        var name = "Manager";
+        var role = Role.Create(name, "Management access");
         await _roleRepository.AddAsync(role);
         await _dbContext.SaveChangesAsync();
 
         // Act
-        var retrievedRole = await _roleRepository.GetByNameAsync("Manager");
+        var retrievedRole = await _roleRepository.GetByNameAsync(name);
 
         // Assert
         retrievedRole.Should().NotBeNull();
-        retrievedRole!.Name.Should().Be("Manager");
+        retrievedRole!.Name.Should().Be(name);
     }
 
     [Fact]
@@ -183,7 +189,9 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
 
         // Re-fetch the role
         var roleToUpdate = await _roleRepository.GetByIdAsync(role.Id);
-        roleToUpdate!.Update("Senior Operator", "Senior operator with extended access");
+        var name = "Senior Operator";
+        var description = "Senior operator with extended access";
+        roleToUpdate!.Update(name, description);
 
         // Act
         await _roleRepository.UpdateAsync(roleToUpdate);
@@ -194,7 +202,8 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
 
         // Assert
         var updatedRole = await _roleRepository.GetByIdAsync(role.Id);
-        updatedRole!.Description.Should().Be("Senior operator with extended access");
+        updatedRole!.Name.Should().Be(name);
+        updatedRole!.Description.Should().Be(description);
     }
 
     [Fact]
@@ -214,7 +223,9 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         _dbContext.ChangeTracker.Clear();
 
         var roleToUpdate = await _roleRepository.GetByIdAsync(role.Id);
-        roleToUpdate!.Update("Senior Editor", "Senior editor with more access");
+        var name = "Senior Editor";
+        var description = "Senior editor with more access";
+        roleToUpdate!.Update(name, description);
 
         // Act
         await _roleRepository.UpdateAsync(roleToUpdate);
@@ -225,7 +236,9 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         // Assert
         var updatedRole = await _roleRepository.GetByIdAsync(role.Id);
         
-        updatedRole!.Name.Should().Be("Senior Editor");
+        updatedRole.Should().NotBeNull();
+        updatedRole!.Name.Should().Be(name);
+        updatedRole.Description.Should().Be(description);
         updatedRole.Permissions.Should().HaveCount(1);
     }
 

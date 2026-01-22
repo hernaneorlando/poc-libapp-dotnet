@@ -33,85 +33,49 @@ public sealed class AddDeniedPermissionCommandHandler(
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
-            return Result<AddDeniedPermissionResponse>.Invalid(
-                validationResult.Errors.Select(e => e.ErrorMessage));
+            throw new Core.Validation.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
 
-        try
-        {
-            // Parse user ID
-            if (!Guid.TryParse(request.UserId, out var userGuid))
-            {
-                _logger.LogWarning("Invalid user ID format: {UserId}", request.UserId);
-                return Result<AddDeniedPermissionResponse>.Error("Invalid user ID format");
-            }
+        // Parse user ID
+        if (!Guid.TryParse(request.UserId, out var userGuid))
+            throw new InvalidOperationException("Invalid user ID format");
 
-            var userId = UserId.From(userGuid);
+        var userId = UserId.From(userGuid);
 
-            // Get user
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user is null)
-            {
-                _logger.LogWarning("User not found: {UserId}", userGuid);
-                return Result<AddDeniedPermissionResponse>.Error("User not found");
-            }
+        // Get user
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken) ?? throw new InvalidOperationException("User not found");
 
-            // Parse feature and action
-            if (!Enum.TryParse<PermissionFeature>(request.Feature, ignoreCase: true, out var feature))
-            {
-                _logger.LogWarning("Invalid feature: {Feature}", request.Feature);
-                return Result<AddDeniedPermissionResponse>.Error($"Invalid feature: {request.Feature}");
-            }
+        // Parse feature and action
+        if (!Enum.TryParse<PermissionFeature>(request.Feature, ignoreCase: true, out var feature))
+            throw new InvalidOperationException($"Invalid feature: {request.Feature}");
 
-            if (!Enum.TryParse<PermissionAction>(request.Action, ignoreCase: true, out var action))
-            {
-                _logger.LogWarning("Invalid action: {Action}", request.Action);
-                return Result<AddDeniedPermissionResponse>.Error($"Invalid action: {request.Action}");
-            }
+        if (!Enum.TryParse<PermissionAction>(request.Action, ignoreCase: true, out var action))
+            throw new InvalidOperationException($"Invalid action: {request.Action}");
 
-            // Create permission
-            var permission = new Permission(feature, action);
+        // Create permission
+        var permission = new Permission(feature, action);
 
-            // Check if already denied
-            if (user.DeniedPermissions.Contains(permission))
-            {
-                _logger.LogWarning(
-                    "Permission {Feature}:{Action} already denied for user {UserId}",
-                    feature,
-                    action,
-                    userGuid);
-                return Result<AddDeniedPermissionResponse>.Error(
-                    $"Permission {feature}:{action} is already denied for this user");
-            }
+        // Check if already denied
+        if (user.DeniedPermissions.Contains(permission))
+            throw new InvalidOperationException($"Permission {feature}:{action} is already denied for this user");
 
-            // Add to denied permissions
-            user.DeniedPermissions.Add(permission);
+        // Add to denied permissions
+        user.DeniedPermissions.Add(permission);
 
-            // Persist changes
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        // Persist changes
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation(
-                "Successfully added denied permission {Feature}:{Action} for user {UserId}",
-                feature,
-                action,
-                userGuid);
+        _logger.LogInformation(
+            "Successfully added denied permission {Feature}:{Action} for user {UserId}",
+            feature,
+            action,
+            userGuid);
 
-            var response = new AddDeniedPermissionResponse(
-                UserId: userGuid.ToString(),
-                Feature: feature.ToString(),
-                Action: action.ToString(),
-                Message: $"Permission {feature}:{action} has been denied for user");
+        var response = new AddDeniedPermissionResponse(
+            UserId: userGuid.ToString(),
+            Feature: feature.ToString(),
+            Action: action.ToString(),
+            Message: $"Permission {feature}:{action} has been denied for user");
 
-            return Result<AddDeniedPermissionResponse>.Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error adding denied permission {Feature}:{Action} for user {UserId}",
-                request.Feature,
-                request.Action,
-                request.UserId);
-            return Result<AddDeniedPermissionResponse>.Error("An error occurred while adding denied permission");
-        }
+        return Result<AddDeniedPermissionResponse>.Ok(response);
     }
 }

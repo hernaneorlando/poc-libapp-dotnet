@@ -31,82 +31,62 @@ public sealed class CreateUserHandler(
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         
         if (!validationResult.IsValid)
-            return Result<UserDTO>.Invalid(validationResult.Errors.Select(e => e.ErrorMessage));
+            throw new Core.Validation.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
 
-        try
+        // Generate username from first and last name
+        var usernameResult = await _usernameGenerator.GenerateUsernameAsync(request.FirstName, request.LastName, cancellationToken);
+        
+        if (!usernameResult.IsAvailable)
+            throw new InvalidOperationException("Failed to generate a unique username");
+
+        // Parse user type
+        if (!Enum.TryParse<UserType>(request.UserType, ignoreCase: true, out var userType))
+            throw new InvalidOperationException($"Invalid user type: '{request.UserType}'");
+
+        // Create user aggregate
+        var user = User.Create(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            userType,
+            usernameResult.SuggestedUsername,
+            request.PhoneNumber
+        );
+
+        // Assign roles if provided
+        if (request.RoleIds is not null && request.RoleIds.Count > 0)
         {
-            // Generate username from first and last name
-            var usernameResult = await _usernameGenerator.GenerateUsernameAsync(request.FirstName, request.LastName, cancellationToken);
+            _logger.LogInformation("Assigning {RoleCount} roles to user", request.RoleIds.Count);
             
-            if (!usernameResult.IsAvailable)
+            foreach (var roleIdString in request.RoleIds)
             {
-                _logger.LogWarning("Failed to generate unique username for {FirstName} {LastName}", request.FirstName, request.LastName);
-                return Result<UserDTO>.Error("Failed to generate a unique username");
+                // Parse role ID from string to Guid
+                if (!Guid.TryParse(roleIdString, out var roleGuid))
+                    throw new InvalidOperationException($"Invalid role ID format: '{roleIdString}'");
+
+                var roleId = Auth.Domain.Aggregates.Role.RoleId.From(roleGuid);
+
+                // Fetch role from repository
+                var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken);
+                if (role is null)
+                    throw new InvalidOperationException($"Role with ID '{roleIdString}' not found");
+
+                // Assign role to user
+                user.AssignRole(role);
+                _logger.LogInformation("Assigned role {RoleId} ({RoleName}) to user", role.Id.Value, role.Name);
             }
-
-            // Parse user type
-            if (!Enum.TryParse<UserType>(request.UserType, ignoreCase: true, out var userType))
-            {
-                _logger.LogWarning("Invalid user type: {UserType}", request.UserType);
-                return Result<UserDTO>.Error($"Invalid user type: '{request.UserType}'");
-            }
-
-            // Create user aggregate
-            var user = User.Create(
-                request.FirstName,
-                request.LastName,
-                request.Email,
-                userType,
-                usernameResult.SuggestedUsername,
-                request.PhoneNumber
-            );
-
-            // Assign roles if provided
-            if (request.RoleIds is not null && request.RoleIds.Count > 0)
-            {
-                _logger.LogInformation("Assigning {RoleCount} roles to user", request.RoleIds.Count);
-                
-                foreach (var roleIdString in request.RoleIds)
-                {
-                    // Parse role ID from string to Guid
-                    if (!Guid.TryParse(roleIdString, out var roleGuid))
-                    {
-                        _logger.LogWarning("Invalid role ID format: {RoleId}", roleIdString);
-                        return Result<UserDTO>.Error($"Invalid role ID format: '{roleIdString}'");
-                    }
-
-                    var roleId = Auth.Domain.Aggregates.Role.RoleId.From(roleGuid);
-
-                    // Fetch role from repository
-                    var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken);
-                    if (role is null)
-                    {
-                        _logger.LogWarning("Role not found: {RoleId}", roleIdString);
-                        return Result<UserDTO>.Error($"Role with ID '{roleIdString}' not found");
-                    }
-
-                    // Assign role to user
-                    user.AssignRole(role);
-                    _logger.LogInformation("Assigned role {RoleId} ({RoleName}) to user", role.Id.Value, role.Name);
-                }
-            }
-
-            // Persist user
-            await _userRepository.AddAsync(user, cancellationToken);
-            
-            // Flush changes to database
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("User created successfully: {UserId} ({Username})", user.Id.Value, user.Username.Value);
-
-            // Map to DTO
-            var userDto = UserDTO.FromDomain(user);
-            return Result<UserDTO>.Ok(userDto);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating user: {FirstName} {LastName}", request.FirstName, request.LastName);
-            return Result<UserDTO>.Error($"Failed to create user: {ex.Message}");
-        }
+
+        // Persist user
+        await _userRepository.AddAsync(user, cancellationToken);
+        
+        // Flush changes to database
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("User created successfully: {UserId} ({Username})", user.Id.Value, user.Username.Value);
+
+        // Map to DTO
+        var userDto = UserDTO.FromDomain(user);
+        return Result<UserDTO>.Ok(userDto);
     }
 }

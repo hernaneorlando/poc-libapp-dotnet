@@ -24,71 +24,51 @@ public sealed class CreateRoleCommandHandler(
     {
         _logger.LogInformation("Creating role: {RoleName}", request.Name);
 
-        try
+        // Step 1: Create role aggregate
+        var role = Role.Create(request.Name, request.Description);
+
+        // Step 2: Assign permissions to role
+        foreach (var permissionRequest in request.Permissions)
         {
-            // Step 1: Create role aggregate
-            var role = Role.Create(request.Name, request.Description);
-
-            // Step 2: Assign permissions to role
-            foreach (var permissionRequest in request.Permissions)
+            // Parse feature and action from strings
+            if (!Enum.TryParse<PermissionFeature>(
+                permissionRequest.Feature, ignoreCase: true, out var feature))
             {
-                // Parse feature and action from strings
-                if (!Enum.TryParse<PermissionFeature>(
-                    permissionRequest.Feature, ignoreCase: true, out var feature))
-                {
-                    _logger.LogWarning("Invalid permission feature: {Feature}", permissionRequest.Feature);
-                    return Result<RoleResponse>.Invalid([$"Invalid permission feature: {permissionRequest.Feature}"]);
-                }
-
-                if (!Enum.TryParse<PermissionAction>(
-                    permissionRequest.Action, ignoreCase: true, out var action))
-                {
-                    _logger.LogWarning("Invalid permission action: {Action}", permissionRequest.Action);
-                    return Result<RoleResponse>.Invalid([$"Invalid permission action: {permissionRequest.Action}"]);
-                }
-
-                // Create permission value object from feature + action
-                var permission = new Permission(feature, action);
-
-                // Assign permission to role
-                role.AssignPermission(permission);
+                throw new InvalidOperationException($"Invalid permission feature: {permissionRequest.Feature}");
             }
 
-            // Step 3: Persist role
-            await _roleRepository.AddAsync(role, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if (!Enum.TryParse<PermissionAction>(
+                permissionRequest.Action, ignoreCase: true, out var action))
+            {
+                throw new InvalidOperationException($"Invalid permission action: {permissionRequest.Action}");
+            }
 
-            _logger.LogInformation(
-                "Role created successfully: {RoleId} ({RoleName}) with {PermissionCount} permissions",
-                role.Id.Value,
-                role.Name,
-                role.Permissions.Count);
+            // Create permission value object from feature + action
+            var permission = new Permission(feature, action);
 
-            // Step 4: Build response
-            var response = new RoleResponse(
-                Id: role.Id.Value.ToString(),
-                Name: role.Name,
-                Description: role.Description,
-                Permissions: [.. role.Permissions.Select(p => new RolePermissionResponse(
-                    Feature: p.Feature.ToString(),
-                    Action: p.Action.ToString()))]);
+            // Assign permission to role
+            role.AssignPermission(permission);
+        }
 
-            return Result<RoleResponse>.Ok(response);
-        }
-        catch (ValidationException ex)
-        {
-            _logger.LogWarning(ex, "Validation error creating role: {RoleName}", request.Name);
-            return Result<RoleResponse>.Invalid([ex.Message]);
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning(ex, "Validation error creating role: {RoleName}", request.Name);
-            return Result<RoleResponse>.Invalid([ex.Message]);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating role: {RoleName}", request.Name);
-            return Result<RoleResponse>.Error("An error occurred while creating the role");
-        }
+        // Step 3: Persist role
+        await _roleRepository.AddAsync(role, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Role created successfully: {RoleId} ({RoleName}) with {PermissionCount} permissions",
+            role.Id.Value,
+            role.Name,
+            role.Permissions.Count);
+
+        // Step 4: Build response
+        var response = new RoleResponse(
+            Id: role.Id.Value.ToString(),
+            Name: role.Name,
+            Description: role.Description,
+            Permissions: [.. role.Permissions.Select(p => new RolePermissionResponse(
+                Feature: p.Feature.ToString(),
+                Action: p.Action.ToString()))]);
+
+        return Result<RoleResponse>.Ok(response);
     }
 }

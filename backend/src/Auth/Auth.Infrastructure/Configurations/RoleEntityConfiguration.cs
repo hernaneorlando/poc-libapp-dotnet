@@ -25,7 +25,7 @@ public sealed class RoleEntityConfiguration : IEntityTypeConfiguration<RoleEntit
             .HasDatabaseName("IX_Roles_Name");
 
         builder.Property(r => r.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(256);
 
         builder.Property(r => r.PermissionsJson)
             .IsRequired()

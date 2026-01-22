@@ -27,60 +27,46 @@ public sealed class RefreshTokenCommandHandler(
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
-            return Result<RefreshTokenResponse>.Invalid(validationResult.Errors.Select(e => e.ErrorMessage));
+            throw new Core.Validation.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
 
-        try
+        // Find user by refresh token
+        var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken) 
+            ?? throw new InvalidOperationException("Refresh token is invalid or not found");
+
+        // Check if user has this refresh token and if it's valid
+        var refreshToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == request.RefreshToken);
+        if (refreshToken is null || !refreshToken.IsValid)
         {
-            // Find user by refresh token
-            var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
-
-            if (user is null)
-            {
-                _logger.LogWarning("Refresh token not found or invalid");
-                return Result<RefreshTokenResponse>.Error("Refresh token is invalid or not found");
-            }
-
-            // Check if user has this refresh token and if it's valid
-            var refreshToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == request.RefreshToken);
-
-            if (refreshToken is null || !refreshToken.IsValid)
-            {
-                _logger.LogWarning("Refresh token is invalid, expired, or revoked for user {UserId}", user.Id.Value);
-                return Result<RefreshTokenResponse>.Error("Refresh token is invalid, expired, or revoked");
-            }
-
-            // Generate new access token
-            var newAccessToken = _tokenService.GenerateAccessToken(user);
-
-            // Generate new refresh token
-            var newRefreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
-            var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays);
-            var newRefreshToken = Auth.Domain.ValueObjects.RefreshToken.Create(newRefreshTokenString, newRefreshTokenExpiresAt);
-
-            // Revoke old refresh token
-            refreshToken.RevokedAt = DateTime.UtcNow;
-
-            // Add new refresh token to user
-            user.AddRefreshToken(newRefreshToken);
-
-            // Persist changes
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation(
-                "Token refreshed successfully for user {UserId}",
-                user.Id.Value);
-
-            var response = new RefreshTokenResponse(
-                AccessToken: newAccessToken,
-                RefreshToken: newRefreshTokenString,
-                ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60);
-
-            return Result<RefreshTokenResponse>.Ok(response);
+            _logger.LogWarning("Refresh token is invalid, expired, or revoked for user {UserId}", user.Id.Value);
+            throw new InvalidOperationException("Refresh token is invalid, expired, or revoked");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error refreshing token");
-            return Result<RefreshTokenResponse>.Error("An error occurred while refreshing the token");
-        }
+
+        // Generate new access token
+        var newAccessToken = _tokenService.GenerateAccessToken(user);
+
+        // Generate new refresh token
+        var newRefreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
+        var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays);
+        var newRefreshToken = Auth.Domain.ValueObjects.RefreshToken.Create(newRefreshTokenString, newRefreshTokenExpiresAt);
+
+        // Revoke old refresh token
+        refreshToken.RevokedAt = DateTime.UtcNow;
+
+        // Add new refresh token to user
+        user.AddRefreshToken(newRefreshToken);
+
+        // Persist changes
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Token refreshed successfully for user {UserId}",
+            user.Id.Value);
+
+        var response = new RefreshTokenResponse(
+            AccessToken: newAccessToken,
+            RefreshToken: newRefreshTokenString,
+            ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60);
+
+        return Result<RefreshTokenResponse>.Ok(response);
     }
 }

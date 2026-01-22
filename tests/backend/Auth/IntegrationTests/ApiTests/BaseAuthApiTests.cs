@@ -3,14 +3,13 @@ using Auth.Domain.Aggregates.User;
 using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Enums;
-using Auth.Infrastructure.Services;
 using Auth.Application.Common.Security;
-using IntegrationTests.ApiTests.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Auth.Domain.Repositories;
 using Auth.Domain;
+using Common;
 
-namespace IntegrationTests.Auth.IntegrationTests.ApiTests;
+namespace Auth.Tests.IntegrationTests.ApiTests;
 
 /// <summary>
 /// Base class for Auth context API integration tests.

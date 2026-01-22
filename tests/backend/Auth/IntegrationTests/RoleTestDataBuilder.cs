@@ -1,7 +1,7 @@
 using Auth.Application.Roles.Commands.CreateRole;
 using Bogus;
 
-namespace IntegrationTests.Auth.IntegrationTests;
+namespace Auth.Tests.IntegrationTests;
 
 /// <summary>
 /// Builder/Faker for test data related to role creation.
@@ -10,14 +10,17 @@ namespace IntegrationTests.Auth.IntegrationTests;
 /// </summary>
 public static class RoleTestDataBuilder
 {
+    private static readonly string[] featureTypes = ["User", "Book", "Role", "Category"];
+    private static readonly string[] actionTypes = ["Create", "Read", "Update", "Delete"];
+
     /// <summary>
     /// Creates a Faker for RolePermissionRequest.
     /// </summary>
     public static Faker<RolePermissionRequest> CreateRolePermissionRequestFaker() =>
         new Faker<RolePermissionRequest>()
             .CustomInstantiator(f => new RolePermissionRequest(
-                Feature: f.PickRandom(new[] { "User", "Book", "Role", "Category" }),
-                Action: f.PickRandom(new[] { "Create", "Read", "Update", "Delete" })
+                Feature: f.PickRandom(featureTypes),
+                Action: f.PickRandom(actionTypes)
             ));
 
     /// <summary>
@@ -28,10 +31,9 @@ public static class RoleTestDataBuilder
             .CustomInstantiator(f => new CreateRoleCommand(
                 Name: f.Name.FirstName() + " Role",
                 Description: f.Lorem.Sentences(2).Replace("\n", " "),
-                Permissions: CreateRolePermissionRequestFaker()
+                Permissions: [.. CreateRolePermissionRequestFaker()
                     .Generate(f.Random.Int(1, 3))
-                    .DistinctBy(p => $"{p.Feature}:{p.Action}")
-                    .ToList()
+                    .DistinctBy(p => $"{p.Feature}:{p.Action}")]
             ));
 
     /// <summary>
@@ -54,9 +56,7 @@ public static class RoleTestDataBuilder
     public static List<RolePermissionRequest> GenerateRolePermissionRequests(int count = 3)
     {
         var faker = CreateRolePermissionRequestFaker();
-        return faker.Generate(count)
-            .DistinctBy(p => $"{p.Feature}:{p.Action}")
-            .ToList();
+        return [.. faker.Generate(count).DistinctBy(p => $"{p.Feature}:{p.Action}")];
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class RoleTestDataBuilder
     public static CreateRoleCommand GenerateCreateRoleCommandWithoutPermissions()
     {
         return GenerateCreateRoleCommand(
-            permissions: new List<RolePermissionRequest>()
+            permissions: []
         );
     }
 
@@ -161,7 +161,7 @@ public static class RoleTestDataBuilder
     public static CreateRoleCommand GenerateCreateRoleCommandWithLongDescription()
     {
         return GenerateCreateRoleCommand(
-            description: new string('D', 501),
+            description: new string('D', 257),
             permissions: GenerateRolePermissionRequests(1)
         );
     }
@@ -172,7 +172,7 @@ public static class RoleTestDataBuilder
     public static CreateRoleCommand GenerateCreateRoleCommandWithInvalidFeature(string feature = "InvalidFeature")
     {
         return GenerateCreateRoleCommand(
-            permissions: new List<RolePermissionRequest> { new(feature, "Read") }
+            permissions: [new(feature, "Read")]
         );
     }
 
@@ -182,7 +182,7 @@ public static class RoleTestDataBuilder
     public static CreateRoleCommand GenerateCreateRoleCommandWithInvalidAction(string action = "InvalidAction")
     {
         return GenerateCreateRoleCommand(
-            permissions: new List<RolePermissionRequest> { new("User", action) }
+            permissions: [new("User", action)]
         );
     }
 }

@@ -2,21 +2,18 @@ using Auth.Application.Common.Security;
 using Auth.Domain;
 using Auth.Domain.Repositories;
 using Auth.Domain.Services;
-using Auth.Infrastructure;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
 using Auth.Infrastructure.Services;
 using LibraryApp.API;
-using MediatR;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
-namespace IntegrationTests.ApiTests.Common;
+namespace Common;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
