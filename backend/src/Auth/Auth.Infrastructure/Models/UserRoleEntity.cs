@@ -13,6 +13,6 @@ public sealed class UserRoleEntity
     /// <summary>
     /// Navigation properties for the relationship.
     /// </summary>
-    public UserEntity? User { get; set; }
-    public RoleEntity? Role { get; set; }
+    public UserEntity User { get; set; }
+    public RoleEntity Role { get; set; }
 }

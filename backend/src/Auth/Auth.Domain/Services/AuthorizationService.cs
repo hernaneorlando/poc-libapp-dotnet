@@ -1,8 +1,7 @@
+namespace Auth.Domain.Services;
+
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Aggregates.User;
-using Auth.Domain.Enums;
-
-namespace Auth.Domain.Services;
 
 /// <summary>
 /// Default implementation of authorization service.

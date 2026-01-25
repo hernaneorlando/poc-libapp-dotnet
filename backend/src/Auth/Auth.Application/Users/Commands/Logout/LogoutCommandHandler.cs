@@ -1,9 +1,9 @@
 namespace Auth.Application.Users.Commands.Logout;
 
-using Auth.Application.Common;
 using Auth.Domain;
 using Auth.Domain.Aggregates.User;
-using Auth.Domain.Repositories;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Core.API;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

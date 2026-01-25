@@ -1,6 +1,6 @@
-namespace Auth.Application.Common.Security;
-
 using Auth.Domain.Aggregates.User;
+
+namespace Auth.Application.Common.Security.Interfaces;
 
 /// <summary>
 /// Service for generating and validating JWT tokens.

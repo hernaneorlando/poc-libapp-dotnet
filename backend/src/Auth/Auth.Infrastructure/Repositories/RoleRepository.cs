@@ -1,3 +1,6 @@
+using Auth.Infrastructure.Repositories.Interfaces;
+using Core.Infrastructure;
+
 namespace Auth.Infrastructure.Repositories;
 
 /// <summary>
@@ -5,8 +8,11 @@ namespace Auth.Infrastructure.Repositories;
 /// Handles persistence operations for the Role aggregate root.
 /// Converts between relational entities and domain aggregates using implicit operators.
 /// </summary>
-public sealed class RoleRepository(AuthDbContext _context) : IRoleRepository
+public sealed class RoleRepository(AuthDbContext context) 
+    : BaseRepository<Role, RoleId, RoleEntity>(context), IRoleRepository
 {
+    private readonly AuthDbContext _context = context;
+
     public async Task AddAsync(Role role, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(role);
@@ -24,28 +30,6 @@ public sealed class RoleRepository(AuthDbContext _context) : IRoleRepository
             .FirstOrDefaultAsync(r => r.Id == id.Value && r.IsActive, cancellationToken);
 
         return roleEntity is null ? null : (Role)roleEntity;
-    }
-
-    public async Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name cannot be empty", nameof(name));
-
-        var roleEntity = await _context.Roles
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Name == name && r.IsActive, cancellationToken);
-
-        return roleEntity is null ? null : (Role)roleEntity;
-    }
-
-    public async Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        var roleEntities = await _context.Roles
-            .AsNoTracking()
-            .Where(r => r.IsActive)
-            .ToListAsync(cancellationToken);
-
-        return roleEntities.Select(role => (Role)role);
     }
 
     public async Task UpdateAsync(Role role, CancellationToken cancellationToken = default)
@@ -82,4 +66,6 @@ public sealed class RoleRepository(AuthDbContext _context) : IRoleRepository
             _context.Roles.Update(roleEntity);
         }
     }
+
+    protected override Role MapToDomain(RoleEntity entity) => (Role)entity;
 }

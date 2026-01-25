@@ -1,7 +1,5 @@
 using Auth.Application.Roles.Commands.CreateRole;
-using Auth.Application.Common;
 using Auth.Domain;
-using Auth.Domain.Repositories;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
 using MediatR;
@@ -9,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Core.Validation;
+using Auth.Application.Roles.DTOs;
+using Core.API;
+using Auth.Infrastructure.Repositories.Interfaces;
 
 namespace Auth.Tests.IntegrationTests.ApplicationHandlerTests.Roles;
 
@@ -124,8 +125,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         successResult.Data.Id.Should().NotBeEmpty();
     }
 
@@ -142,8 +143,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         
         var savedRole = await _dbContext.Roles.FindAsync(Guid.Parse(successResult.Data.Id));
         savedRole.Should().NotBeNull();
@@ -165,8 +166,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         
         successResult.Data.Permissions.Should().HaveCount(3);
     }
@@ -181,8 +182,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         
         successResult.Data.Permissions.Should().BeEmpty();
     }
@@ -197,8 +198,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         successResult.Data.Id.Should().NotBeEmpty();
         Guid.TryParse(successResult.Data.Id, out _).Should().BeTrue();
     }
@@ -334,8 +335,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result2 = await _mediator.Send(command2);
 
         // Assert
-        result1.Should().BeOfType<Result<RoleResponse>.Success>();
-        result2.Should().BeOfType<Result<RoleResponse>.Success>();
+        result1.Should().BeOfType<Result<RoleDTO>.Success>();
+        result2.Should().BeOfType<Result<RoleDTO>.Success>();
         
         var roles = await _dbContext.Roles.ToListAsync();
         roles.Should().HaveCount(2);
@@ -353,8 +354,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var afterCreation = DateTime.UtcNow;
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         
         var savedRole = await _dbContext.Roles.FindAsync(Guid.Parse(successResult.Data.Id));
         savedRole!.CreatedAt.Should().BeOnOrAfter(beforeCreation);
@@ -371,8 +372,8 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         var result = await _mediator.Send(command);
 
         // Assert
-        result.Should().BeOfType<Result<RoleResponse>.Success>();
-        var successResult = (Result<RoleResponse>.Success)result;
+        result.Should().BeOfType<Result<RoleDTO>.Success>();
+        var successResult = (Result<RoleDTO>.Success)result;
         
         var savedRole = await _dbContext.Roles.FindAsync(Guid.Parse(successResult.Data.Id));
         savedRole!.IsActive.Should().BeTrue();

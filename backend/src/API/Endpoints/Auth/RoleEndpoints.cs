@@ -1,11 +1,8 @@
-namespace LibraryApp.API.Endpoints.Auth;
+using Auth.Application.Roles.Commands.CreateRole;
+using Auth.Application.Roles.DTOs;
+using Auth.Application.Roles.Queries.ListRoles;
 
-using global::Auth.Application.Roles.Commands.CreateRole;
-using global::Auth.Application.Roles.DTOs;
-using global::Auth.Domain.Attributes;
-using global::Auth.Domain.Enums;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+namespace LibraryApp.API.Endpoints.Auth;
 
 /// <summary>
 /// Role management endpoints (minimal API).
@@ -30,6 +27,14 @@ public static class RoleEndpoints
             .Produces<RoleDTO>(StatusCodes.Status201Created)
             .Produces<ErrorResponse>(StatusCodes.Status400BadRequest);
 
+        // GET /api/auth/roles - List all roles with pagination
+        roleGroupBuilder.MapGet("", ListRoles)
+            .WithName(nameof(ListRoles))
+            .WithSummary("List all roles")
+            .WithDescription("Retrieves a paginated list of roles with optional filtering by name and active status.")
+            .Produces<PaginatedResponse<RoleDTO>>(StatusCodes.Status200OK)
+            .Produces<ErrorResponse>(StatusCodes.Status400BadRequest);
+
         return app;
     }
 
@@ -40,39 +45,17 @@ public static class RoleEndpoints
     [RequirePermission(PermissionFeature.Role, PermissionAction.Create)]
     private static async Task<IResult> CreateRole(
         [FromServices] IMediator mediator,
-        [FromBody] CreateRoleRequest request,
+        [FromBody] CreateRoleCommand request,
         CancellationToken cancellationToken)
     {
-        // Convert API request payloads to command payloads
-        var permissions = request.Permissions
-            .Select(p => new RolePermissionRequest(p.Feature, p.Action))
-            .ToList();
-
-        // Map request to command
-        var command = new CreateRoleCommand(
-            request.Name,
-            request.Description,
-            permissions
-        );
-
         // Send command through MediatR pipeline
-        var result = await mediator.Send(command, cancellationToken);
+        var result = await mediator.Send(request, cancellationToken);
 
         // Handle result using pattern matching
         return result.Match(
             onSuccess: roleResponse =>
             {
-                // Map response to RoleDTO for consistency
-                var roleDto = new RoleDTO(
-                    Id: roleResponse.Id,
-                    Name: roleResponse.Name,
-                    Description: roleResponse.Description,
-                    Permissions: [.. roleResponse.Permissions.Select(p => new PermissionDTO(p.Feature, p.Action, $"{p.Action}_{p.Feature}"))],
-                    CreatedAt: DateTime.UtcNow,
-                    UpdatedAt: null,
-                    IsActive: true
-                );
-                return Results.CreatedAtRoute("CreateRole", null, roleDto);
+                return Results.CreatedAtRoute("CreateRole", null, roleResponse);
             },
             onError: errorMessage => Results.BadRequest(new ErrorResponse
             {
@@ -89,19 +72,38 @@ public static class RoleEndpoints
             })
         );
     }
+
+    /// <summary>
+    /// Lists all roles with optional pagination and filtering.
+    /// </summary>
+    [RequirePermission(PermissionFeature.Role, PermissionAction.Read)]
+    private static async Task<IResult> ListRoles(
+        [FromServices] IMediator mediator,
+        [FromQuery] QueryStringWithFilters<ListRolesQuery, RoleDTO> filters,
+        CancellationToken cancellationToken = default)
+    {
+        // Create query from parameters
+        var query = filters.GetQuery();
+
+        // Send query through MediatR pipeline
+        var result = await mediator.Send(query, cancellationToken);
+
+        // Handle result using pattern matching
+        return result.Match(
+            onSuccess: listResponse => Results.Ok(listResponse),
+            onError: errorMessage => Results.BadRequest(new ErrorResponse
+            {
+                Title = "Failed to Retrieve Roles",
+                Detail = errorMessage,
+                Status = StatusCodes.Status400BadRequest
+            }),
+            onValidationError: errors => Results.BadRequest(new ErrorResponse
+            {
+                Title = "Validation Failed",
+                Detail = "One or more validation errors occurred.",
+                Status = StatusCodes.Status400BadRequest,
+                Errors = [.. errors]
+            })
+        );
+    }
 }
-
-/// <summary>
-/// Request model for creating a new role.
-/// </summary>
-public sealed record CreateRoleRequest(
-    string Name,
-    string Description,
-    IReadOnlyList<PermissionRequestPayload> Permissions);
-
-/// <summary>
-/// Permission payload in role creation request.
-/// </summary>
-public sealed record PermissionRequestPayload(
-    string Feature,
-    string Action);

@@ -1,9 +1,9 @@
-namespace Auth.Infrastructure.Services;
+namespace Auth.Application.Common.Security;
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Auth.Application.Common.Security;
+using Auth.Application.Common.Security.Interfaces;
 using Auth.Domain.Aggregates.User;
 using Microsoft.IdentityModel.Tokens;
 

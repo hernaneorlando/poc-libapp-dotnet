@@ -1,2 +1,3 @@
-global using Auth.Domain.Repositories;
 global using Auth.Domain.ValueObjects;
+global using MediatR;
+global using Microsoft.Extensions.Logging;

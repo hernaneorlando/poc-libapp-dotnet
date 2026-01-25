@@ -3,7 +3,7 @@ using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Enums;
 using Core.Validation;
 
-namespace Auth.Tests.UnitTests.Roles;
+namespace Auth.Tests.UnitTests;
 
 /// <summary>
 /// Unit tests for the Role aggregate.
@@ -152,14 +152,16 @@ public class RoleAggregateTests
     }
 
     [Fact]
-    public void RemovePermission_WithNullPermission_ThrowsArgumentNullException()
+    public void RemovePermission_WithNullPermission_ThrowsValidationException()
     {
         // Arrange
         var role = Role.Create("Viewer", "Viewer role");
 
         // Act & Assert
         var action = () => role.RemovePermission(null!);
-        action.Should().Throw<ArgumentNullException>();
+        action.Should()
+            .Throw<ValidationException>()
+            .WithMessage("*Permission cannot be null*");
     }
 
     [Fact]

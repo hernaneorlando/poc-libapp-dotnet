@@ -1,7 +1,7 @@
 namespace Auth.Application.Users.Commands.RemoveDeniedPermission;
 
 using MediatR;
-using Auth.Application.Common;
+using Core.API;
 
 /// <summary>
 /// Command to remove a denied permission from a user.

@@ -1,14 +1,12 @@
 namespace Auth.Application.Roles.Commands.CreateRole;
 
-using Auth.Application.Common;
+using Auth.Application.Roles.DTOs;
 using Auth.Domain;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Enums;
-using Auth.Domain.Repositories;
-using Core.Validation;
-using MediatR;
-using Microsoft.Extensions.Logging;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Core.API;
 
 /// <summary>
 /// Handler for CreateRoleCommand.
@@ -18,9 +16,9 @@ using Microsoft.Extensions.Logging;
 public sealed class CreateRoleCommandHandler(
     IRoleRepository _roleRepository,
     ILogger<CreateRoleCommandHandler> _logger,
-    IUnitOfWork _unitOfWork) : IRequestHandler<CreateRoleCommand, Result<RoleResponse>>
+    IUnitOfWork _unitOfWork) : IRequestHandler<CreateRoleCommand, Result<RoleDTO>>
 {
-    public async Task<Result<RoleResponse>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RoleDTO>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Creating role: {RoleName}", request.Name);
 
@@ -61,14 +59,15 @@ public sealed class CreateRoleCommandHandler(
             role.Permissions.Count);
 
         // Step 4: Build response
-        var response = new RoleResponse(
+        var response = new RoleDTO(
             Id: role.Id.Value.ToString(),
             Name: role.Name,
             Description: role.Description,
-            Permissions: [.. role.Permissions.Select(p => new RolePermissionResponse(
-                Feature: p.Feature.ToString(),
-                Action: p.Action.ToString()))]);
+            Permissions: [.. role.Permissions.Select(p => new PermissionDTO(p.Code))],
+            CreatedAt: role.CreatedAt,
+            UpdatedAt: null,
+            IsActive: true);
 
-        return Result<RoleResponse>.Ok(response);
+        return Result<RoleDTO>.Ok(response);
     }
 }

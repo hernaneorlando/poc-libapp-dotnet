@@ -1,5 +1,3 @@
-using System;
-
 namespace Auth.Application.Common.Security;
 
 public interface IPolicyLoader

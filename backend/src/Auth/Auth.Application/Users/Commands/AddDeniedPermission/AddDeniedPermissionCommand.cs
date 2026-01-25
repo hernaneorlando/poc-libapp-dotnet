@@ -1,8 +1,7 @@
 namespace Auth.Application.Users.Commands.AddDeniedPermission;
 
-using Auth.Domain.Enums;
 using MediatR;
-using Auth.Application.Common;
+using Core.API;
 
 /// <summary>
 /// Command to add a denied permission to a user.

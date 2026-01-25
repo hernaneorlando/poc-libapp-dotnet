@@ -1,7 +1,7 @@
 namespace Auth.Application.Users.Queries.GetDeniedPermissions;
 
 using MediatR;
-using Auth.Application.Common;
+using Core.API;
 
 /// <summary>
 /// Query to retrieve all denied permissions for a user.

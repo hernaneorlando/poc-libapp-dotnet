@@ -1,7 +1,6 @@
 namespace Auth.Application.Roles.DTOs;
 
 using Auth.Domain.Aggregates.Role;
-using Auth.Domain.Aggregates.Permission;
 
 /// <summary>
 /// Data Transfer Object for Role aggregate.
@@ -19,7 +18,7 @@ public sealed record RoleDTO(
     /// <summary>
     /// Maps a Role aggregate to a RoleDTO.
     /// </summary>
-    public static RoleDTO FromDomain(Role role)
+    public static implicit operator RoleDTO(Role role)
     {
         ArgumentNullException.ThrowIfNull(role);
 
@@ -27,7 +26,7 @@ public sealed record RoleDTO(
             Id: role.Id.Value.ToString(),
             Name: role.Name,
             Description: role.Description,
-            Permissions: role.Permissions.Select(p => PermissionDTO.FromDomain(p)).ToList(),
+            Permissions: [.. role.Permissions.Select(p => (PermissionDTO)p)],
             CreatedAt: role.CreatedAt,
             UpdatedAt: role.UpdatedAt,
             IsActive: role.IsActive

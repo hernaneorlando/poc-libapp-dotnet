@@ -1,12 +1,13 @@
-namespace Auth.Domain.Repositories;
+namespace Auth.Infrastructure.Repositories.Interfaces;
 
 using Auth.Domain.Aggregates.User;
+using Core.Infrastructure;
 
 /// <summary>
 /// Repository interface for User aggregate persistence.
 /// Defines operations for managing users in persistent storage.
 /// </summary>
-public interface IUserRepository
+public interface IUserRepository : IBaseRepository<User, UserEntity>
 {
     /// <summary>
     /// Adds a new user to the repository.
@@ -17,22 +18,6 @@ public interface IUserRepository
     /// Retrieves a user by its unique identifier.
     /// </summary>
     Task<User?> GetByIdAsync(UserId userId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a user by username.
-    /// </summary>
-    Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a user by email address.
-    /// </summary>
-    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a user by refresh token.
-    /// Used for token refresh operations.
-    /// </summary>
-    Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing user.

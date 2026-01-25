@@ -1,8 +1,9 @@
 namespace Auth.Application.Users.Commands.CreateUser;
 
 using FluentValidation;
-using Auth.Domain.Repositories;
 using Auth.Domain.Enums;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Infrastructure.Specifications;
 
 /// <summary>
 /// Validator for CreateUserCommand.
@@ -45,7 +46,7 @@ public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCom
 
     private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken)
     {
-        var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
+        var existingUser = await _userRepository.FindAsync(new GetUserByEmail(email), cancellationToken);
         return existingUser is null;
     }
 }

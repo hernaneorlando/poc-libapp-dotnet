@@ -2,7 +2,6 @@ namespace Auth.Domain.Aggregates.User;
 
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Aggregates.Role;
-using Auth.Domain.Enums;
 
 /// <summary>
 /// Aggregate Root representing a User in the authentication system.
@@ -21,9 +20,9 @@ public sealed class User : AggregateRoot<UserId>
     public string? PasswordHash { get; set; }
     public UserContact Contact { get; set; } = null!;
     public UserType UserType { get; set; }
-    public List<Role> Roles { get; set; } = [];
-    public List<Permission> DeniedPermissions { get; set; } = [];
-    public List<RefreshToken> RefreshTokens { get; set; } = [];
+    public List<Role> Roles { get; private set; } = [];
+    public List<Permission> DeniedPermissions { get; private set; } = [];
+    public List<RefreshToken> RefreshTokens { get; private set; } = [];
 
     public User() { }
 
@@ -51,11 +50,7 @@ public sealed class User : AggregateRoot<UserId>
         Username? username = null,
         string? phoneNumber = null)
     {
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be empty");
-
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be empty");
+        Validate(firstName, lastName);
 
         var contact = UserContact.Create(email, phoneNumber);
 
@@ -87,11 +82,11 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void Update(string firstName, string lastName)
     {
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be empty");
+        Validate(firstName, lastName);
 
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be empty");
+        FirstName = firstName.Trim();
+        LastName = lastName.Trim();
+        UpdatedAt = DateTime.UtcNow;
 
         FirstName = firstName.Trim();
         LastName = lastName.Trim();
@@ -105,8 +100,7 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void SetPasswordHash(string passwordHash)
     {
-        if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new ArgumentException("Password hash cannot be empty");
+        ValidationException.ThrowIfNullOrWhiteSpace(passwordHash, "Password hash cannot be empty");
 
         PasswordHash = passwordHash;
         UpdatedAt = DateTime.UtcNow;
@@ -119,7 +113,7 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void AssignRole(Role role)
     {
-        ArgumentNullException.ThrowIfNull(role);
+        ValidationException.ThrowIfNull(role);
         
         if (Roles.Any(r => r.Id == role.Id))
             throw new InvalidOperationException("Role already assigned to this user");
@@ -135,11 +129,10 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void RemoveRole(RoleId roleId)
     {
-        ArgumentNullException.ThrowIfNull(roleId);
+        ValidationException.ThrowIfNull(roleId);
         
-        var role = Roles.FirstOrDefault(r => r.Id == roleId);
-        if (role is null)
-            throw new InvalidOperationException("Role not assigned to this user");
+        var role = Roles.FirstOrDefault(r => r.Id == roleId) 
+            ?? throw new InvalidOperationException("Role not assigned to this user");
 
         Roles.Remove(role);
         UpdatedAt = DateTime.UtcNow;
@@ -152,7 +145,10 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void AddRefreshToken(RefreshToken refreshToken)
     {
-        ArgumentNullException.ThrowIfNull(refreshToken);
+        ValidationException.ThrowIfNull(refreshToken, "Refresh token cannot be null");
+        if (RefreshTokens.Any(rt => rt.Token == refreshToken.Token))
+            throw new InvalidOperationException("Refresh token already exists for this user");
+        
         RefreshTokens.Add(refreshToken);
         UpdatedAt = DateTime.UtcNow;
     }
@@ -162,7 +158,8 @@ public sealed class User : AggregateRoot<UserId>
     /// </summary>
     public void RevokeRefreshToken(string token)
     {
-        var refreshToken = RefreshTokens.FirstOrDefault(rt => rt.Token == token) ?? throw new InvalidOperationException("Refresh token not found");
+        var refreshToken = RefreshTokens.FirstOrDefault(rt => rt.Token == token) 
+            ?? throw new InvalidOperationException("Refresh token not found");
         refreshToken.Revoke();
         UpdatedAt = DateTime.UtcNow;
     }
@@ -181,5 +178,11 @@ public sealed class User : AggregateRoot<UserId>
         }
 
         RaiseDomainEvent(new UserDeactivatedEvent(Id));
+    }
+
+    private static void Validate(string firstName, string lastName)
+    {
+            ValidationException.ThrowIfNullOrWhiteSpace(firstName, "First name cannot be empty");
+            ValidationException.ThrowIfNullOrWhiteSpace(lastName, "Last name cannot be empty");
     }
 }

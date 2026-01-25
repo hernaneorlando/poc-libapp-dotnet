@@ -1,11 +1,13 @@
+using Auth.Application.Roles.DTOs;
 using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Enums;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
+using Core.API;
 using Microsoft.EntityFrameworkCore;
 
-namespace Auth.Tests.IntegrationTests.RepositoryTests.Roles;
+namespace Auth.Tests.IntegrationTests.RepositoryTests;
 
 /// <summary>
 /// Integration tests for the RoleRepository.
@@ -116,33 +118,6 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetByNameAsync_ExistingRole_ReturnsRole()
-    {
-        // Arrange
-        var name = "Manager";
-        var role = Role.Create(name, "Management access");
-        await _roleRepository.AddAsync(role);
-        await _dbContext.SaveChangesAsync();
-
-        // Act
-        var retrievedRole = await _roleRepository.GetByNameAsync(name);
-
-        // Assert
-        retrievedRole.Should().NotBeNull();
-        retrievedRole!.Name.Should().Be(name);
-    }
-
-    [Fact]
-    public async Task GetByNameAsync_NonExistingRole_ReturnsNull()
-    {
-        // Act
-        var retrievedRole = await _roleRepository.GetByNameAsync("NonExistentRole");
-
-        // Assert
-        retrievedRole.Should().BeNull();
-    }
-
-    [Fact]
     public async Task GetAllAsync_MultipleRoles_ReturnsAllRoles()
     {
         // Arrange
@@ -156,20 +131,22 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         // Act
-        var allRoles = await _roleRepository.GetAllAsync();
+        var query = new BasePagedQuery<RoleDTO> { PageNumber = 1, PageSize = 100 };
+        var pagedResult = await _roleRepository.GetAllAsync(query);
 
         // Assert
-        allRoles.Should().HaveCount(3);
+        pagedResult.Should().HaveCount(3);
     }
 
     [Fact]
     public async Task GetAllAsync_EmptyDatabase_ReturnsEmptyList()
     {
         // Act
-        var allRoles = await _roleRepository.GetAllAsync();
+        var query = new BasePagedQuery<RoleDTO> { PageNumber = 1, PageSize = 100 };
+        var pagedResult = await _roleRepository.GetAllAsync(query);
 
         // Assert
-        allRoles.Should().BeEmpty();
+        pagedResult.Should().BeEmpty();
     }
 
     #endregion
@@ -305,13 +282,14 @@ public class RoleRepositoryIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         // Act
-        var allRoles = (await _roleRepository.GetAllAsync()).ToList();
+        var query = new BasePagedQuery<RoleDTO> { PageNumber = 1, PageSize = 100 };
+        var pagedResult = await _roleRepository.GetAllAsync(query);
 
         // Assert
         // GetAllAsync filters by IsActive = true, so only active roles are returned
-        allRoles.Should().HaveCount(1);
-        allRoles[0].Name.Should().Be("Active");
-        allRoles[0].IsActive.Should().BeTrue();
+        pagedResult.Should().HaveCount(1);
+        pagedResult[0].Name.Should().Be("Active");
+        pagedResult[0].IsActive.Should().BeTrue();
     }
 
     [Fact]

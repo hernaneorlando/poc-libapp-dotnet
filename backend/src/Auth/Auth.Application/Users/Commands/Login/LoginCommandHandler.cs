@@ -1,10 +1,12 @@
 namespace Auth.Application.Users.Commands.Login;
 
-using Auth.Application.Common;
 using Auth.Application.Common.Security;
+using Auth.Application.Common.Security.Interfaces;
 using Auth.Domain;
-using Auth.Domain.Repositories;
 using Auth.Domain.ValueObjects;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Infrastructure.Specifications;
+using Core.API;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -25,7 +27,7 @@ public sealed class LoginCommandHandler(
         _logger.LogInformation("Login attempt for user: {Username}", request.Username);
 
         // Step 1: Find user by username
-        var user = await _userRepository.GetByUsernameAsync(request.Username, cancellationToken);
+        var user = await _userRepository.FindAsync(new GetUserByUsername(request.Username), cancellationToken, u => u.UserRoles);
         if (user is null)
         {
             _logger.LogWarning("Login failed: User not found - {Username}", request.Username);

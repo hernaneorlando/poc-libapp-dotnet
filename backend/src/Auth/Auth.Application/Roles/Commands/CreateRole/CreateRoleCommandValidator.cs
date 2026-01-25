@@ -24,8 +24,8 @@ public sealed class CreateRoleCommandValidator : AbstractValidator<CreateRoleCom
             .WithMessage("Role description is required")
             .MinimumLength(10)
             .WithMessage("Role description must be at least 10 characters")
-            .MaximumLength(500)
-            .WithMessage("Role description must not exceed 500 characters");
+            .MaximumLength(256)
+            .WithMessage("Role description must not exceed 256 characters");
 
         RuleFor(x => x.Permissions)
             .NotNull()
@@ -34,7 +34,7 @@ public sealed class CreateRoleCommandValidator : AbstractValidator<CreateRoleCom
             .WithMessage("At least one permission is required");
 
         RuleForEach(x => x.Permissions)
-            .Must(permission => IsValidPermission(permission))
+            .Must(IsValidPermission)
             .WithMessage("Invalid permission feature/action combination");
     }
 

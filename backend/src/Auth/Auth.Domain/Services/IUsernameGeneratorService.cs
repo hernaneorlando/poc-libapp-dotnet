@@ -1,7 +1,5 @@
 namespace Auth.Domain.Services;
 
-using Auth.Domain.Aggregates.User;
-
 /// <summary>
 /// Result of username generation attempt.
 /// Indicates whether the suggested username is available or if customization is needed.

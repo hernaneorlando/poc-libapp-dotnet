@@ -1,4 +1,4 @@
-namespace LibraryApp.API.Extensions;
+namespace Core.API;
 
 /// <summary>
 /// Result error details for API responses.

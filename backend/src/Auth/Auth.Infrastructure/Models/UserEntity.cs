@@ -1,15 +1,15 @@
 namespace Auth.Infrastructure.Models;
 
 using Auth.Domain.Enums;
+using Core.Infrastructure;
 
 /// <summary>
 /// Relational entity for User aggregate persistence.
 /// Flattens nested value objects for relational database storage.
 /// Uses Data Mapper pattern with implicit operators.
 /// </summary>
-public sealed class UserEntity
+public sealed class UserEntity : Entity
 {
-    public Guid Id { get; set; }
     public required string FirstName { get; set; }
     public required string LastName { get; set; }
     public required string Username { get; set; }
@@ -22,16 +22,12 @@ public sealed class UserEntity
     public string? AddressZipCode { get; set; }
     public string? AddressCountry { get; set; }
     public int UserType { get; set; }
-    public int Version { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public bool IsActive { get; set; }
 
     /// <summary>
     /// Navigation properties for collections.
     /// </summary>
-    public ICollection<UserRoleEntity> UserRoles { get; set; } = [];
-    public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];
+    public IList<UserRoleEntity> UserRoles { get; set; } = [];
+    public IList<RefreshTokenEntity> RefreshTokens { get; set; } = [];
 
     /// <summary>
     /// Converts relational entity to domain aggregate root (Entity → Domain).
@@ -71,15 +67,21 @@ public sealed class UserEntity
             PasswordHash = userEntity.PasswordHash,
             Contact = contact,
             UserType = (UserType)userEntity.UserType,
-            Roles = [.. userEntity.UserRoles
-                .Where(ur => ur.Role != null)
-                .Select(ur => (Role)ur.Role!)],
-            RefreshTokens = [.. userEntity.RefreshTokens.Select(rt => (RefreshToken)rt)],
             Version = userEntity.Version,
             CreatedAt = userEntity.CreatedAt,
             UpdatedAt = userEntity.UpdatedAt,
             IsActive = userEntity.IsActive
         };
+
+        foreach (var roleEntity in userEntity.UserRoles)
+        {
+            user.Roles.Add((Role)roleEntity.Role);
+        }
+
+        foreach (var tokenEntity in userEntity.RefreshTokens)
+        {
+            user.RefreshTokens.Add((RefreshToken)tokenEntity);
+        }
 
         return user;
     }

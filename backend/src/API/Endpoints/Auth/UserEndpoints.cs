@@ -1,14 +1,10 @@
-namespace LibraryApp.API.Endpoints.Auth;
+using Auth.Application.Users.Commands.AddDeniedPermission;
+using Auth.Application.Users.Commands.CreateUser;
+using Auth.Application.Users.Commands.RemoveDeniedPermission;
+using Auth.Application.Users.DTOs;
+using Auth.Application.Users.Queries.GetDeniedPermissions;
 
-using global::Auth.Application.Users.Commands.CreateUser;
-using global::Auth.Application.Users.Commands.AddDeniedPermission;
-using global::Auth.Application.Users.Commands.RemoveDeniedPermission;
-using global::Auth.Application.Users.Queries.GetDeniedPermissions;
-using global::Auth.Application.Users.DTOs;
-using global::Auth.Domain.Attributes;
-using global::Auth.Domain.Enums;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+namespace LibraryApp.API.Endpoints.Auth;
 
 /// <summary>
 /// User management endpoints (minimal API).
@@ -73,19 +69,9 @@ public static class UserEndpoints
     [RequirePermission(PermissionFeature.User, PermissionAction.Create)]
     private static async Task<IResult> CreateUser(
         [FromServices] IMediator mediator,
-        [FromBody] CreateUserRequest request,
+        [FromBody] CreateUserCommand command,
         CancellationToken cancellationToken)
     {
-        // Map request to command with optional roles
-        var command = new CreateUserCommand(
-            request.FirstName,
-            request.LastName,
-            request.Email,
-            request.UserType,
-            request.PhoneNumber,
-            request.RoleIds
-        );
-
         // Send command through MediatR pipeline
         var result = await mediator.Send(command, cancellationToken);
 
@@ -117,10 +103,9 @@ public static class UserEndpoints
     private static async Task<IResult> AddDeniedPermission(
         [FromServices] IMediator mediator,
         [FromRoute] string userId,
-        [FromBody] DeniedPermissionRequest request,
+        [FromBody] AddDeniedPermissionCommand command,
         CancellationToken cancellationToken)
     {
-        var command = new AddDeniedPermissionCommand(userId, request.Feature, request.Action);
         var result = await mediator.Send(command, cancellationToken);
 
         return result.Match(
@@ -150,10 +135,9 @@ public static class UserEndpoints
     private static async Task<IResult> RemoveDeniedPermission(
         [FromServices] IMediator mediator,
         [FromRoute] string userId,
-        [FromBody] DeniedPermissionRequest request,
+        [FromBody] RemoveDeniedPermissionCommand command,
         CancellationToken cancellationToken)
     {
-        var command = new RemoveDeniedPermissionCommand(userId, request.Feature, request.Action);
         var result = await mediator.Send(command, cancellationToken);
 
         return result.Match(
@@ -204,37 +188,4 @@ public static class UserEndpoints
             })
         );
     }
-}
-
-/// <summary>
-/// Request model for managing denied permissions.
-/// </summary>
-public sealed record DeniedPermissionRequest(
-    /// <summary>The permission feature (e.g., Book, Category, User, etc.)</summary>
-    string Feature,
-
-    /// <summary>The permission action (Create, Read, Update, Delete)</summary>
-    string Action);
-
-/// <summary>
-/// Request model for creating a new user.
-/// RoleIds are optional and can be used to assign roles during user creation.
-/// </summary>
-public sealed record CreateUserRequest(
-    string FirstName,
-    string LastName,
-    string Email,
-    string UserType,
-    string? PhoneNumber = null,
-    IReadOnlyList<string>? RoleIds = null);
-
-/// <summary>
-/// Standard error response model following ProblemDetails pattern.
-/// </summary>
-public sealed record ErrorResponse
-{
-    public string Title { get; init; } = string.Empty;
-    public string Detail { get; init; } = string.Empty;
-    public int Status { get; init; }
-    public List<string> Errors { get; init; } = [];
 }

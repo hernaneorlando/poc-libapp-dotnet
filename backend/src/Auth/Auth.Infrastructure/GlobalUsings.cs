@@ -1,17 +1,11 @@
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.EntityFrameworkCore.Design;
-global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Configuration;
-global using Microsoft.Extensions.Logging;
 global using Auth.Domain.Aggregates.User;
 global using Auth.Domain.Aggregates.Role;
-global using Auth.Domain.Aggregates.Permission;
-global using Auth.Domain.Repositories;
 global using Auth.Domain.ValueObjects;
-global using Auth.Domain.Enums;
 global using Auth.Infrastructure.Data;
 global using Auth.Infrastructure.Models;
 global using Auth.Infrastructure.Configurations;
-global using Auth.Infrastructure.Repositories;

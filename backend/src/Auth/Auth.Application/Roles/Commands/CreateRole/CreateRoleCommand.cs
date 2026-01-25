@@ -1,7 +1,7 @@
-namespace Auth.Application.Roles.Commands.CreateRole;
+using Auth.Application.Roles.DTOs;
+using Core.API;
 
-using MediatR;
-using Auth.Application.Common;
+namespace Auth.Application.Roles.Commands.CreateRole;
 
 /// <summary>
 /// Command to create a new role with permissions.
@@ -10,28 +10,12 @@ using Auth.Application.Common;
 public sealed record CreateRoleCommand(
     string Name,
     string Description,
-    IReadOnlyList<RolePermissionRequest> Permissions) : IRequest<Result<RoleResponse>>;
+    IReadOnlyList<RolePermissionRequest> Permissions) : IRequest<Result<RoleDTO>>;
 
 /// <summary>
 /// Permission request model for role creation.
 /// Specifies Feature + Action combination as strings.
 /// </summary>
 public sealed record RolePermissionRequest(
-    string Feature,
-    string Action);
-
-/// <summary>
-/// Response model for role creation.
-/// </summary>
-public sealed record RoleResponse(
-    string Id,
-    string Name,
-    string Description,
-    IReadOnlyList<RolePermissionResponse> Permissions);
-
-/// <summary>
-/// Permission response model in role response.
-/// </summary>
-public sealed record RolePermissionResponse(
     string Feature,
     string Action);

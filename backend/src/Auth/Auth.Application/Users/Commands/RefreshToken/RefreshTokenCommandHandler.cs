@@ -2,10 +2,13 @@ namespace Auth.Application.Users.Commands.RefreshToken;
 
 using MediatR;
 using Auth.Domain;
-using Auth.Domain.Repositories;
-using Auth.Application.Common;
-using Auth.Application.Common.Security;
 using Microsoft.Extensions.Logging;
+using Core.API;
+using Auth.Application.Common.Security;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Application.Common.Security.Interfaces;
+using Auth.Domain.ValueObjects;
+using Auth.Infrastructure.Specifications;
 
 /// <summary>
 /// Handler for RefreshTokenCommand.
@@ -27,10 +30,10 @@ public sealed class RefreshTokenCommandHandler(
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
-            throw new Core.Validation.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+            throw new Core.Validation.ValidationException([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
 
         // Find user by refresh token
-        var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken) 
+        var user = await _userRepository.FindAsync(new GetUserByRefreshToken(request.RefreshToken), cancellationToken, u => u.RefreshTokens, u => u.UserRoles) 
             ?? throw new InvalidOperationException("Refresh token is invalid or not found");
 
         // Check if user has this refresh token and if it's valid
@@ -47,7 +50,7 @@ public sealed class RefreshTokenCommandHandler(
         // Generate new refresh token
         var newRefreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
         var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays);
-        var newRefreshToken = Auth.Domain.ValueObjects.RefreshToken.Create(newRefreshTokenString, newRefreshTokenExpiresAt);
+        var newRefreshToken = RefreshToken.Create(newRefreshTokenString, newRefreshTokenExpiresAt);
 
         // Revoke old refresh token
         refreshToken.RevokedAt = DateTime.UtcNow;

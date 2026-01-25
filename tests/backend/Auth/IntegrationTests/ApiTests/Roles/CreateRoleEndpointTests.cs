@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using Auth.Application.Roles.Commands.CreateRole;
 using Auth.Application.Roles.DTOs;
 using Common;
-using LibraryApp.API.Endpoints.Auth;
 
 namespace Auth.Tests.IntegrationTests.ApiTests.Roles;
 
@@ -19,14 +19,14 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Administrator",
             Description: "Full system access with all permissions",
             Permissions:
             [
-                new PermissionRequestPayload("User", "Create"),
-                new PermissionRequestPayload("User", "Read"),
-                new PermissionRequestPayload("Role", "Update")
+                new RolePermissionRequest("User", "Create"),
+                new RolePermissionRequest("User", "Read"),
+                new RolePermissionRequest("Role", "Update")
             ]
         );
 
@@ -42,13 +42,13 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Editor",
             Description: "Can edit content",
             Permissions:
             [
-                new PermissionRequestPayload("Book", "Update"),
-                new PermissionRequestPayload("Book", "Read")
+                new RolePermissionRequest("Book", "Update"),
+                new RolePermissionRequest("Book", "Read")
             ]
         );
 
@@ -70,13 +70,13 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Viewer",
             Description: "Read-only access",
             Permissions:
             [
-                new PermissionRequestPayload("Book", "Read"),
-                new PermissionRequestPayload("User", "Read")
+                new RolePermissionRequest("Book", "Read"),
+                new RolePermissionRequest("User", "Read")
             ]
         );
 
@@ -96,14 +96,14 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Manager",
             Description: "Management access",
             Permissions:
             [
-                new PermissionRequestPayload("User", "Create"),
-                new PermissionRequestPayload("Role", "Read"),
-                new PermissionRequestPayload("Category", "Update")
+                new RolePermissionRequest("User", "Create"),
+                new RolePermissionRequest("Role", "Read"),
+                new RolePermissionRequest("Category", "Update")
             ]
         );
 
@@ -114,9 +114,9 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
         // Assert
         Assert.NotNull(roleDto);
         Assert.Equal(3, roleDto.Permissions.Count);
-        Assert.Contains(roleDto.Permissions, p => p.Feature == "User" && p.Action == "Create");
-        Assert.Contains(roleDto.Permissions, p => p.Feature == "Role" && p.Action == "Read");
-        Assert.Contains(roleDto.Permissions, p => p.Feature == "Category" && p.Action == "Update");
+        Assert.Contains(roleDto.Permissions, p => p.Code == "User:Create");
+        Assert.Contains(roleDto.Permissions, p => p.Code == "Role:Read");
+        Assert.Contains(roleDto.Permissions, p => p.Code == "Category:Update");
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Guest",
             Description: "Guest role without permissions",
             Permissions: []
@@ -149,10 +149,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "",
             Description: "Valid description",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -169,10 +169,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "AB",
             Description: "Valid description",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -188,10 +188,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
         var longName = new string('A', 51);
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: longName,
             Description: "Valid description",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -206,10 +206,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ValidRole",
             Description: "",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -224,10 +224,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ValidRole",
             Description: "Short",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -243,10 +243,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
         var longDescription = new string('D', 501);
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ValidRole",
             Description: longDescription,
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -261,10 +261,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ValidRole",
             Description: "Valid description for testing",
-            Permissions: new[] { new PermissionRequestPayload("InvalidFeature", "Read") }
+            Permissions: new[] { new RolePermissionRequest("InvalidFeature", "Read") }
         );
 
         // Act
@@ -279,10 +279,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ValidRole",
             Description: "Valid description for testing",
-            Permissions: new[] { new PermissionRequestPayload("User", "InvalidAction") }
+            Permissions: new[] { new RolePermissionRequest("User", "InvalidAction") }
         );
 
         // Act
@@ -301,10 +301,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "Complete",
             Description: "Testing complete response structure",
-            Permissions: new[] { new PermissionRequestPayload("User", "Create") }
+            Permissions: new[] { new RolePermissionRequest("User", "Create") }
         );
 
         // Act
@@ -327,10 +327,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "HeaderTest",
             Description: "Testing location header",
-            Permissions: new[] { new PermissionRequestPayload("Book", "Read") }
+            Permissions: new[] { new RolePermissionRequest("Book", "Read") }
         );
 
         // Act
@@ -351,10 +351,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "IdTest",
             Description: "Testing ID generation",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -371,10 +371,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "TimestampTest",
             Description: "Testing timestamp",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
         var beforeRequest = DateTime.UtcNow;
 
@@ -395,10 +395,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "ActiveTest",
             Description: "Testing active status",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -419,10 +419,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = CreateHttpClient(); // No authentication
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "TestRole",
             Description: "Testing without authentication",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -442,10 +442,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
         client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "invalid_token_12345");
         
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "TestRole",
             Description: "Testing with invalid token",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -460,10 +460,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientWithoutRequiredPermissions();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "TestRole",
             Description: "Testing without required permissions",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act
@@ -480,10 +480,10 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForRoleCreation();
-        var request = new CreateRoleRequest(
+        var request = new CreateRoleCommand(
             Name: "AuthorizedTest",
             Description: "Testing with valid authentication and permission",
-            Permissions: new[] { new PermissionRequestPayload("User", "Read") }
+            Permissions: new[] { new RolePermissionRequest("User", "Read") }
         );
 
         // Act

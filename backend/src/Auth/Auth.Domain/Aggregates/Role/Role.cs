@@ -1,7 +1,6 @@
 namespace Auth.Domain.Aggregates.Role;
 
 using Auth.Domain.Aggregates.Permission;
-using Core.Validation;
 
 /// <summary>
 /// Aggregate Root representing a Role in the authorization system.
@@ -52,10 +51,8 @@ public sealed class Role : AggregateRoot<RoleId>
     /// </summary>
     public void AssignPermission(Permission permission)
     {
-        ArgumentNullException.ThrowIfNull(permission);
-        
-        if (Permissions.Contains(permission))
-            throw new ValidationException("Permission already assigned to this role");
+        ValidationException.ThrowIfNull(permission, "Permission cannot be null");
+        ValidationException.ThrowIfPredicate(Permissions.Contains(permission), "Permission already assigned to this role");
 
         Permissions.Add(permission);
         UpdatedAt = DateTime.UtcNow;
@@ -75,10 +72,8 @@ public sealed class Role : AggregateRoot<RoleId>
     /// </summary>
     public void RemovePermission(Permission permission)
     {
-        ArgumentNullException.ThrowIfNull(permission);
-        
-        if (!Permissions.Contains(permission))
-            throw new ValidationException("Permission not assigned to this role");
+        ValidationException.ThrowIfNull(permission, "Permission cannot be null");
+        ValidationException.ThrowIfPredicate(!Permissions.Contains(permission), "Permission not assigned to this role");
 
         Permissions.Remove(permission);
         UpdatedAt = DateTime.UtcNow;
@@ -95,22 +90,11 @@ public sealed class Role : AggregateRoot<RoleId>
 
     private static void Validate(string name, string description)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ValidationException("Name cannot be empty");
-
-        if (string.IsNullOrWhiteSpace(description))
-            throw new ValidationException("Description cannot be empty");
-
-        if (name.Length < 3)
-            throw new ValidationException("Name must be at least 3 characters");
-
-        if (name.Length > 50)
-            throw new ValidationException("Name must not exceed 50 characters");
-
-        if (description.Length < 10)
-            throw new ValidationException("Description must be at least 10 characters");
-
-        if (description.Length > 256)
-            throw new ValidationException("Description must not exceed 256 characters");
+        ValidationException.ThrowIfNullOrWhiteSpace(name, "Name cannot be empty");
+        ValidationException.ThrowIfNullOrWhiteSpace(description, "Description cannot be empty");
+        ValidationException.ThrowIfPredicate(name.Length < 3, "Name must be at least 3 characters");
+        ValidationException.ThrowIfPredicate(name.Length > 50, "Name must not exceed 50 characters");
+        ValidationException.ThrowIfPredicate(description.Length < 10, "Description must be at least 10 characters");
+        ValidationException.ThrowIfPredicate(description.Length > 256, "Description must not exceed 256 characters");
     }
 }

@@ -1,4 +1,4 @@
-namespace Auth.Application.Common;
+namespace Core.API;
 
 /// <summary>
 /// Generic result wrapper for command/query responses.

@@ -3,11 +3,11 @@ using Auth.Domain.Aggregates.User;
 using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Enums;
-using Auth.Application.Common.Security;
 using Microsoft.Extensions.DependencyInjection;
-using Auth.Domain.Repositories;
 using Auth.Domain;
 using Common;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Application.Common.Security.Interfaces;
 
 namespace Auth.Tests.IntegrationTests.ApiTests;
 

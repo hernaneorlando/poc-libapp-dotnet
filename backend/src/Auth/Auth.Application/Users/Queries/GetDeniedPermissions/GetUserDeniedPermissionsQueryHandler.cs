@@ -1,10 +1,10 @@
 namespace Auth.Application.Users.Queries.GetDeniedPermissions;
 
 using Auth.Domain.Aggregates.User;
-using Auth.Domain.Repositories;
-using Auth.Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Core.API;
+using Auth.Infrastructure.Repositories.Interfaces;
 
 /// <summary>
 /// Handler for GetUserDeniedPermissionsQuery.

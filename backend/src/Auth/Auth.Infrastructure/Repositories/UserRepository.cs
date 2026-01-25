@@ -1,3 +1,6 @@
+using Auth.Infrastructure.Repositories.Interfaces;
+using Core.Infrastructure;
+
 namespace Auth.Infrastructure.Repositories;
 
 /// <summary>
@@ -5,9 +8,10 @@ namespace Auth.Infrastructure.Repositories;
 /// Handles persistence operations for the User aggregate root.
 /// Converts between relational entities and domain aggregates using implicit operators.
 /// </summary>
-public sealed class UserRepository(AuthDbContext context) : IUserRepository
+public sealed class UserRepository(AuthDbContext context)
+    : BaseRepository<User, UserId, UserEntity>(context), IUserRepository
 {
-    private readonly AuthDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly AuthDbContext _context = context;
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
@@ -49,48 +53,6 @@ public sealed class UserRepository(AuthDbContext context) : IUserRepository
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == id.Value && u.IsActive, cancellationToken);
-
-        return userEntity is null ? null : (User)userEntity;
-    }
-
-    public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-            throw new ArgumentException("Username cannot be empty", nameof(username));
-
-        var userEntity = await _context.Users
-            .Include(u => u.RefreshTokens)
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
-
-        return userEntity is null ? null : (User)userEntity;
-    }
-
-    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email cannot be empty", nameof(email));
-
-        var userEntity = await _context.Users
-            .AsNoTracking()
-            .Include(u => u.RefreshTokens)
-            .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.Email == email && u.IsActive, cancellationToken);
-
-        return userEntity is null ? null : (User)userEntity;
-    }
-
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(refreshToken))
-            throw new ArgumentException("Refresh token cannot be empty", nameof(refreshToken));
-
-        var userEntity = await _context.Users
-            .AsNoTracking()
-            .Include(u => u.RefreshTokens)
-            .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken) && u.IsActive, cancellationToken);
 
         return userEntity is null ? null : (User)userEntity;
     }
@@ -160,4 +122,6 @@ public sealed class UserRepository(AuthDbContext context) : IUserRepository
             _context.Users.Update(userEntity);
         }
     }
+
+    protected override User MapToDomain(UserEntity entity) => (User)entity;
 }

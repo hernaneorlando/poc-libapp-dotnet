@@ -1,6 +1,8 @@
 namespace Auth.Application.Services;
 
 using Auth.Domain.Services;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Infrastructure.Specifications;
 
 /// <summary>
 /// Implementation of IUsernameGeneratorService.
@@ -23,7 +25,7 @@ public sealed class UsernameGeneratorService(IUserRepository _userRepository) : 
         var primaryUsername = Username.GenerateFromName(firstName, lastName);
 
         // Check if available
-        var existingUser = await _userRepository.GetByUsernameAsync(primaryUsername.Value, cancellationToken);
+        var existingUser = await _userRepository.FindAsync(new GetUserByUsername(primaryUsername.Value), cancellationToken);
         if (existingUser is null)
             return UsernameGenerationResult.Success(primaryUsername);
 
@@ -32,8 +34,7 @@ public sealed class UsernameGeneratorService(IUserRepository _userRepository) : 
         for (int i = 1; i <= MaxAlternativesToSuggest; i++)
         {
             var candidateUsername = Username.GenerateFromNameWithSuffix(firstName, lastName, i);
-            var exists = await _userRepository.GetByUsernameAsync(candidateUsername.Value, cancellationToken);
-
+            var exists = await _userRepository.FindAsync(new GetUserByUsername(candidateUsername.Value), cancellationToken);
             if (exists is null)
             {
                 alternatives.Add(candidateUsername);
@@ -54,7 +55,7 @@ public sealed class UsernameGeneratorService(IUserRepository _userRepository) : 
     {
         ArgumentNullException.ThrowIfNull(username);
 
-        var existingUser = await _userRepository.GetByUsernameAsync(username.Value, cancellationToken);
+        var existingUser = await _userRepository.FindAsync(new GetUserByUsername(username.Value), cancellationToken);
         return existingUser is null;
     }
 }

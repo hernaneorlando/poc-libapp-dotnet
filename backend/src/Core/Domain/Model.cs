@@ -5,7 +5,7 @@ namespace Core.Domain;
 /// Entities have unique identity and can change state over time.
 /// </summary>
 /// <typeparam name="TId">Type of the unique identifier of the entity (e.g., UserId, BookId)</typeparam>
-public abstract class Entity<TId> : IEquatable<Entity<TId>>
+public abstract class Model<TId> : IEquatable<Model<TId>>
     where TId : ValueObject
 {
     /// <summary>
@@ -59,7 +59,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// </summary>
     public override bool Equals(object? obj)
     {
-        if (obj is not Entity<TId> other)
+        if (obj is not Model<TId> other)
             return false;
 
         if (ReferenceEquals(this, other))
@@ -71,7 +71,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// <summary>
     /// Compares two entities by identity.
     /// </summary>
-    public bool Equals(Entity<TId>? other) => Equals((object?)other);
+    public bool Equals(Model<TId>? other) => Equals((object?)other);
 
     /// <summary>
     /// Returns the hash code based on identity.
@@ -81,7 +81,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// <summary>
     /// Equality operator for entities.
     /// </summary>
-    public static bool operator ==(Entity<TId> left, Entity<TId> right)
+    public static bool operator ==(Model<TId> left, Model<TId> right)
     {
         if (left is null && right is null)
             return true;
@@ -95,5 +95,5 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// <summary>
     /// Inequality operator for entities.
     /// </summary>
-    public static bool operator !=(Entity<TId> left, Entity<TId> right) => !(left == right);
+    public static bool operator !=(Model<TId> left, Model<TId> right) => !(left == right);
 }

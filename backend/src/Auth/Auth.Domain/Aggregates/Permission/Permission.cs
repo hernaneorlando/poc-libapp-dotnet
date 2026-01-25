@@ -1,7 +1,5 @@
 namespace Auth.Domain.Aggregates.Permission;
 
-using Auth.Domain.Enums;
-
 /// <summary>
 /// ValueObject representing a Permission in the authorization system.
 /// Immutable combination of a Feature and an Action.

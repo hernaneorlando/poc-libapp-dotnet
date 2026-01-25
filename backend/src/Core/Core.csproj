@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Application\" />
     <Folder Include="Infrastructure\" />
+    <Folder Include="Infrastructure\Enums\" />
     <Folder Include="Util\" />
   </ItemGroup>
 

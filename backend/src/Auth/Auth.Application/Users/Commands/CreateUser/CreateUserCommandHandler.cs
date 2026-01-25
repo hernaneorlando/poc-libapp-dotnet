@@ -3,12 +3,12 @@ namespace Auth.Application.Users.Commands.CreateUser;
 using MediatR;
 using Auth.Domain;
 using Auth.Domain.Aggregates.User;
-using Auth.Domain.Repositories;
 using Auth.Domain.Services;
 using Auth.Domain.Enums;
 using Auth.Application.Users.DTOs;
-using Auth.Application.Common;
 using Microsoft.Extensions.Logging;
+using Core.API;
+using Auth.Infrastructure.Repositories.Interfaces;
 
 /// <summary>
 /// Handler for creating a new user.

@@ -1,5 +1,4 @@
 using Core.Validation;
-using LibraryApp.API.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
 using System.Net;
 using System.Text.Json;

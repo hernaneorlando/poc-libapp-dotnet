@@ -34,8 +34,8 @@ public sealed record UserDTO(
             Username: user.Username.Value,
             Email: user.Contact.Email,
             PhoneNumber: user.Contact.PhoneNumber,
-            Roles: user.Roles.Select(r => RoleDTO.FromDomain(r)).ToList(),
-            DeniedPermissions: user.DeniedPermissions.Select(p => PermissionDTO.FromDomain(p)).ToList(),
+            Roles: [.. user.Roles.Select(r => (RoleDTO)r)],
+            DeniedPermissions: [.. user.DeniedPermissions.Select(p => (PermissionDTO)p)],
             CreatedAt: user.CreatedAt,
             UpdatedAt: user.UpdatedAt,
             IsActive: user.IsActive

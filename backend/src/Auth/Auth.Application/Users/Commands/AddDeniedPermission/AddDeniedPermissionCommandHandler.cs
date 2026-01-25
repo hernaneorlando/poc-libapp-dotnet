@@ -3,11 +3,11 @@ namespace Auth.Application.Users.Commands.AddDeniedPermission;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Aggregates.User;
 using Auth.Domain.Enums;
-using Auth.Domain.Repositories;
 using Auth.Domain;
-using Auth.Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Core.API;
+using Auth.Infrastructure.Repositories.Interfaces;
 
 /// <summary>
 /// Handler for AddDeniedPermissionCommand.

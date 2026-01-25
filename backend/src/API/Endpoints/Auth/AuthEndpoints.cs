@@ -1,8 +1,6 @@
 using Auth.Application.Users.Commands.Login;
 using Auth.Application.Users.Commands.Logout;
 using Auth.Application.Users.Commands.RefreshToken;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryApp.API.Endpoints.Auth;
 
@@ -60,12 +58,9 @@ public static class AuthEndpoints
     /// </summary>
     private static async Task<IResult> Login(
         [FromServices] IMediator mediator,
-        [FromBody] LoginRequest request,
+        [FromBody] LoginCommand command,
         CancellationToken cancellationToken)
     {
-        // Map request to command
-        var command = new LoginCommand(request.Username, request.Password);
-
         // Send command through MediatR pipeline
         var result = await mediator.Send(command, cancellationToken);
 
@@ -89,21 +84,9 @@ public static class AuthEndpoints
     /// </summary>
     private static async Task<IResult> Logout(
         [FromServices] IMediator mediator,
-        [FromBody] LogoutRequest request,
-        HttpContext httpContext,
+        [FromBody] LogoutCommand command,
         CancellationToken cancellationToken)
     {
-        // Extract user ID from JWT claims
-        var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-        if (userIdClaim is null || !Guid.TryParse(userIdClaim.Value, out var userId))
-        {
-            return Results.Unauthorized();
-        }
-
-        // Map request to command
-        var command = new LogoutCommand(userId, request.RefreshToken);
-
         // Send command through MediatR pipeline
         var result = await mediator.Send(command, cancellationToken);
 
@@ -132,12 +115,9 @@ public static class AuthEndpoints
     /// </summary>
     private static async Task<IResult> RefreshToken(
         [FromServices] IMediator mediator,
-        [FromBody] RefreshTokenRequest request,
+        [FromBody] RefreshTokenCommand command,
         CancellationToken cancellationToken)
     {
-        // Map request to command
-        var command = new RefreshTokenCommand(request.RefreshToken);
-
         // Send command through MediatR pipeline
         var result = await mediator.Send(command, cancellationToken);
 
@@ -155,21 +135,3 @@ public static class AuthEndpoints
         );
     }
 }
-
-/// <summary>
-/// Request model for refreshing an access token.
-/// </summary>
-public sealed record RefreshTokenRequest(string RefreshToken);
-
-/// <summary>
-/// Request model for user login.
-/// </summary>
-public sealed record LoginRequest(
-    string Username,
-    string Password);
-
-/// <summary>
-/// Request model for user logout.
-/// </summary>
-public sealed record LogoutRequest(
-    string RefreshToken);

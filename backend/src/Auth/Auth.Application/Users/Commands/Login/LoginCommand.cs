@@ -1,7 +1,6 @@
-namespace Auth.Application.Users.Commands.Login;
+using Core.API;
 
-using MediatR;
-using Auth.Application.Common;
+namespace Auth.Application.Users.Commands.Login;
 
 /// <summary>
 /// Command to authenticate a user and obtain JWT tokens.

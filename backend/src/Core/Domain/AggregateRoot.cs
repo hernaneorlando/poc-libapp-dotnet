@@ -6,7 +6,7 @@ namespace Core.Domain;
 /// Aggregates are transactional and persistence boundaries.
 /// </summary>
 /// <typeparam name="TId">Type of the unique identifier of the aggregate (e.g., BookId, UserId)</typeparam>
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Model<TId>
     where TId : ValueObject
 {
     /// <summary>

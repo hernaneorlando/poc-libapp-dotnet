@@ -2,8 +2,8 @@ namespace Auth.Application.Users.Commands.CreateUser;
 
 using MediatR;
 using Auth.Application.Users.DTOs;
-using Auth.Application.Common;
 using Auth.Domain.Enums;
+using Core.API;
 
 /// <summary>
 /// Command to create a new user in the system with assigned roles.

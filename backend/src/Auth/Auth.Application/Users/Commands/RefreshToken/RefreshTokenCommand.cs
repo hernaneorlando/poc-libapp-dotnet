@@ -1,7 +1,6 @@
-namespace Auth.Application.Users.Commands.RefreshToken;
+using Core.API;
 
-using MediatR;
-using Auth.Application.Common;
+namespace Auth.Application.Users.Commands.RefreshToken;
 
 /// <summary>
 /// Command to refresh an access token using a valid refresh token.

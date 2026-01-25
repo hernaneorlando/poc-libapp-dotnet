@@ -1,7 +1,6 @@
-namespace Auth.Application.Users.Commands.Logout;
+using Core.API;
 
-using MediatR;
-using Auth.Application.Common;
+namespace Auth.Application.Users.Commands.Logout;
 
 /// <summary>
 /// Command to logout a user by revoking their refresh token.

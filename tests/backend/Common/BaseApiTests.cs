@@ -1,10 +1,10 @@
 using Auth.Application.Common.Security;
+using Auth.Application.Common.Security.Interfaces;
 using Auth.Domain;
-using Auth.Domain.Repositories;
 using Auth.Domain.Services;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
-using Auth.Infrastructure.Services;
+using Auth.Infrastructure.Repositories.Interfaces;
 using LibraryApp.API;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

@@ -1,4 +1,4 @@
-namespace Auth.Application.Common.Security;
+namespace Auth.Application.Common.Security.Interfaces;
 
 /// <summary>
 /// Service for hashing and verifying passwords.

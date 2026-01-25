@@ -1,7 +1,8 @@
-namespace Auth.Infrastructure.Services;
+namespace Auth.Application.Common.Security;
 
-using Auth.Application.Common.Security;
+using Auth.Application.Common.Security.Interfaces;
 using BCrypt.Net;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Password hashing service using bcrypt.

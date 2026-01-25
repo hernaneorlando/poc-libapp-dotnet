@@ -25,11 +25,13 @@ public sealed class UserRoleEntityConfiguration : IEntityTypeConfiguration<UserR
         // Foreign Keys
         builder.HasOne(ur => ur.User)
             .WithMany(u => u.UserRoles)
+            .IsRequired()
             .HasForeignKey(ur => ur.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ur => ur.Role)
             .WithMany(r => r.UserRoles)
+            .IsRequired()
             .HasForeignKey(ur => ur.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
     }

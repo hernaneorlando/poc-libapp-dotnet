@@ -4,21 +4,17 @@ using System.Text.Json;
 using Auth.Domain.Aggregates.Permission;
 using Auth.Domain.Aggregates.Role;
 using Auth.Domain.Enums;
+using Core.Infrastructure;
 
 /// <summary>
 /// Relational entity for Role aggregate persistence.
 /// Uses Data Mapper pattern with implicit operators for seamless conversion.
 /// Permissions stored as JSON in database.
 /// </summary>
-public sealed class RoleEntity
+public sealed class RoleEntity : Entity
 {
-    public Guid Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
-    public int Version { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public bool IsActive { get; set; }
 
     /// <summary>
     /// Permissions stored as JSON serialized data.
@@ -28,7 +24,7 @@ public sealed class RoleEntity
     /// <summary>
     /// Navigation properties for junction tables.
     /// </summary>
-    public ICollection<UserRoleEntity> UserRoles { get; set; } = [];
+    public IList<UserRoleEntity> UserRoles { get; set; } = [];
 
     /// <summary>
     /// Converts relational entity to domain aggregate root (Entity → Domain).

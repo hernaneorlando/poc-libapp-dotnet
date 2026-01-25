@@ -1,7 +1,7 @@
 using Auth.Domain.Attributes;
 using Auth.Domain.Services;
-using Auth.Domain.Repositories;
 using System.Security.Claims;
+using Auth.Infrastructure.Repositories.Interfaces;
 
 namespace LibraryApp.API.Middlewares;
 
