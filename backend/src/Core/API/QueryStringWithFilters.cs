@@ -14,21 +14,21 @@ public class QueryStringWithFilters<TQuery, TResponse> : Dictionary<string, List
     {
         var query = new TQuery();
 
-        if (ContainsKey(PageNumberKey) || ContainsKey(nameof(BasePagedQuery<TResponse>.PageNumber)))
+        if (ContainsKey(PageNumberKey) || ContainsKey(nameof(BasePagedQuery<>.PageNumber)))
         {
             var value = SanitizeValues(this[PageNumberKey].FirstOrDefault()!);
             query.PageNumber = int.TryParse(value, out int page) ? page : 0;
             Remove(PageNumberKey);
         }
 
-        if (ContainsKey(PageSizeKey) || ContainsKey(nameof(BasePagedQuery<TResponse>.PageSize)))
+        if (ContainsKey(PageSizeKey) || ContainsKey(nameof(BasePagedQuery<>.PageSize)))
         {
             var value = SanitizeValues(this[PageSizeKey].FirstOrDefault()!);
             query.PageSize = int.TryParse(value, out int page) ? page : 0;
             Remove(PageSizeKey);
         }
 
-        if (ContainsKey(OrderByKey) || ContainsKey(nameof(BasePagedQuery<TResponse>.OrderBy)))
+        if (ContainsKey(OrderByKey) || ContainsKey(nameof(BasePagedQuery<>.OrderBy)))
         {
             query.OrderBy = SanitizeValues(this[OrderByKey].FirstOrDefault()!);
             Remove(OrderByKey);
@@ -54,13 +54,85 @@ public class QueryStringWithFilters<TQuery, TResponse> : Dictionary<string, List
             .Replace("\"]", string.Empty);
     }
 
-    public static API.QueryStringWithFilters<TQuery, TResponse> Parse(string s, IFormatProvider? provider)
+    /// <summary>
+    /// Parses a query string into a QueryStringWithFilters instance.
+    /// </summary>
+    /// <param name="s">Query string (e.g., "page=1&size=10&order=Name&search=test")</param>
+    /// <param name="provider">Format provider (unused)</param>
+    /// <returns>Parsed QueryStringWithFilters instance</returns>
+    /// <exception cref="FormatException">Thrown when the query string format is invalid</exception>
+    public static QueryStringWithFilters<TQuery, TResponse> Parse(string s, IFormatProvider? provider)
     {
-        throw new NotImplementedException();
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new FormatException($"Failed to parse query string: '{s}'");
+        }
+
+        return result!;
     }
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out API.QueryStringWithFilters<TQuery, TResponse> result)
+    /// <summary>
+    /// Attempts to parse a query string into a QueryStringWithFilters instance.
+    /// </summary>
+    /// <param name="s">Query string (e.g., "page=1&size=10&order=Name&search=test")</param>
+    /// <param name="provider">Format provider (unused)</param>
+    /// <param name="result">Parsed QueryStringWithFilters instance if successful; otherwise null</param>
+    /// <returns>True if parsing succeeded; otherwise false</returns>
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out QueryStringWithFilters<TQuery, TResponse> result)
     {
-        throw new NotImplementedException();
+        result = null;
+
+        // Handle empty or null strings
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            result = [];
+            return true;
+        }
+
+        try
+        {
+            var queryString = new QueryStringWithFilters<TQuery, TResponse>();
+
+            // Remove leading '?' if present
+            var queryPart = s.StartsWith('?') ? s[1..] : s;
+
+            if (string.IsNullOrWhiteSpace(queryPart))
+            {
+                result = queryString;
+                return true;
+            }
+
+            // Split by '&' to get individual parameters
+            var parameters = queryPart.Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var parameter in parameters)
+            {
+                var parts = parameter.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 0)
+                    continue;
+
+                var key = Uri.UnescapeDataString(parts[0]);
+                var value = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty;
+
+                // Add or append value to the dictionary
+                if (queryString.TryGetValue(key, out List<string>? value1))
+                {
+                    value1.Add(value);
+                }
+                else
+                {
+                    queryString[key] = [value];
+                }
+            }
+
+            result = queryString;
+            return true;
+        }
+        catch
+        {
+            result = null;
+            return false;
+        }
     }
 }

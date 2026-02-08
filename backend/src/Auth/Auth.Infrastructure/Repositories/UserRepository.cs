@@ -19,29 +19,6 @@ public sealed class UserRepository(AuthDbContext context)
 
         var userEntity = (UserEntity)user;
         await _context.Users.AddAsync(userEntity, cancellationToken);
-
-        // Add refresh tokens separately
-        foreach (var token in user.RefreshTokens)
-        {
-            var tokenEntity = (RefreshTokenEntity)token;
-            tokenEntity.UserId = user.Id.Value;
-            tokenEntity.Id = Guid.NewGuid();
-            tokenEntity.CreatedAt = DateTime.UtcNow;
-            await _context.RefreshTokens.AddAsync(tokenEntity, cancellationToken);
-        }
-
-        // Add user roles separately
-        foreach (var role in user.Roles)
-        {
-            var userRoleEntity = new UserRoleEntity
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id.Value,
-                RoleId = role.Id.Value,
-                AssignedAt = DateTime.UtcNow
-            };
-            await _context.UserRoles.AddAsync(userRoleEntity, cancellationToken);
-        }
     }
 
     public async Task<User?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default)
@@ -49,6 +26,7 @@ public sealed class UserRepository(AuthDbContext context)
         ArgumentNullException.ThrowIfNull(id);
 
         var userEntity = await _context.Users
+            .AsNoTracking()
             .Include(u => u.RefreshTokens)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
@@ -64,7 +42,8 @@ public sealed class UserRepository(AuthDbContext context)
         var userEntity = await _context.Users
             .Include(u => u.RefreshTokens)
             .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.Id == user.Id.Value, cancellationToken) 
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == user.Id.Value, cancellationToken)
             ?? throw new InvalidOperationException($"User with ID {user.Id} not found");
 
         // Update basic properties
@@ -83,28 +62,88 @@ public sealed class UserRepository(AuthDbContext context)
         userEntity.UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow;
         userEntity.IsActive = user.IsActive;
 
-        // Update roles
-        _context.UserRoles.RemoveRange(userEntity.UserRoles);
-        foreach (var role in user.Roles)
+        // Update roles - only remove/add if roles have changed
+        var currentRoleIds = userEntity.UserRoles.Select(ur => ur.RoleId).ToHashSet();
+        var newRoleIds = user.Roles.Select(r => r.Id.Value).ToHashSet();
+
+        // Remove roles that are no longer assigned
+        var rolesToRemove = userEntity.UserRoles.Where(ur => !newRoleIds.Contains(ur.RoleId)).ToList();
+        foreach (var roleToRemove in rolesToRemove)
         {
-            userEntity.UserRoles.Add(new UserRoleEntity
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id.Value,
-                RoleId = role.Id.Value,
-                AssignedAt = DateTime.UtcNow
-            });
+            _context.UserRoles.Remove(roleToRemove);
         }
 
-        // Update refresh tokens
-        _context.RefreshTokens.RemoveRange(userEntity.RefreshTokens);
-        foreach (var token in user.RefreshTokens)
+        // Add new roles
+        foreach (var role in user.Roles)
         {
-            var tokenEntity = (RefreshTokenEntity)token;
-            tokenEntity.UserId = user.Id.Value;
-            tokenEntity.Id = Guid.NewGuid();
-            tokenEntity.CreatedAt = DateTime.UtcNow;
-            userEntity.RefreshTokens.Add(tokenEntity);
+            if (!currentRoleIds.Contains(role.Id.Value))
+            {
+                // Ensure role is persisted if it's new
+                var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Id == role.Id.Value, cancellationToken);
+                if (existingRole is null)
+                {
+                    var roleEntity = (RoleEntity)role;
+                    // Detach if already tracked to avoid conflicts
+                    var trackedRole = _context.Roles.Local.FirstOrDefault(r => r.Id == roleEntity.Id);
+                    if (trackedRole is not null)
+                        _context.Entry(trackedRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
+                    await _context.Roles.AddAsync(roleEntity, cancellationToken);
+                }
+
+                userEntity.UserRoles.Add(new UserRoleEntity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id.Value,
+                    RoleId = role.Id.Value,
+                    AssignedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        // CRITICAL: Handle refresh token removal and updates
+        // Tokens should be removed from the database if they have been revoked in the domain
+        
+        foreach (var entityToken in userEntity.RefreshTokens)
+        {
+            var domainToken = user.RefreshTokens.FirstOrDefault(t => t.Token == entityToken.Token);
+            if (domainToken is null)
+            {
+                continue; // Token has been removed in domain - skip
+            }
+            else if (domainToken.IsExpired)
+            {
+                // Token has been expired - remove it
+                user.RefreshTokens.Remove(domainToken);
+                _context.RefreshTokens.Remove(entityToken);
+                userEntity.RefreshTokens.Remove(entityToken);
+            }
+            else
+            {
+                // Token exists and is not expired - update it
+                entityToken.RevokedAt = domainToken.RevokedAt;
+                entityToken.ExpiresAt = domainToken.ExpiresAt;
+            }
+        }
+
+        // Add any new tokens from the domain that aren't in the entity
+        foreach (var domainToken in user.RefreshTokens.Where(t => !t.IsRevoked))
+        {
+            var existingToken = userEntity.RefreshTokens.FirstOrDefault(rt => rt.Token == domainToken.Token);
+            if (existingToken is null)
+            {
+                var tokenEntity = new RefreshTokenEntity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id.Value,
+                    Token = domainToken.Token,
+                    ExpiresAt = domainToken.ExpiresAt,
+                    RevokedAt = domainToken.RevokedAt,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.RefreshTokens.Add(tokenEntity);
+                userEntity.RefreshTokens.Add(tokenEntity);
+            }
         }
 
         _context.Users.Update(userEntity);

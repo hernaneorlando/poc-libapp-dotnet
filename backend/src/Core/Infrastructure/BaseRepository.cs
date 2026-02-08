@@ -51,31 +51,21 @@ public abstract class BaseRepository<TModel, TId, TEntity>(DbContext context) : 
         if (specification?.Predicate is null)
             throw new ArgumentNullException(nameof(specification), "Specification must not be null and contain a valid predicate.");
 
-        var result = await context.Set<TEntity>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(specification?.Predicate!, cancellationToken);
-
-        return result is null ? null : MapToDomain(result!);
-    }
-
-    /// <summary>
-    /// Retrieves an entityby a pre-defined constraint
-    /// </summary>
-    /// <param name="specification">The constraint to find the entity</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The entity if found, null otherwise</returns>
-    public async Task<TModel?> FindAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
-    {
-        if (specification?.Predicate is null)
-            throw new ArgumentNullException(nameof(specification), "Specification must not be null and contain a valid predicate.");
-
         var query = context.Set<TEntity>().AsNoTracking();
 
-        if (includes.Length != 0)
+        if (specification.Includes.Any())
         {
-            foreach (var include in includes)
+            foreach (var include in specification.Includes)
             {
-                query = query.Include(include);
+                var includedQuery = query.Include(include.IncludeExpression);
+                if (include.ThenIncludeExpression is not null)
+                {
+                    query = includedQuery.ThenInclude(include.ThenIncludeExpression);
+                }
+                else
+                {
+                    query = includedQuery;
+                }
             }
         }
 

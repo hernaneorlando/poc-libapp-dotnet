@@ -10,6 +10,7 @@ using Core.Validation;
 using Auth.Application.Roles.DTOs;
 using Core.API;
 using Auth.Infrastructure.Repositories.Interfaces;
+using Common;
 
 namespace Auth.Tests.IntegrationTests.ApplicationHandlerTests.Roles;
 
@@ -50,64 +51,10 @@ public class CreateRoleHandlerIntegrationTests : IAsyncLifetime
         _unitOfWork = _serviceProvider.GetRequiredService<IUnitOfWork>();
         
         // Create a simple command dispatcher without MediatR licensing
-        _mediator = new SimpleMediator(_roleRepository, _logger, _unitOfWork);
+        _mediator = new SimpleMediator<IRoleRepository, CreateRoleCommandHandler, CreateRoleCommand, Result<RoleDTO>, IUnitOfWork>(_roleRepository, _logger, _unitOfWork);
 
         // Ensure database is created
         await _dbContext.Database.EnsureCreatedAsync();
-    }
-
-    /// <summary>
-    /// Simple mediator implementation to avoid MediatR licensing issues
-    /// </summary>
-    private class SimpleMediator(IRoleRepository _roleRepository, ILogger<CreateRoleCommandHandler> _logger, IUnitOfWork _unitOfWork) : IMediator
-    {
-        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            // Handle CreateRoleCommand specifically
-            if (request is CreateRoleCommand createRoleCommand)
-            {
-                var handler = new CreateRoleCommandHandler(_roleRepository, _logger, _unitOfWork);
-                return (TResponse)(object)await handler.Handle(createRoleCommand, cancellationToken);
-            }
-
-            throw new NotSupportedException($"Command type {request.GetType().Name} is not supported");
-        }
-
-        public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
-        {
-            // Handle void request types
-            if (request is IRequest unitRequest)
-            {
-                await Send(unitRequest, cancellationToken);
-                return;
-            }
-            throw new NotSupportedException($"Request type {typeof(TRequest).Name} not supported");
-        }
-
-        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Publish(object notification, CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
     }
 
     #region Success Scenarios

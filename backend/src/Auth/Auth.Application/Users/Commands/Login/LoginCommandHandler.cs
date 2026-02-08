@@ -7,6 +7,7 @@ using Auth.Domain.ValueObjects;
 using Auth.Infrastructure.Repositories.Interfaces;
 using Auth.Infrastructure.Specifications;
 using Core.API;
+using Core.Validation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -27,18 +28,18 @@ public sealed class LoginCommandHandler(
         _logger.LogInformation("Login attempt for user: {Username}", request.Username);
 
         // Step 1: Find user by username
-        var user = await _userRepository.FindAsync(new GetUserByUsername(request.Username), cancellationToken, u => u.UserRoles);
+        var user = await _userRepository.FindAsync(new GetUserByUsername(request.Username), cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Login failed: User not found - {Username}", request.Username);
-            throw new InvalidOperationException("Invalid username or password");
+            throw new ValidationException("Invalid username");
         }
 
         // Step 2: Verify password
         if (user.PasswordHash is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             _logger.LogWarning("Login failed: Invalid password for user - {Username}", request.Username);
-            throw new InvalidOperationException("Invalid username or password");
+            throw new ValidationException("Invalid password");
         }
 
         // Step 3: Generate JWT access token
@@ -52,6 +53,7 @@ public sealed class LoginCommandHandler(
 
         // Step 5: Add refresh token to user
         user.AddRefreshToken(refreshToken);
+        await _userRepository.UpdateAsync(user, cancellationToken);
 
         // Step 6: Persist changes
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -68,7 +70,7 @@ public sealed class LoginCommandHandler(
                 Username: user.Username.Value,
                 Email: user.Contact.Email,
                 FullName: user.GetFullName(),
-                Roles: user.Roles.Select(r => r.Name).ToList()));
+                Roles: [.. user.Roles.Select(r => r.Name)]));
 
         return Result<LoginResponse>.Ok(response);
     }

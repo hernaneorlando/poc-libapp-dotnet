@@ -52,6 +52,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Tests", "..\tests\backend\Core\Core.Tests.csproj", "{FA572002-AA8F-428C-9865-2A2BFD4C72BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -254,6 +256,18 @@ Global
 		{CCC35BE6-EA31-6B84-B984-6E7CA554CDCC}.Release|x64.Build.0 = Release|Any CPU
 		{CCC35BE6-EA31-6B84-B984-6E7CA554CDCC}.Release|x86.ActiveCfg = Release|Any CPU
 		{CCC35BE6-EA31-6B84-B984-6E7CA554CDCC}.Release|x86.Build.0 = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|x64.Build.0 = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -279,5 +293,6 @@ Global
 		{58BCACCD-755D-4B8A-BC14-8F407A2003CD} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{9C7D4E5B-3A1F-4B8E-2D6C-8E5A7F1B3D2C} = {C5D7E3A5-2B8A-4F1D-9E3C-7A5B8D2C1F3E}
 		{CCC35BE6-EA31-6B84-B984-6E7CA554CDCC} = {C5D7E3A5-2B8A-4F1D-9E3C-7A5B8D2C1F3E}
+		{FA572002-AA8F-428C-9865-2A2BFD4C72BA} = {C5D7E3A5-2B8A-4F1D-9E3C-7A5B8D2C1F3E}
 	EndGlobalSection
 EndGlobal

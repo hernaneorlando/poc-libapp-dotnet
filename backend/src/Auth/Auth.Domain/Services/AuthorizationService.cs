@@ -34,7 +34,7 @@ public class AuthorizationService : IAuthorizationService
     public IEnumerable<Permission> GetUserPermissions(User user)
     {
         if (user is null)
-            return Enumerable.Empty<Permission>();
+            return [];
 
         var allRolePermissions = user.Roles
             .SelectMany(role => role.Permissions)
@@ -51,7 +51,7 @@ public class AuthorizationService : IAuthorizationService
     public IEnumerable<Permission> GetRolePermissions(User user)
     {
         if (user is null)
-            return Enumerable.Empty<Permission>();
+            return [];
 
         return user.Roles
             .SelectMany(role => role.Permissions)

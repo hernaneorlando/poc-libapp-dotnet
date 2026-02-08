@@ -2,6 +2,7 @@ using Auth.Domain.Attributes;
 using Auth.Domain.Services;
 using System.Security.Claims;
 using Auth.Infrastructure.Repositories.Interfaces;
+using Auth.Domain.Aggregates.User;
 
 namespace LibraryApp.API.Middlewares;
 
@@ -43,7 +44,7 @@ public class AuthorizationMiddleware(
             try
             {
                 // Load user from repository with roles and permissions
-                var userIdValueObject = Auth.Domain.Aggregates.User.UserId.From(userId);
+                var userIdValueObject = UserId.From(userId);
                 var user = await userRepository.GetByIdAsync(userIdValueObject, CancellationToken.None);
 
                 if (user is null)

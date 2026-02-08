@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Core.API;
 
 namespace Core.Infrastructure;
@@ -26,12 +25,4 @@ public interface IBaseRepository<TModel, TEntity>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The entity if found, null otherwise</returns>
     Task<TModel?> FindAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves an entityby a pre-defined constraint
-    /// </summary>
-    /// <param name="specification">The constraint to find the entity</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The entity if found, null otherwise</returns>
-    Task<TModel?> FindAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 }

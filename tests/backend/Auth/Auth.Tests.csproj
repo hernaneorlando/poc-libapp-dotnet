@@ -33,6 +33,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="IntegrationTests\ApiTests\Auth\" />
+    <Folder Include="IntegrationTests\ApplicationHandlerTests\Auth\" />
     <Folder Include="IntegrationTests\RepositoryTests\Users\" />
   </ItemGroup>
 

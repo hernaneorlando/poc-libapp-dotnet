@@ -92,7 +92,7 @@ public sealed class UserEntity : Entity
     /// </summary>
     public static implicit operator UserEntity(User user)
     {
-        return new UserEntity
+        var userEntity = new UserEntity
         {
             Id = user.Id.Value,
             FirstName = user.FirstName,
@@ -112,5 +112,28 @@ public sealed class UserEntity : Entity
             UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow,
             IsActive = user.IsActive
         };
+
+        // Map refresh tokens
+        foreach (var refreshToken in user.RefreshTokens)
+        {
+            userEntity.RefreshTokens.Add((RefreshTokenEntity)refreshToken);
+        }
+
+        // Map roles
+        foreach (var role in user.Roles)
+        {
+            var roleEntity = (RoleEntity)role;
+            userEntity.UserRoles.Add(new UserRoleEntity
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id.Value,
+                User = userEntity,
+                RoleId = role.Id.Value,
+                Role = roleEntity,
+                AssignedAt = DateTime.UtcNow
+            });
+        }
+
+        return userEntity;
     }
 }

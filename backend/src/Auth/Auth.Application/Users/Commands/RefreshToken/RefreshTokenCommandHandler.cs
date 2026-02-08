@@ -25,15 +25,8 @@ public sealed class RefreshTokenCommandHandler(
     {
         _logger.LogInformation("Attempting to refresh token");
 
-        // Validate command
-        var validator = new RefreshTokenCommandValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-        if (!validationResult.IsValid)
-            throw new Core.Validation.ValidationException([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
-
         // Find user by refresh token
-        var user = await _userRepository.FindAsync(new GetUserByRefreshToken(request.RefreshToken), cancellationToken, u => u.RefreshTokens, u => u.UserRoles) 
+        var user = await _userRepository.FindAsync(new GetUserByRefreshToken(request.RefreshToken), cancellationToken) 
             ?? throw new InvalidOperationException("Refresh token is invalid or not found");
 
         // Check if user has this refresh token and if it's valid
@@ -59,6 +52,7 @@ public sealed class RefreshTokenCommandHandler(
         user.AddRefreshToken(newRefreshToken);
 
         // Persist changes
+        await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(

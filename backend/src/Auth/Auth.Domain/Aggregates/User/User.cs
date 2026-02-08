@@ -125,6 +125,27 @@ public sealed class User : AggregateRoot<UserId>
     }
 
     /// <summary>
+    /// Assigns a role to the user.
+    /// </summary>
+    public void AssignRoles(Role[] roles)
+    {
+        if (roles is null || roles.Length == 0)
+            throw new ArgumentNullException(nameof(roles), "Roles array cannot be null or empty");
+
+        foreach (var role in roles)
+        {
+            ValidationException.ThrowIfNull(role);
+            if (Roles.Any(r => r.Id == role.Id))
+                throw new InvalidOperationException("Role already assigned to this user");
+            
+            Roles.Add(role);
+        }
+        
+        UpdatedAt = DateTime.UtcNow;
+        RaiseDomainEvent(new RoleAssignedToUserEvent(Id, string.Join(",", roles.Select(r => r.Id.ToString()))));
+    }
+
+    /// <summary>
     /// Removes a role from the user.
     /// </summary>
     public void RemoveRole(RoleId roleId)
@@ -155,11 +176,19 @@ public sealed class User : AggregateRoot<UserId>
 
     /// <summary>
     /// Revokes a specific refresh token.
+    /// The token is marked as revoked but NOT removed from the collection.
+    /// Removal is handled by the infrastructure layer during persistence.
     /// </summary>
     public void RevokeRefreshToken(string token)
     {
         var refreshToken = RefreshTokens.FirstOrDefault(rt => rt.Token == token) 
             ?? throw new InvalidOperationException("Refresh token not found");
+        
+        // Check if already revoked
+        if (refreshToken.IsRevoked)
+            throw new InvalidOperationException("Refresh token is already revoked");
+        
+        // Mark as revoked
         refreshToken.Revoke();
         UpdatedAt = DateTime.UtcNow;
     }

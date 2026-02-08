@@ -85,10 +85,10 @@ public class UserRepositoryIntegrationTests : IAsyncLifetime
         await _userRepository.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
+        _dbContext.ChangeTracker.Clear();
+
         // Assert
-        var savedUser = await _dbContext.Users
-            .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Id == user.Id.Value);
+        var savedUser = await _userRepository.GetByIdAsync(user.Id);
         
         savedUser.Should().NotBeNull();
         savedUser!.RefreshTokens.Should().HaveCount(1);
@@ -541,7 +541,7 @@ public class UserRepositoryIntegrationTests : IAsyncLifetime
 
         // Act
         var specification = new GetUserByRefreshToken(tokenValue);
-        var userEntity = await _userRepository.FindAsync(specification, CancellationToken.None, u => u.RefreshTokens);
+        var userEntity = await _userRepository.FindAsync(specification, CancellationToken.None);
         
         // Assert
         userEntity.Should().NotBeNull();

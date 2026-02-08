@@ -29,22 +29,17 @@ public sealed class LogoutCommandHandler(
         }
 
         // Step 2: Revoke the refresh token
-        try
-        {
-            user.RevokeRefreshToken(request.RefreshToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning(ex, "Logout failed: Token not found for user - {UserId}", request.UserId);
-            throw;
-        }
+        user.RevokeRefreshToken(request.RefreshToken);
 
-        // Step 3: Persist changes
+        // Step 3: Update user to persist the changes
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        // Step 4: Persist changes
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Logout successful for user: {UserId}", request.UserId);
 
-        // Step 4: Build response
+        // Step 5: Build response
         var response = new LogoutResponse(
             Success: true,
             Message: "Logout successful. Refresh token has been revoked.");

@@ -422,7 +422,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAu
         var request = new CreateRoleCommand(
             Name: "TestRole",
             Description: "Testing without authentication",
-            Permissions: new[] { new RolePermissionRequest("User", "Read") }
+            Permissions: [new RolePermissionRequest("User", "Read")]
         );
 
         // Act
