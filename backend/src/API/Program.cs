@@ -1,6 +1,7 @@
 using System.Text;
 using Auth.Application;
 using Auth.Infrastructure;
+using BackgroundServices;
 using LibraryApp.API.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -33,8 +34,11 @@ public class Program
             builder.Services
                 .AddAuthInfrastructure(
                     builder.Configuration.GetConnectionString("SqlConnectionString")
-                    ?? "Server=.;Database=LibraryApp;Trusted_Connection=true;Encrypt=false"
+                    ?? throw new InvalidOperationException("Connection string 'SqlConnectionString' not found in configuration. Check appsettings.json.")
                 );
+            
+            // Register background services (Quartz.NET scheduled jobs)
+            builder.Services.AddBackgroundServices();
         }
         
         builder.Services
@@ -110,8 +114,12 @@ public class Program
                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
             });
 
+            // Ensure database is created and migrated (always run, not just in Development)
             EnsureDatabaseCreation(app);
         }
+
+        // CORS must be before UseExceptionHandler
+        app.UseCors("AllowBlazorOrigin");
 
         app.UseExceptionHandler();
         // app.UseHttpsRedirection();
@@ -150,6 +158,10 @@ public class Program
     private static void EnsureDatabaseCreation(WebApplication app)
     {
         using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        logger.LogWarning("EnsureDatabaseCreation: Starting database initialization");
+        
         var authDbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
         var retryCount = 0;
         var maxRetries = 3;
@@ -159,24 +171,24 @@ public class Program
         {
             try
             {
-                Console.WriteLine($"Attempting to ensure database is created (Attempt {retryCount + 1}/{maxRetries})");
-                Console.WriteLine($"Attempting to run migrations");
+                logger.LogInformation("Attempting to ensure database is created (Attempt {Attempt}/{MaxRetries})", retryCount + 1, maxRetries);
+                logger.LogInformation("Attempting to run migrations");
                 authDbContext.Database.Migrate();
-                Console.WriteLine("Database initialization/migration completed successfully");
+                logger.LogInformation("Database initialization/migration completed successfully");
 
                 // Execute initial data seed script if it exists
-                ExecuteInitialDataSeed(authDbContext);
+                ExecuteInitialDataSeed(authDbContext, logger);
 
                 break;
             }
             catch (Exception ex)
             {
                 retryCount++;
-                Console.WriteLine($"Error initializing database: {ex.Message}. Retrying in {delay.TotalSeconds} seconds...");
+                logger.LogError(ex, "Error initializing database. Retrying in {Delay} seconds...", delay.TotalSeconds);
 
                 if (retryCount >= maxRetries)
                 {
-                    Console.WriteLine("Failed to initialize database after multiple attempts");
+                    logger.LogCritical("Failed to initialize database after multiple attempts");
                     throw;
                 }
 
@@ -186,7 +198,7 @@ public class Program
         }
     }
 
-    private static void ExecuteInitialDataSeed(AuthDbContext authDbContext)
+    private static void ExecuteInitialDataSeed(AuthDbContext authDbContext, ILogger logger)
     {
         try
         {
@@ -194,11 +206,11 @@ public class Program
             var adminExists = authDbContext.Users.Any(u => u.Username == "admin");
             if (adminExists)
             {
-                Console.WriteLine("Initial data seed already applied (admin user exists). Skipping...");
+                logger.LogInformation("Initial data seed already applied (admin user exists). Skipping...");
                 return;
             }
 
-            Console.WriteLine("Executing initial data seed script...");
+            logger.LogInformation("Creating initial data (Admin user and roles)...");
             
             // Construct path to seed script
             // The InitialDataSeed.sql is in the same directory as Program.cs
@@ -208,28 +220,28 @@ public class Program
             
             var seedScriptPath = Path.Combine(projectDir, "InitialDataSeed.sql");
             
-            Console.WriteLine($"Looking for seed script at: {seedScriptPath}");
+            logger.LogInformation($"Looking for seed script at: {seedScriptPath}");
             
             if (File.Exists(seedScriptPath))
             {
                 var seedScript = File.ReadAllText(seedScriptPath);
                 authDbContext.Database.ExecuteSqlRaw(seedScript);
-                Console.WriteLine("Initial data seed script executed successfully");
+                logger.LogInformation("Initial data seed script executed successfully");
             }
             else
             {
-                Console.WriteLine($"Warning: Seed script not found at {seedScriptPath}");
+                logger.LogInformation($"Warning: Seed script not found at {seedScriptPath}");
                 // List files in project directory for debugging
                 var files = Directory.GetFiles(projectDir, "*.*");
                 if (files.Length > 0)
                 {
-                    Console.WriteLine($"Files in {projectDir}: {string.Join(", ", files.Select(f => Path.GetFileName(f)).Take(10))}");
+                    logger.LogInformation($"Files in {projectDir}: {string.Join(", ", files.Select(f => Path.GetFileName(f)).Take(10))}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error executing initial data seed: {ex.Message}");
+            logger.LogError(ex, "Error executing initial data seed");
             // Don't throw - allow app to continue even if seed fails
         }
     }

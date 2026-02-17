@@ -1,57 +1,135 @@
 ﻿@page "/categories"
-@using MudBlazor.Extensions
 
 @inject ICategoryService categoryService
+@inject IAuthStateService AuthState
 
-<h3>Categories</h3>
+@using LibraryApp.Web.Components
+@using LibraryApp.Web.Services.Auth
+@using static LibraryApp.Web.Model.Auth.Permissions
 
-<MudTable T="CategoryDto" ServerData="ServerReload" FixedHeader="true" Hover="true" Striped="true"
-    LoadingProgressColor="Color.Info" SortLabel="Sort By">
-    <HeaderContent>
-        <MudTh>
-            <MudTableSortLabel SortLabel="@nameof(CategoryDto.Name)" T="CategoryDto">Name</MudTableSortLabel>
-        </MudTh>
-        <MudTh>
-            <MudTableSortLabel SortLabel="@nameof(CategoryDto.Description)" T="CategoryDto"> Description
-            </MudTableSortLabel>
-        </MudTh>
-        <MudTh>Active</MudTh>
-        <MudTh>Created At</MudTh>
-        <MudTh>Updated At</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Description">@context.Description</MudTd>
-        <MudTd DataLabel="Active">@context.Active</MudTd>
-        <MudTd DataLabel="Created At">@context.CreatedAt.ToIsoDateString()</MudTd>
-        <MudTd DataLabel="Updated At">@context.UpdatedAt.ToIsoDateString()</MudTd>
-    </RowTemplate>
-    <NoRecordsContent>
-        <MudText>No matching records found</MudText>
-    </NoRecordsContent>
-    <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" RowsPerPageString="Rows per page:"
-            InfoFormat="{first_item}-{last_item} of {all_items}" />
-    </PagerContent>
-</MudTable>
+<PageTitle>Categories - LibraryApp</PageTitle>
+
+<AuthorizeView Roles="Administrator" RedirectTo="/login">
+    <Authorized>
+        <div>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-primary-900">📚 Categories</h1>
+                
+                <!-- Action buttons with permission-based visibility -->
+                <div class="flex gap-3">
+                    <AuthorizePermission Feature="Category" Action="Create">
+                        <Authorized>
+                            <Button Variant="ButtonVariant.Primary" OnClick="@(() => Console.WriteLine("Create category"))">
+                                ➕ New Category
+                            </Button>
+                        </Authorized>
+                    </AuthorizePermission>
+                    
+                    <AuthorizePermission Permissions="@CategoryRead">
+                        <Authorized>
+                            <Button Variant="ButtonVariant.Outline" OnClick="@(() => Console.WriteLine("Export categories"))">
+                                📄 Export
+                            </Button>
+                        </Authorized>
+                    </AuthorizePermission>
+                </div>
+            </div>
+
+            @if (categories.Count > 0)
+            {
+                <Card>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-neutral-200">
+                            <thead class="bg-neutral-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Name</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Description</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Active</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Created</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Updated</th>
+                                    <!-- Only show Actions column if user has Update or Delete permissions -->
+                                    @if (AuthState.HasAnyPermission(CategoryUpdate, CategoryDelete))
+                                    {
+                                        <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Actions</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-200">
+                                @foreach (var category in categories)
+                                {
+                                    <tr class="hover:bg-neutral-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm font-medium text-neutral-900">@category.Name</td>
+                                        <td class="px-6 py-4 text-sm text-neutral-700">@category.Description</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            @if (category.Active)
+                                            {
+                                                <Badge Variant="BadgeVariant.Success">Active</Badge>
+                                            }
+                                            else
+                                            {
+                                                <Badge Variant="BadgeVariant.Warning">Inactive</Badge>
+                                            }
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-neutral-600">@category.CreatedAt.ToString()</td>
+                                        <td class="px-6 py-4 text-sm text-neutral-600">@category.UpdatedAt.ToString()</td>
+                                        
+                                        <!-- Row actions based on permissions -->
+                                        @if (AuthState.HasAnyPermission(CategoryUpdate, CategoryDelete))
+                                        {
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="flex gap-2">
+                                                    @if (AuthState.HasPermission(CategoryUpdate))
+                                                    {
+                                                        <button @onclick="@(() => EditCategory(category.Id))" 
+                                                                class="text-primary-600 hover:text-primary-800 transition-colors"
+                                                                title="Edit">
+                                                            ✏️
+                                                        </button>
+                                                    }
+                                                    
+                                                    @if (AuthState.HasPermission(CategoryDelete))
+                                                    {
+                                                        <button @onclick="@(() => DeleteCategory(category.Id))" 
+                                                                class="text-red-600 hover:text-red-800 transition-colors"
+                                                                title="Delete">
+                                                            🗑️
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            }
+            else
+            {
+                <Alert AlertType="AlertVariant.Info" Title="No Categories">
+                    No categories found. Add a new one to get started.
+                </Alert>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <Alert AlertType="AlertVariant.Warning" Title="Access Denied">
+            You do not have permission to view this page.
+        </Alert>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
-    private PagedResponseDTO<CategoryDto> pagedData = new();
-
-    private async Task<TableData<CategoryDto>> ServerReload(TableState state, CancellationToken token)
+    private void EditCategory(Guid id)
     {
-        var pagedRequest = new PagedRequest(state.Page + 1, state.PageSize)
-        {
-            OrderBy = state.SortLabel,
-            IsDescending = state.SortDirection == SortDirection.Ascending
-        };
+        Console.WriteLine($"Edit category: {id}");
+        // TODO: Implement edit functionality
+    }
 
-        pagedData = await categoryService.GetCategories(pagedRequest, token);
-
-        return new TableData<CategoryDto>
-        {
-            Items = pagedData.Data,
-            TotalItems = pagedData.TotalRecords
-        };
+    private void DeleteCategory(Guid id)
+    {
+        Console.WriteLine($"Delete category: {id}");
+        // TODO: Implement delete functionality
     }
 }

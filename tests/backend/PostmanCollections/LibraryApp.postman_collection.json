@@ -1,0 +1,420 @@
+{
+  "info": {
+    "_postman_id": "library-app-collection",
+    "name": "LibraryApp API",
+    "description": "Complete API collection for LibraryApp with Authentication, User Management, and Role Management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "User authentication endpoints for login, logout, and token refresh",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"accessToken\", jsonData.accessToken);",
+                  "    pm.environment.set(\"refreshToken\", jsonData.refreshToken);",
+                  "    pm.environment.set(\"userId\", jsonData.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Test@123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user with username and password. Returns JWT access token and refresh token."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"accessToken\", jsonData.accessToken);",
+                  "    pm.environment.set(\"refreshToken\", jsonData.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Refresh the access token using a valid refresh token. Generates new access and refresh tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout user by revoking their refresh token. Requires authorization."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "description": "User management endpoints for creating users and managing denied permissions",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"newUserId\", jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password@123!\",\n  \"userType\": \"Customer\",\n  \"roleIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users"
+              ]
+            },
+            "description": "Create a new user account with the provided information. Requires User.Create permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Denied Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feature\": \"Role\",\n  \"action\": \"Delete\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}/denied-permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users",
+                "{{userId}}",
+                "denied-permissions"
+              ]
+            },
+            "description": "Add a denied permission for a user. Explicitly prevents access to a specific resource action. Requires User.Update permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Denied Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}/denied-permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users",
+                "{{userId}}",
+                "denied-permissions"
+              ]
+            },
+            "description": "Retrieve all denied permissions for a specific user."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Denied Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feature\": \"Role\",\n  \"action\": \"Delete\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}/denied-permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users",
+                "{{userId}}",
+                "denied-permissions"
+              ]
+            },
+            "description": "Remove a denied permission for a user. Allows the user to access the resource action if granted through roles. Requires User.Update permission."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Role Management",
+      "description": "Role management endpoints for creating and listing roles with permission-based access control",
+      "item": [
+        {
+          "name": "Create Role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"roleId\", jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Librarian\",\n  \"description\": \"Role for library staff with full access to catalog management\",\n  \"permissions\": [\n    {\n      \"feature\": \"Role\",\n      \"action\": \"Create\"\n    },\n    {\n      \"feature\": \"User\",\n      \"action\": \"Create\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "roles"
+              ]
+            },
+            "description": "Create a new role and assign permissions to it. Implements PBAC (Permission-Based Access Control) pattern. Requires Role.Create permission."
+          },
+          "response": []
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/roles?page=1&pageSize=10&name=&isActive=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "isActive",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of roles with optional filtering by name and active status. Requires Role.Read permission."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL for the API (localhost for development, replace with production URL)"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token obtained from login. Auto-populated after successful login."
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Refresh token obtained from login. Auto-populated after successful login. Used to refresh access token."
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string",
+      "description": "User ID obtained from login. Auto-populated after successful login."
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string",
+      "description": "Role ID created from create role endpoint. Auto-populated after successful role creation."
+    },
+    {
+      "key": "newUserId",
+      "value": "",
+      "type": "string",
+      "description": "User ID created from create user endpoint. Auto-populated after successful user creation."
+    }
+  ]
+}

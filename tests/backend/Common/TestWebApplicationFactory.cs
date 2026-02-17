@@ -63,14 +63,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 Audience = configuration["Jwt:Audience"] ?? "LibraryAppUsers",
                 SecretKey = configuration["Jwt:SecretKey"] ?? "your-test-secret-key-min-32-chars",
                 TokenExpiryInMinutes = int.Parse(configuration["Jwt:TokenExpiryInMinutes"] ?? "15"),
-                RefreshTokenExpiryInDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7")
+                RefreshTokenExpiryInDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7"),
+                RefreshTokenSlidingExpiryInMinutes = int.Parse(configuration["Jwt:RefreshTokenSlidingExpiryInMinutes"] ?? "20")
             };
             services.AddSingleton(jwtSettings);
         });
     }
-}
-
-public abstract class BaseApiTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
-{
-    protected readonly TestWebApplicationFactory _webFactory = factory;
 }

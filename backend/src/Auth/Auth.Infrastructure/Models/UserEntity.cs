@@ -10,6 +10,7 @@ using Core.Infrastructure;
 /// </summary>
 public sealed class UserEntity : Entity
 {
+    public long ExternalId { get; set; }
     public required string FirstName { get; set; }
     public required string LastName { get; set; }
     public required string Username { get; set; }
@@ -61,6 +62,7 @@ public sealed class UserEntity : Entity
         var user = new User
         {
             Id = UserId.From(userEntity.Id),
+            ExternalId = userEntity.ExternalId,
             FirstName = userEntity.FirstName,
             LastName = userEntity.LastName,
             Username = username ?? new Username { Value = string.Empty },
@@ -95,6 +97,7 @@ public sealed class UserEntity : Entity
         var userEntity = new UserEntity
         {
             Id = user.Id.Value,
+            ExternalId = user.ExternalId,
             FirstName = user.FirstName,
             LastName = user.LastName,
             Username = user.Username.Value,

@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 /// Implementation of the Unit of Work pattern using Entity Framework Core.
 /// Manages database transactions and coordinates persistence operations.
 /// </summary>
-public sealed class UnitOfWork : IUnitOfWork
+public sealed class UnitOfWork(AuthDbContext _context) : IUnitOfWork
 {
-    private readonly AuthDbContext _context;
     private IDbContextTransaction? _transaction;
 
-    public UnitOfWork(AuthDbContext context)
+    public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        return new TransactionWrapper(_transaction);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -28,26 +28,23 @@ public sealed class UnitOfWork : IUnitOfWork
         {
             throw new InvalidOperationException("An error occurred while saving changes to the database.", ex);
         }
-    }
-
-    public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        return new TransactionWrapper(_transaction);
+        finally
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+                // Only clear change tracker when manually managing transactions
+                _context.ChangeTracker.Clear();
+            }
+        }
     }
 
     /// <summary>
     /// Wrapper class for EF Core transactions implementing our ITransaction interface.
     /// </summary>
-    private sealed class TransactionWrapper : ITransaction
+    private sealed class TransactionWrapper(IDbContextTransaction _transaction) : ITransaction
     {
-        private readonly IDbContextTransaction _transaction;
-
-        public TransactionWrapper(IDbContextTransaction transaction)
-        {
-            _transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
-        }
-
         public async Task CommitAsync(CancellationToken cancellationToken = default)
         {
             await _transaction.CommitAsync(cancellationToken);

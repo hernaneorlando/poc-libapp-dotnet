@@ -14,6 +14,7 @@ public sealed class RefreshTokenEntity
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsRememberMe { get; set; }
 
     /// <summary>
     /// Converts relational entity to domain value object (Entity → Domain).
@@ -24,7 +25,8 @@ public sealed class RefreshTokenEntity
         {
             Token = entity.Token,
             ExpiresAt = entity.ExpiresAt,
-            RevokedAt = entity.RevokedAt
+            RevokedAt = entity.RevokedAt,
+            IsRememberMe = entity.IsRememberMe
         };
     }
 
@@ -39,6 +41,7 @@ public sealed class RefreshTokenEntity
             Token = token.Token,
             ExpiresAt = token.ExpiresAt,
             RevokedAt = token.RevokedAt,
+            IsRememberMe = token.IsRememberMe,
             CreatedAt = DateTime.UtcNow
         };
     }

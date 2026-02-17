@@ -1,0 +1,110 @@
+@page "/login"
+@layout PublicLayout
+@using LibraryApp.Web.Services
+@using LibraryApp.Web.Design
+
+<div class="flex items-center justify-center min-h-screen px-4">
+    <div class="w-full max-w-md">
+        <!-- Card Container -->
+        <div class="bg-white rounded-xl shadow-lg shadow-neutral-900/10 overflow-hidden">
+            
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-8 text-center">
+                <img src="images/owl.svg" alt="LibraryApp" class="w-12 h-12 mx-auto mb-3">
+                <h1 class="text-2xl font-bold text-white">Sign In</h1>
+                <p class="text-primary-100 text-sm mt-2">Sign in to your account to continue</p>
+            </div>
+
+            <!-- Form -->
+            <form @onsubmit="HandleSubmit" class="p-6 space-y-5">
+                
+                <!-- Username -->
+                <div>
+                    <label class="block text-sm font-semibold text-neutral-700 mb-2">Username</label>
+                    <Input 
+                        @bind-Value="Username"
+                        HtmlType="text"
+                        Placeholder="username"
+                        Required="true"
+                        Disabled="IsLoading" />
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-semibold text-neutral-700">Password</label>
+                        <a href="/forgot-password" class="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                            Forgot your password?
+                        </a>
+                    </div>
+                    <Input 
+                        @bind-Value="Password"
+                        HtmlType="password"
+                        Placeholder="••••••••"
+                        Required="true"
+                        Disabled="IsLoading" />
+                </div>
+
+                <!-- Remember Me -->
+                <div class="flex items-center" title="Only use 'Remember Me' on private, trusted devices">
+                    <input 
+                        @bind="RememberMe"
+                        type="checkbox" 
+                        id="remember" 
+                        class="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                        disabled="@IsLoading" />
+                    <label for="remember" class="ml-2 text-sm text-neutral-700 cursor-pointer">
+                        Remember me on this device
+                    </label>
+                </div>
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-sm text-red-700">@ErrorMessage</p>
+                    </div>
+                }
+
+                <!-- Login Button -->
+                <Button 
+                    Class="w-full"
+                    Variant="ButtonVariant.Primary"
+                    Size="ButtonSize.Large"
+                    Type="submit"
+                    Disabled="IsLoading">
+                    @if (IsLoading)
+                    {
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="animate-spin">
+                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            </div>
+                            <span>Signing in...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span>Sign In</span>
+                    }
+                </Button>
+
+                <!-- Register Link -->
+                <div class="text-center pt-2">
+                    <p class="text-sm text-neutral-600">
+                        Don't have an account? 
+                        <a href="/register" class="text-primary-600 hover:text-primary-700 font-semibold">
+                            Create account
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Demo Info -->
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-xs text-blue-700">
+                <strong>Demo:</strong> Use username "admin" with password "Admin@123" to login as Administrator.
+            </p>
+        </div>
+    </div>
+</div>

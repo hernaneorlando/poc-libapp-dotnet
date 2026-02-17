@@ -1,12 +1,114 @@
-﻿﻿<MudNavMenu Class="mud-width-full mt-4">
-    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavGroup Title="Catalog Management" Icon="@Icons.Material.Filled.MenuBook" Expanded="false">
-        <MudNavLink Href="/categories">Categories</MudNavLink>
-    </MudNavGroup>
-    <MudNavGroup Title="Loan Management" Icon="@Icons.Material.Filled.CalendarMonth" Expanded="false">
-    </MudNavGroup>
-    <MudNavGroup Title="Report Management" Icon="@Icons.Material.Filled.Analytics" Expanded="false">
-    </MudNavGroup>
-    <MudNavGroup Title="User Management" Icon="@Icons.Material.Filled.SupervisedUserCircle" Expanded="false">
-    </MudNavGroup>
-</MudNavMenu>
+﻿﻿@using LibraryApp.Web.Components
+@using LibraryApp.Web.Services.Auth
+@using LibraryApp.Web.Model.Auth
+@using static LibraryApp.Web.Model.Auth.Permissions
+
+<nav class="w-full bg-neutral-900 text-white p-4">
+    <ul class="space-y-2">
+        <li>
+            <a href="/" class="flex items-center gap-3 px-4 py-2 rounded-lg transition-smooth hover:bg-primary-600">
+                <span>📚</span>
+                <span>Home</span>
+            </a>
+        </li>
+        
+        <!-- Catalog Management - Show submenu only with permissions -->
+        @if (AuthState.IsAuthenticated && AuthState.HasAnyPermission(CategoryRead, BookRead, ContributorRead, PublisherRead))
+        {
+            <li>
+                <details class="group">
+                    <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                        <div class="flex items-center gap-3">
+                            <span>📖</span>
+                            <span>Catalog Management</span>
+                        </div>
+                        <span class="transition-transform group-open:rotate-180">▼</span>
+                    </summary>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        @if (AuthState.HasPermission(CategoryRead))
+                        {
+                            <li><a href="/categories" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Categories</a></li>
+                        }
+                        @if (AuthState.HasPermission(BookRead))
+                        {
+                            <li><a href="/books" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Books</a></li>
+                        }
+                    </ul>
+                </details>
+            </li>
+        }
+
+        <!-- Loan Management - Requires specific permissions -->
+        @if (AuthState.IsAuthenticated && AuthState.HasPermission(BookCheckoutRead))
+        {
+            <li>
+                <details class="group">
+                    <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                        <div class="flex items-center gap-3">
+                            <span>📅</span>
+                            <span>Loan Management</span>
+                        </div>
+                        <span class="transition-transform group-open:rotate-180">▼</span>
+                    </summary>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        <li><a href="/loans" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Loans</a></li>
+                    </ul>
+                </details>
+            </li>
+        }
+
+        <!-- Report Management - Administrator or Employee role -->
+        <AuthorizeView Roles="Administrator,Employee">
+            <Authorized>
+                <li>
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                            <div class="flex items-center gap-3">
+                                <span>📊</span>
+                                <span>Report Management</span>
+                            </div>
+                            <span class="transition-transform group-open:rotate-180">▼</span>
+                        </summary>
+                        <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                            <li><a href="/reports" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Reports</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- User Management - Administrator only -->
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <li>
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                            <div class="flex items-center gap-3">
+                                <span>👥</span>
+                                <span>User Management</span>
+                            </div>
+                            <span class="transition-transform group-open:rotate-180">▼</span>
+                        </summary>
+                        <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                            @if (AuthState.HasPermission(UserRead))
+                            {
+                                <li><a href="/users" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Users</a></li>
+                            }
+                            @if (AuthState.HasPermission(RoleRead))
+                            {
+                                <li><a href="/roles" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Roles</a></li>
+                            }
+                        </ul>
+                    </details>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+
+        <li class="border-t border-neutral-700 mt-4 pt-4">
+            <a href="/design-system" class="flex items-center gap-3 px-4 py-2 rounded-lg transition-smooth hover:bg-secondary-600 text-secondary-400 hover:text-white">
+                <span>🎨</span>
+                <span>Design System</span>
+            </a>
+        </li>
+    </ul>
+</nav>

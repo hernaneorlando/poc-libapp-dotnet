@@ -1,0 +1,259 @@
+@page "/design-system"
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+<PageTitle>Design System - Library App</PageTitle>
+
+<div class="min-h-screen bg-neutral-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 text-white py-12 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold mb-2">Design System</h1>
+            <p class="text-lg opacity-90">Components and visual styles of LibraryApp</p>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="max-w-6xl mx-auto py-12 px-6 space-y-12">
+
+        <!-- ====== BUTTONS ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Buttons</h2>
+            
+            <div class="grid gap-6">
+                <!-- Primary Variants -->
+                <div>
+                    <h3 class="text-lg font-semibold text-neutral-700 mb-4">Primary</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <Button>Default Button</Button>
+                        <Button Size="ButtonSize.Small">Small</Button>
+                        <Button Size="ButtonSize.Large">Large</Button>
+                        <Button Disabled="true">Disabled</Button>
+                        <Button FullWidth="true">Full Width</Button>
+                    </div>
+                </div>
+
+                <!-- Other Variants -->
+                <div>
+                    <h3 class="text-lg font-semibold text-neutral-700 mb-4">Variantes</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <Button Variant="ButtonVariant.Secondary">Secondary</Button>
+                        <Button Variant="ButtonVariant.Accent">Accent</Button>
+                        <Button Variant="ButtonVariant.Outline">Outline</Button>
+                        <Button Variant="ButtonVariant.Ghost">Ghost</Button>
+                        <Button Variant="ButtonVariant.Danger">Danger</Button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== INPUTS ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Inputs</h2>
+            
+            <div class="grid gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input Label="Text Input" Placeholder="Enter text..." />
+                    <Input Label="Email" HtmlType="email" Placeholder="email@example.com" />
+                    <Input Label="With Helper Text" HelperText="This is a helper text" />
+                    <Input Label="Error State" InputType="InputVariant.Error" ErrorMessage="This field is required" />
+                    <Input Label="Success State" InputType="InputVariant.Success" />
+                    <Input Label="Disabled" Disabled="true" Value="Disabled input" />
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== CARDS ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Cards</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card Title="Basic Card">
+                    <p class="text-neutral-700">This is a basic card with title and content.</p>
+                </Card>
+
+                <Card Title="Card with Buttons" Elevation="CardElevation.High">
+                    <p class="text-neutral-700 mb-4">This card has action buttons below.</p>
+                    <div class="flex gap-2">
+                        <Button Size="ButtonSize.Small">Action</Button>
+                        <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline">Cancel</Button>
+                    </div>
+                </Card>
+
+                <Card ShowBorder="true" Title="Custom Header with Badge">
+                    <p class="text-neutral-700">Card with custom header content.</p>
+                </Card>
+
+                <Card Elevation="CardElevation.None" ShowBorder="true">
+                    <p class="text-neutral-700 mb-4">This is a minimal card style.</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <Badge Variant="BadgeVariant.Secondary">Tag 1</Badge>
+                        <Badge Variant="BadgeVariant.Accent">Tag 2</Badge>
+                    </div>
+                </Card>
+            </div>
+        </section>
+
+        <!-- ====== BADGES ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Badges</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-neutral-700 mb-4">Variantes</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <Badge>Primary</Badge>
+                        <Badge Variant="BadgeVariant.Secondary">Secondary</Badge>
+                        <Badge Variant="BadgeVariant.Accent">Accent</Badge>
+                        <Badge Variant="BadgeVariant.Success">Success</Badge>
+                        <Badge Variant="BadgeVariant.Warning">Warning</Badge>
+                        <Badge Variant="BadgeVariant.Error">Error</Badge>
+                        <Badge Variant="BadgeVariant.Info">Info</Badge>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-neutral-700 mb-4">Sizes</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <Badge Size="BadgeSize.Small">Small</Badge>
+                        <Badge Size="BadgeSize.Medium">Medium</Badge>
+                        <Badge Size="BadgeSize.Large">Large</Badge>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== ALERTS ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Alerts</h2>
+            
+            <div class="space-y-4">
+                <Alert AlertType="AlertVariant.Info" Title="Information">
+                    This is an informational alert with some helpful content.
+                </Alert>
+
+                <Alert AlertType="AlertVariant.Success" Title="Success">
+                    Your action was completed successfully!
+                </Alert>
+
+                <Alert AlertType="AlertVariant.Warning" Title="Warning">
+                    Please review this important information before proceeding.
+                </Alert>
+
+                <Alert AlertType="AlertVariant.Error" Title="Error" Closeable="true">
+                    An error occurred. Please try again later.
+                </Alert>
+            </div>
+        </section>
+
+        <!-- ====== COLORS ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Color Palette</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Primary -->
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-primary-50"></div>
+                    <p class="text-xs font-mono text-neutral-600">primary-50</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-primary-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">primary-500</p>
+                </div>
+                
+                <!-- Secondary -->
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-secondary-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">secondary-500</p>
+                </div>
+
+                <!-- Accent -->
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-accent-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">accent-500</p>
+                </div>
+
+                <!-- Status -->
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-green-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">success</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-yellow-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">warning</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-red-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">error</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-blue-500"></div>
+                    <p class="text-xs font-mono text-neutral-600">info</p>
+                </div>
+
+                <!-- Neutral -->
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-neutral-100 border-2 border-neutral-200"></div>
+                    <p class="text-xs font-mono text-neutral-600">neutral-100</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-24 rounded-lg bg-neutral-900"></div>
+                    <p class="text-xs font-mono text-neutral-600">neutral-900</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== TYPOGRAPHY ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Typography</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <p class="text-xs text-neutral-600 mb-2">H1</p>
+                    <h1>Heading 1</h1>
+                </div>
+                <div>
+                    <p class="text-xs text-neutral-600 mb-2">H2</p>
+                    <h2>Heading 2</h2>
+                </div>
+                <div>
+                    <p class="text-xs text-neutral-600 mb-2">H3</p>
+                    <h3>Heading 3</h3>
+                </div>
+                <div>
+                    <p class="text-xs text-neutral-600 mb-2">Body Text</p>
+                    <p>This is body text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+                <div>
+                    <p class="text-xs text-neutral-600 mb-2">Small Text</p>
+                    <p class="text-sm">This is small text used for helper text and descriptions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SPACING ====== -->
+        <section>
+            <h2 class="text-3xl font-bold text-primary-900 mb-6 pb-3 border-b-2 border-primary-200">Spacing</h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-12 bg-primary-500 rounded"></div>
+                    <p class="text-sm font-mono">4px (xs)</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-20 h-12 bg-secondary-500 rounded"></div>
+                    <p class="text-sm font-mono">8px (sm)</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-32 h-12 bg-accent-500 rounded"></div>
+                    <p class="text-sm font-mono">16px (md)</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-40 h-12 bg-primary-300 rounded"></div>
+                    <p class="text-sm font-mono">24px (lg)</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>

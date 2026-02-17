@@ -40,16 +40,24 @@ public sealed class RefreshTokenCommandHandler(
         // Generate new access token
         var newAccessToken = _tokenService.GenerateAccessToken(user);
 
+        // Use IsRememberMe flag to determine token expiry
+        // RememberMe=true: long-lived token, set expiry in days
+        // RememberMe=false: sliding window, set expiry in minutes
+        var now = DateTime.UtcNow;
+        var newTokenExpiresAt = refreshToken.IsRememberMe
+            ? now.AddDays(_jwtSettings.RefreshTokenExpiryInDays)
+            : now.AddMinutes(_jwtSettings.RefreshTokenSlidingExpiryInMinutes);
+
+        // Revoke the old refresh token
+        refreshToken.Revoke();
+
         // Generate new refresh token
         var newRefreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
-        var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays);
-        var newRefreshToken = RefreshToken.Create(newRefreshTokenString, newRefreshTokenExpiresAt);
 
-        // Revoke old refresh token
-        refreshToken.RevokedAt = DateTime.UtcNow;
-
-        // Add new refresh token to user
-        user.AddRefreshToken(newRefreshToken);
+        // Create new refresh token and add to user
+        // Preserve the IsRememberMe flag from the original token
+        var newRefreshToken = RefreshToken.Create(newRefreshTokenString, newTokenExpiresAt, refreshToken.IsRememberMe);
+        user.RefreshTokens.Add(newRefreshToken);
 
         // Persist changes
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -61,8 +69,7 @@ public sealed class RefreshTokenCommandHandler(
 
         var response = new RefreshTokenResponse(
             AccessToken: newAccessToken,
-            RefreshToken: newRefreshTokenString,
-            ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60);
+            RefreshToken: newRefreshTokenString);
 
         return Result<RefreshTokenResponse>.Ok(response);
     }

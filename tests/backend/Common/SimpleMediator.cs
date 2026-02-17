@@ -123,6 +123,53 @@ public class SimpleMediator<TRepository, THandler, TRequest, TResponse, TDepende
 }
 
 /// <summary>
+/// Simple mediator implementation for handlers that require two dependencies (e.g. UnitOfWork + IMediator)
+/// Used by tests to construct handlers with an extra dependency.
+/// </summary>
+public class SimpleMediator<TRepository, THandler, TRequest, TResponse, TDependency1, TDependency2>(
+    TRepository _repository,
+    ILogger<THandler> _logger,
+    TDependency1 _dep1,
+    TDependency2 _dep2) : IMediator
+    where TRepository : class
+    where THandler : class, IRequestHandler<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
+    where TDependency1 : class
+    where TDependency2 : class
+{
+    public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    {
+        if (request is TRequest typedRequest)
+        {
+            var handler = Activator.CreateInstance(typeof(THandler), _repository, _logger, _dep1, _dep2) as THandler;
+            return (TResponse)(object)await handler!.Handle(typedRequest, cancellationToken);
+        }
+
+        throw new NotSupportedException($"Command type {request.GetType().Name} is not supported");
+    }
+
+    public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
+    {
+        if (request is IRequest unitRequest)
+        {
+            await Send(unitRequest, cancellationToken);
+            return;
+        }
+        throw new NotSupportedException($"Request type {typeof(TRequest).Name} not supported");
+    }
+
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<object?> Send(object request, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    public Task Publish(object notification, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
+/// <summary>
 /// Simple mediator implementation to avoid MediatR licensing issues - For handlers with 6 parameters
 /// </summary>
 public class SimpleMediator<TRepository, THandler, TRequest, TResponse, TDependency1, TDependency2, TDependency3, TDependency4>(

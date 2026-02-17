@@ -14,6 +14,7 @@ using Auth.Domain.Aggregates.Role;
 /// </summary>
 public sealed class User : AggregateRoot<UserId>
 {
+    public long ExternalId { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public Username Username { get; set; } = null!;
@@ -191,6 +192,9 @@ public sealed class User : AggregateRoot<UserId>
         // Mark as revoked
         refreshToken.Revoke();
         UpdatedAt = DateTime.UtcNow;
+
+        // Raise a domain event so external handlers can revoke all tokens for this user
+        RaiseDomainEvent(new UserLoggedOutEvent(Id));
     }
 
     /// <summary>

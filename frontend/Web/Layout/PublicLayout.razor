@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+@using LibraryApp.Web.Components
+@using LibraryApp.Web.Design
+
+<!-- Public Layout (sem Menu Lateral) -->
+<div class="min-h-screen bg-gradient-to-br from-neutral-50 via-primary-50 to-accent-50 flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-neutral-200 bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+
+                <a href="/" class="flex items-center space-x-3 hover:opacity-80 transition-opacity no-underline text-neutral-900">
+                    <img src="images/owl.svg" alt="LibraryApp" class="w-10 h-10">
+                    <span class="text-xl font-bold">LibraryApp</span>
+                </a>
+
+                <!-- User Navigation with Avatar -->
+                <UserNav />
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            @Body
+        </div>
+    </main>
+</div>

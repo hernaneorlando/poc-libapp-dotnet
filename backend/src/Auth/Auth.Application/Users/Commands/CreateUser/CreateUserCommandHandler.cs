@@ -67,9 +67,8 @@ public sealed class CreateUserHandler(
                 var roleId = Auth.Domain.Aggregates.Role.RoleId.From(roleGuid);
 
                 // Fetch role from repository
-                var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken);
-                if (role is null)
-                    throw new InvalidOperationException($"Role with ID '{roleIdString}' not found");
+                var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken) 
+                    ?? throw new InvalidOperationException($"Role with ID '{roleIdString}' not found");
 
                 // Assign role to user
                 user.AssignRole(role);

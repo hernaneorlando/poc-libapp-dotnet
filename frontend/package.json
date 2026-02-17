@@ -1,0 +1,19 @@
+{
+  "name": "libraryapp-web",
+  "version": "1.0.0",
+  "description": "LibraryApp - Blazor WebAssembly with Tailwind CSS Design System",
+  "scripts": {
+    "build:css": "tailwindcss -i ./Web/Styles/tailwind.css -o ./Web/wwwroot/css/tailwind.css",
+    "build:css:watch": "tailwindcss -i ./Web/Styles/tailwind.css -o ./Web/wwwroot/css/tailwind.css --watch",
+    "build:css:prod": "NODE_ENV=production tailwindcss -i ./Web/Styles/tailwind.css -o ./Web/wwwroot/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.17",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "@tailwindcss/aspect-ratio": "^0.4.2"
+  },
+  "dependencies": {}
+}

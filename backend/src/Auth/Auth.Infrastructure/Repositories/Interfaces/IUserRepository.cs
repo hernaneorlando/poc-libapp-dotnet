@@ -20,6 +20,11 @@ public interface IUserRepository : IBaseRepository<User, UserEntity>
     Task<User?> GetByIdAsync(UserId userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Retrieves a user by its external identifier.
+    /// </summary>
+    Task<User?> GetByExternalIdAsync(long externalId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates an existing user.
     /// </summary>
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class PasswordHasher(ILogger<PasswordHasher> _logger) : IPasswordHasher
 {
-    private const int WorkFactor = 11; // bcrypt work factor (between 4-31)
+    public static readonly int WorkFactor = 11; // bcrypt work factor (between 4-31)
 
     /// <summary>
     /// Hashes a password using bcrypt with configurable work factor.

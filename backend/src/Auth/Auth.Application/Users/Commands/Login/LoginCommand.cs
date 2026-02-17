@@ -8,13 +8,14 @@ namespace Auth.Application.Users.Commands.Login;
 /// </summary>
 public sealed record LoginCommand(
     string Username,
-    string Password) : IRequest<Result<LoginResponse>>;
+    string Password,
+    bool RememberMe = false) : IRequest<Result<LoginResponse>>;
 
 /// <summary>
 /// User information in login response.
 /// </summary>
 public sealed record UserLoginInfo(
-    Guid Id,
+    long ExternalId,
     string Username,
     string Email,
     string FullName,
@@ -26,5 +27,4 @@ public sealed record UserLoginInfo(
 public sealed record LoginResponse(
     string AccessToken,
     string RefreshToken,
-    int ExpiresInSeconds,
     UserLoginInfo User);

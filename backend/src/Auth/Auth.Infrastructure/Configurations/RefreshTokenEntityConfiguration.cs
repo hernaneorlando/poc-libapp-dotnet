@@ -30,6 +30,10 @@ public sealed class RefreshTokenEntityConfiguration : IEntityTypeConfiguration<R
         builder.Property(rt => rt.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(rt => rt.IsRememberMe)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValue(false);
+
         // Foreign Key
         builder.HasOne<UserEntity>()
             .WithMany(u => u.RefreshTokens)

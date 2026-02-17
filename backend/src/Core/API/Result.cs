@@ -62,3 +62,22 @@ public abstract record Result<T>
         }
     }
 }
+
+
+public sealed record ApiResult<T>
+{
+    public T? Value { get; init; }
+    public List<ErrorResponse> Errors { get; init; } = [];
+    public bool IsSuccess { get; init; }
+    public bool IsFailure => !IsSuccess;
+
+    /// <summary>
+    /// Factory method to create a successful result.
+    /// </summary>
+    public static ApiResult<T> Ok(T value) => new() { Value = value, IsSuccess = true };
+
+    /// <summary>
+    /// Factory method to create an error result.
+    /// </summary>
+    public static ApiResult<T> Error(params ErrorResponse[] errors) => new() { Errors = [.. errors], IsSuccess = false };
+}

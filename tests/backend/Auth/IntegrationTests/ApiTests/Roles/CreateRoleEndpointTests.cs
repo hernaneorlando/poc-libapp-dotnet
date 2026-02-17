@@ -10,7 +10,7 @@ namespace Auth.Tests.IntegrationTests.ApiTests.Roles;
 /// Integration tests for the Create Role endpoint.
 /// Tests the complete flow: HTTP request → API → Handler → Domain → Database.
 /// </summary>
-public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAuthApiTests(factory)
+public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
 {
     #region Success Scenarios
 

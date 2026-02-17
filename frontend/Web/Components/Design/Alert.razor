@@ -1,0 +1,43 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@{
+    var bgClasses = AlertType switch
+    {
+        AlertVariant.Success => "bg-green-50 border-l-4 border-green-500 text-green-800",
+        AlertVariant.Warning => "bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800",
+        AlertVariant.Error => "bg-red-50 border-l-4 border-red-500 text-red-800",
+        AlertVariant.Info => "bg-blue-50 border-l-4 border-blue-500 text-blue-800",
+        _ => "bg-neutral-50 border-l-4 border-neutral-500 text-neutral-800"
+    };
+
+    var classes = $"rounded-r-lg p-4 flex gap-4 items-start {bgClasses} {Class}";
+}
+
+<div class="@classes" role="alert">
+    @if (Icon != null)
+    {
+        <div class="flex-shrink-0">@Icon</div>
+    }
+    
+    <div class="flex-1">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <h4 class="font-semibold mb-1">@Title</h4>
+        }
+        
+        <div class="text-sm">
+            @ChildContent
+        </div>
+    </div>
+
+    @if (Closeable && OnClose.HasDelegate)
+    {
+        <button class="flex-shrink-0 text-current opacity-70 hover:opacity-100 transition-smooth"
+                @onclick="OnClose"
+                aria-label="Fechar alerta">
+            ✕
+        </button>
+    }
+</div>

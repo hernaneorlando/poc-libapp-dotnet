@@ -64,8 +64,9 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
             SecretKey = "this-is-a-very-long-secret-key-for-jwt-testing-purposes-minimum-32-characters",
             Issuer = "LibraryApp",
             Audience = "LibraryAppUsers",
-            TokenExpiryInMinutes = 15,
-            RefreshTokenExpiryInDays = 7
+            TokenExpiryInMinutes = 10,
+            RefreshTokenExpiryInDays = 2,
+            RefreshTokenSlidingExpiryInMinutes = 20
         });
 
         // Build services
@@ -131,7 +132,6 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         
         successResult.Data.AccessToken.Should().NotBeNullOrEmpty();
         successResult.Data.RefreshToken.Should().NotBeNullOrEmpty();
-        successResult.Data.ExpiresInSeconds.Should().Be(_jwtSettings.TokenExpiryInMinutes * 60);
         successResult.Data.User.Should().NotBeNull();
         successResult.Data.User.Username.Should().Be(user.Username.Value);
         successResult.Data.User.Email.Should().Be(user.Contact.Email);
@@ -156,7 +156,7 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         result.Should().BeOfType<Result<LoginResponse>.Success>();
         var successResult = (Result<LoginResponse>.Success)result;
         
-        successResult.Data.User.Id.Should().Be(user.Id.Value);
+        successResult.Data.User.ExternalId.Should().Be(user.ExternalId);
         successResult.Data.User.Username.Should().Be(user.Username.Value);
         successResult.Data.User.Email.Should().Be(email);
         successResult.Data.User.FullName.Should().Contain(firstName).And.Contain(lastName);
@@ -202,7 +202,6 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         // Verify refresh token is returned in the response
         successResult.Data.RefreshToken.Should().NotBeNullOrWhiteSpace();
         successResult.Data.AccessToken.Should().NotBeNullOrWhiteSpace();
-        successResult.Data.ExpiresInSeconds.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -406,7 +405,6 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         result.Should().BeOfType<Result<LoginResponse>.Success>();
         var successResult = (Result<LoginResponse>.Success)result;
         
-        successResult.Data.ExpiresInSeconds.Should().Be(_jwtSettings.TokenExpiryInMinutes * 60);
     }
 
     [Fact]
@@ -428,7 +426,6 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         // Verify expiry time is correctly set based on settings
         successResult.Data.RefreshToken.Should().NotBeNullOrWhiteSpace();
         // The refresh token expiry should be calculated properly in the handler
-        successResult.Data.ExpiresInSeconds.Should().Be(_jwtSettings.TokenExpiryInMinutes * 60);
     }
 
     #endregion

@@ -13,7 +13,7 @@ namespace Auth.Tests.IntegrationTests.ApiTests.Auth;
 /// Integration tests for the Login endpoint.
 /// Tests the complete flow: HTTP request → API → Handler → Domain → Database.
 /// </summary>
-public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApiTests(factory)
+public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
 {
     #region Success Scenarios
 
@@ -50,13 +50,15 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse.Should().NotBeNull();
-        loginResponse!.AccessToken.Should().NotBeEmpty();
-        loginResponse.RefreshToken.Should().NotBeEmpty();
-        loginResponse.ExpiresInSeconds.Should().BeGreaterThan(0);
+        loginResponse!.IsSuccess.Should().BeTrue();
+        var data = loginResponse.Value;
+        data.Should().NotBeNull();
+        data!.AccessToken.Should().NotBeEmpty();
+        data.RefreshToken.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -73,12 +75,12 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse.Should().NotBeNull();
         // JWT tokens have 3 parts separated by dots
-        var tokenParts = loginResponse!.AccessToken.Split('.');
+        var tokenParts = loginResponse!.Value!.AccessToken.Split('.');
         tokenParts.Length.Should().Be(3);
         tokenParts.All(part => !string.IsNullOrEmpty(part)).Should().BeTrue();
     }
@@ -98,16 +100,16 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert - Verify refresh token is persisted in database
         loginResponse.Should().NotBeNull();
-        loginResponse!.RefreshToken.Should().NotBeEmpty();
+        loginResponse!.Value!.RefreshToken.Should().NotBeEmpty();
         // Token should be retrievable from database
         var userRepository = GetService<IUserRepository>();
-        var user = await userRepository.FindAsync(new GetUserByRefreshToken(loginResponse.RefreshToken), CancellationToken.None);
+        var user = await userRepository.FindAsync(new GetUserByRefreshToken(loginResponse.Value.RefreshToken), CancellationToken.None);
         user.Should().NotBeNull();
-        user!.RefreshTokens.Should().Contain(t => t.Token == loginResponse.RefreshToken);
+        user!.RefreshTokens.Should().Contain(t => t.Token == loginResponse.Value.RefreshToken);
     }
 
     [Fact]
@@ -124,12 +126,11 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse.Should().NotBeNull();
-        // Token should expire in approximately 15 minutes (900 seconds)
-        loginResponse!.ExpiresInSeconds.Should().BeInRange(800, 1000);
+        loginResponse!.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -146,12 +147,13 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse.Should().NotBeNull();
-        loginResponse!.User.Should().NotBeNull();
-        loginResponse.User.Username.Should().Be("infouser");
+        loginResponse!.IsSuccess.Should().BeTrue();
+        loginResponse!.Value!.User.Should().NotBeNull();
+        loginResponse.Value.User.Username.Should().Be("infouser");
     }
 
     [Fact]
@@ -168,18 +170,20 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response1 = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse1 = await response1.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse1 = await response1.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         await Task.Delay(1000); // Ensure time difference for token generation
 
         var response2 = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse2 = await response2.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse2 = await response2.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse1.Should().NotBeNull();
         loginResponse2.Should().NotBeNull();
-        loginResponse1!.AccessToken.Should().NotBe(loginResponse2!.AccessToken);
-        loginResponse1.RefreshToken.Should().NotBe(loginResponse2.RefreshToken);
+        loginResponse1!.IsSuccess.Should().BeTrue();
+        loginResponse2!.IsSuccess.Should().BeTrue();
+        loginResponse1.Value!.AccessToken.Should().NotBe(loginResponse2.Value!.AccessToken);
+        loginResponse1.Value.RefreshToken.Should().NotBe(loginResponse2.Value.RefreshToken);
     }
 
     [Fact]
@@ -202,16 +206,18 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response1 = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse1 = await response1.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse1 = await response1.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         var response2 = await client.PostAsJsonAsync("/api/auth/login", request2);
-        var loginResponse2 = await response2.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse2 = await response2.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse1.Should().NotBeNull();
         loginResponse2.Should().NotBeNull();
-        loginResponse1!.AccessToken.Should().NotBe(loginResponse2!.AccessToken);
-        loginResponse1.RefreshToken.Should().NotBe(loginResponse2.RefreshToken);
+        loginResponse1!.IsSuccess.Should().BeTrue();
+        loginResponse2!.IsSuccess.Should().BeTrue();
+        loginResponse1.Value!.AccessToken.Should().NotBe(loginResponse2.Value!.AccessToken);
+        loginResponse1.Value.RefreshToken.Should().NotBe(loginResponse2.Value.RefreshToken);
     }
 
     #endregion
@@ -447,17 +453,17 @@ public class LoginEndpointTests(TestWebApplicationFactory factory) : BaseAuthApi
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         // Assert
         loginResponse.Should().NotBeNull();
-        loginResponse!.AccessToken.Should().NotBeNull();
-        loginResponse.RefreshToken.Should().NotBeNull();
-        loginResponse.ExpiresInSeconds.Should().BeGreaterThan(0);
-        loginResponse.User.Should().NotBeNull();
-        loginResponse.User.Id.Should().NotBeEmpty();
-        loginResponse.User.Email.Should().NotBeNull();
-        loginResponse.User.FullName.Should().Be("John Doe");
+        var data = loginResponse!.Value;
+        data.Should().NotBeNull();
+        data!.AccessToken.Should().NotBeNull();
+        data.RefreshToken.Should().NotBeNull();
+        data.User.Should().NotBeNull();
+        data.User.Email.Should().NotBeNull();
+        data.User.FullName.Should().Be("John Doe");
     }
 
     #endregion

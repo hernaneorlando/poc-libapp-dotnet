@@ -1,0 +1,38 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@{
+    var bgClasses = Variant switch
+    {
+        BadgeVariant.Primary => "bg-primary-100 text-primary-800",
+        BadgeVariant.Secondary => "bg-secondary-100 text-secondary-800",
+        BadgeVariant.Accent => "bg-accent-100 text-accent-800",
+        BadgeVariant.Success => "bg-green-100 text-green-800",
+        BadgeVariant.Warning => "bg-yellow-100 text-yellow-800",
+        BadgeVariant.Error => "bg-red-100 text-red-800",
+        BadgeVariant.Info => "bg-blue-100 text-blue-800",
+        _ => "bg-neutral-100 text-neutral-800"
+    };
+
+    var sizeClasses = Size switch
+    {
+        BadgeSize.Small => "px-2 py-1 text-xs font-medium",
+        BadgeSize.Large => "px-4 py-2 text-base font-semibold",
+        _ => "px-3 py-1.5 text-sm font-medium" // Medium
+    };
+
+    var classes = $"inline-flex items-center gap-1 rounded-full {bgClasses} {sizeClasses} {Class}";
+}
+
+<span class="@classes">
+    @if (IconStart != null)
+    {
+        <span>@IconStart</span>
+    }
+    @ChildContent
+    @if (IconEnd != null)
+    {
+        <span>@IconEnd</span>
+    }
+</span>

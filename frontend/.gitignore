@@ -1,0 +1,25 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Tailwind CSS output
+Web/wwwroot/css/tailwind.css
+Web/wwwroot/css/tailwind.css.map
+
+# IDEs
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DotNet
+bin/
+obj/
+*.csproj.user

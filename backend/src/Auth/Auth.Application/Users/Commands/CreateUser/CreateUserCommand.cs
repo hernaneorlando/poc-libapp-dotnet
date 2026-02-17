@@ -2,7 +2,6 @@ namespace Auth.Application.Users.Commands.CreateUser;
 
 using MediatR;
 using Auth.Application.Users.DTOs;
-using Auth.Domain.Enums;
 using Core.API;
 
 /// <summary>

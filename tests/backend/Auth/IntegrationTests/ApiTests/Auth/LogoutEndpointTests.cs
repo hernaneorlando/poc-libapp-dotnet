@@ -1,14 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
 using Auth.Application.Users.Commands.Logout;
+using Auth.Domain;
 using Auth.Domain.ValueObjects;
 using Auth.Infrastructure.Repositories.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+using Auth.Infrastructure.Specifications;
 using Common;
 using Core.API;
 using Microsoft.AspNetCore.Http;
-using Auth.Infrastructure.Specifications;
-using Auth.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Auth.Tests.IntegrationTests.ApiTests.Auth;
 
@@ -16,7 +16,7 @@ namespace Auth.Tests.IntegrationTests.ApiTests.Auth;
 /// Integration tests for the Logout endpoint.
 /// Tests the complete flow: HTTP request → API → Handler → Domain → Database.
 /// </summary>
-public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthApiTests(factory)
+public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
 {
     #region Success Scenarios
 
@@ -24,29 +24,32 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     public async Task Logout_WithValidRefreshToken_ReturnsLogoutResponse()
     {
         // Arrange
-        var login = await LoginTestUserAsync("logoutuser", "Logout@123!");
+        var login = await LoginTestUserAsync($"user.test", "Logout@123!");
         var client = CreateHttpClient(login.AccessToken);
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(login.User.ExternalId, login.RefreshToken);
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
-        var logoutResponse = await response.Content.ReadFromJsonAsync<LogoutResponse>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        logoutResponse.Should().NotBeNull();
-        logoutResponse!.Message.Should().NotBeNullOrEmpty();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<LogoutResponse>>();
+        result.Should().NotBeNull();
+        result!.IsSuccess.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        var logoutResponse = result.Value!;
+        logoutResponse.Message.Should().Be("Logout successful. Refresh token has been revoked.");
     }
 
     [Fact]
     public async Task Logout_WithValidRefreshToken_RevokesToken()
     {
         // Arrange
-        var username = "revokeuser";
-        var login = await LoginTestUserAsync(username, "Revoke@123!");
+        var login = await LoginTestUserAsync($"revoked.user", "Revoke@123!");
         var client = CreateHttpClient(login.AccessToken);
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(login.User.ExternalId, login.RefreshToken);
 
         // Act
         await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -55,7 +58,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
         var userRepository = GetService<IUserRepository>();
         var user = await userRepository.FindAsync(new GetUserByRefreshToken(login.RefreshToken), CancellationToken.None);
         user.Should().NotBeNull();
-        
+
         var revokedToken = user!.RefreshTokens.FirstOrDefault(t => t.Token == login.RefreshToken);
         revokedToken.Should().NotBeNull();
         revokedToken!.IsRevoked.Should().BeTrue();
@@ -66,9 +69,9 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     public async Task Logout_MultipleTimes_OnlyFirstSucceeds()
     {
         // Arrange
-        var login = await LoginTestUserAsync("multilogout", "Multi@123!");
+        var login = await LoginTestUserAsync("user.test", "Multi@123!");
         var client = CreateHttpClient(login.AccessToken);
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(login.User.ExternalId, login.RefreshToken);
 
         // Act
         var response1 = await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -88,7 +91,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var request = new LogoutCommand(UserId: Guid.NewGuid(), RefreshToken: "nonexistent-token-12345");
+        var request = new LogoutCommand(ExternalId: 999999L, RefreshToken: "nonexistent-token-12345");
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -96,9 +99,11 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        var result = await response.Content.ReadFromJsonAsync<ResultError>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<LogoutResponse>>();
         result.Should().NotBeNull();
-        result!.Details.Should().Contain("User not found");
+        result!.IsSuccess.Should().BeFalse();
+        result.Value.Should().BeNull();
+        result.Errors.Should().Contain(error => error.Detail.Contains("User not found"));
     }
 
     [Fact]
@@ -106,7 +111,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var request = new LogoutCommand(UserId: Guid.NewGuid(), RefreshToken: "");
+        var request = new LogoutCommand(ExternalId: 999999L, RefreshToken: "");
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -114,9 +119,11 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        var result = await response.Content.ReadFromJsonAsync<ResultError>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<LogoutResponse>>();
         result.Should().NotBeNull();
-        result!.Details.Should().Contain("User not found");
+        result!.IsSuccess.Should().BeFalse();
+        result.Value.Should().BeNull();
+        result.Errors.Should().Contain(error => error.Detail.Contains("User not found"));
     }
 
     [Fact]
@@ -124,7 +131,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var request = new LogoutCommand(UserId: Guid.NewGuid(), RefreshToken: null!);
+        var request = new LogoutCommand(ExternalId: 999999L, RefreshToken: null!);
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -141,9 +148,9 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login = await LoginTestUserAsync("alreadyrevoked", "Already@123!");
+        var login = await LoginTestUserAsync($"revoked.user", "Already@123!");
 
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(ExternalId: login.User.ExternalId, RefreshToken: login.RefreshToken);
 
         // First logout
         await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -160,23 +167,28 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     }
 
     [Fact]
-    public async Task Logout_WithExpiredToken_ReturnsBadRequest()
+    public async Task Logout_WithExpiredToken_ReturnsOk()
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login = await LoginTestUserAsync("expireduser", "Expired@123!");
+        var login = await LoginTestUserAsync($"expired.user", "Expired@123!");
 
         // Create an expired token manually
         var expiredToken = await CreateExpiredRefreshTokenAsync(login.User.Username);
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: expiredToken);
+        var request = new LogoutCommand(ExternalId: login.User.ExternalId, RefreshToken: expiredToken);
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ResultError>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<LogoutResponse>>();
         result.Should().NotBeNull();
+        result!.IsSuccess.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        var logoutResponse = result.Value!;
+        logoutResponse.Message.Should().Be("Logout successful. Refresh token has been revoked.");
     }
 
     [Fact]
@@ -184,10 +196,10 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login = await LoginTestUserAsync("wrongtoken", "Wrong@123!");
+        var login = await LoginTestUserAsync("user.test", "Wrong@123!");
 
         // Try to use access token instead of refresh token
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.AccessToken);
+        var request = new LogoutCommand(login.User.ExternalId, login.AccessToken);
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -205,18 +217,21 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login = await LoginTestUserAsync("messageuser", "Message@123!");
+        var login = await LoginTestUserAsync($"user.test", "Message@123!");
 
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(ExternalId: login.User.ExternalId, RefreshToken: login.RefreshToken);
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/logout", request);
-        var logoutResponse = await response.Content.ReadFromJsonAsync<LogoutResponse>();
 
         // Assert
-        logoutResponse.Should().NotBeNull();
-        logoutResponse!.Message.Should().NotBeNullOrEmpty();
-        logoutResponse.Message.ToLower().Should().Contain("success");
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<LogoutResponse>>();
+        result.Should().NotBeNull();
+        result!.IsSuccess.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        var logoutResponse = result.Value!;
+        logoutResponse.Message.Should().Be("Logout successful. Refresh token has been revoked.");
     }
 
     #endregion
@@ -228,9 +243,9 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login = await LoginTestUserAsync("dbstateuser", "DbState@123!");
+        var login = await LoginTestUserAsync("user.test", "DbState@123!");
 
-        var request = new LogoutCommand(UserId: login.User.Id, RefreshToken: login.RefreshToken);
+        var request = new LogoutCommand(login.User.ExternalId, login.RefreshToken);
 
         // Act
         await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -238,7 +253,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
         // Assert - Check database state
         var userRepository = GetService<IUserRepository>();
         var user = await userRepository.FindAsync(new GetUserByRefreshToken(login.RefreshToken), CancellationToken.None);
-        
+
         user.Should().NotBeNull();
         var token = user!.RefreshTokens.FirstOrDefault(t => t.Token == login.RefreshToken);
         token.Should().NotBeNull();
@@ -252,10 +267,10 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var login1 = await LoginTestUserAsync("user1logout", "User1@123!");
-        var login2 = await LoginTestUserAsync("user2logout", "User2@123!");
+        var login1 = await LoginTestUserAsync($"user1.test", "User1@123!");
+        var login2 = await LoginTestUserAsync($"user2.test", "User2@123!");
 
-        var request = new LogoutCommand(UserId: login1.User.Id, RefreshToken: login1.RefreshToken);
+        var request = new LogoutCommand(ExternalId: login1.User.ExternalId, RefreshToken: login1.RefreshToken);
 
         // Act - Logout user1
         await client.PostAsJsonAsync("/api/auth/logout", request);
@@ -263,7 +278,7 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
         // Assert - Verify user2's token is still active
         var userRepository = GetService<IUserRepository>();
         var user2 = await userRepository.FindAsync(new GetUserByRefreshToken(login2.RefreshToken), CancellationToken.None);
-        
+
         user2.Should().NotBeNull();
         var token2 = user2!.RefreshTokens.FirstOrDefault(t => t.Token == login2.RefreshToken);
         token2.Should().NotBeNull();
@@ -271,35 +286,34 @@ public class LogoutEndpointTests(TestWebApplicationFactory factory) : BaseAuthAp
     }
 
     [Fact]
-    public async Task Logout_OnlyRevokesSpecificToken()
+    public async Task Logout_RevokesAllTokens()
     {
         // Arrange
         var client = await CreateAuthenticatedHttpClientForLogout();
-        var username = "multitoken";
-        
+
         // Login multiple times to get multiple tokens
-        var login1 = await LoginTestUserAsync(username, "Multi@123!");
+        var login1 = await LoginTestUserAsync(UserTest.Username.Value, TestUserPassword, createNewUser: false);
         await Task.Delay(100);
-        var login2 = await LoginTestUserAsync(username, "Multi@123!");
+        var login2 = await LoginTestUserAsync(UserTest.Username.Value, TestUserPassword, createNewUser: false);
 
-        var request = new LogoutCommand(UserId: login1.User.Id, RefreshToken: login1.RefreshToken);
+        var request = new LogoutCommand(login1.User.ExternalId, login1.RefreshToken);
 
-        // Act - Revoke only first token
+        // Act - Revoke all tokens
         await client.PostAsJsonAsync("/api/auth/logout", request);
 
-        // Assert - Verify only first token is revoked
+        // Assert - Verify all tokens are revoked
         var userRepository = GetService<IUserRepository>();
         var user = await userRepository.FindAsync(new GetUserByRefreshToken(login1.RefreshToken), CancellationToken.None);
-        
+
         user.Should().NotBeNull();
-        
+
         var token1 = user!.RefreshTokens.FirstOrDefault(t => t.Token == login1.RefreshToken);
         token1.Should().NotBeNull();
         token1!.IsRevoked.Should().BeTrue();
 
         var token2 = user.RefreshTokens.FirstOrDefault(t => t.Token == login2.RefreshToken);
         token2.Should().NotBeNull();
-        token2!.IsRevoked.Should().BeFalse();
+        token2!.IsRevoked.Should().BeTrue();
     }
 
     #endregion

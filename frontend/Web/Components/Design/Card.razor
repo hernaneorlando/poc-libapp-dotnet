@@ -1,0 +1,49 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@{
+    var borderClasses = ShowBorder ? "border-2 border-neutral-200" : "";
+    var shadowClasses = Elevation switch
+    {
+        CardElevation.None => "shadow-none",
+        CardElevation.Low => "shadow-sm",
+        CardElevation.Medium => "shadow-base",
+        CardElevation.High => "shadow-lg",
+        _ => "shadow-base"
+    };
+
+    var classes = $"rounded-lg bg-white {borderClasses} {shadowClasses} transition-smooth hover:shadow-md {Class}";
+}
+
+<div class="@classes">
+    @if (!string.IsNullOrEmpty(Title) || TitleContent != null)
+    {
+        <div class="px-6 py-4 border-b-2 border-neutral-100">
+            @if (TitleContent != null)
+            {
+                @TitleContent
+            }
+            else if (!string.IsNullOrEmpty(Title))
+            {
+                <h3 class="text-lg font-semibold text-neutral-900">@Title</h3>
+            }
+
+            @if (HeaderContent != null)
+            {
+                <div class="mt-2">@HeaderContent</div>
+            }
+        </div>
+    }
+
+    <div class="px-6 py-4">
+        @ChildContent
+    </div>
+
+    @if (FooterContent != null)
+    {
+        <div class="px-6 py-4 border-t-2 border-neutral-100 bg-neutral-50 rounded-b-lg">
+            @FooterContent
+        </div>
+    }
+</div>

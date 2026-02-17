@@ -37,6 +37,11 @@ namespace Auth.Infrastructure.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsRememberMe")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("datetime2");
 
@@ -142,6 +147,12 @@ namespace Auth.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<long>("ExternalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ExternalId"));
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -188,6 +199,10 @@ namespace Auth.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Email");
+
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_ExternalId");
 
                     b.HasIndex("Username")
                         .IsUnique()

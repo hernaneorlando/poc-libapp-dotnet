@@ -9,13 +9,17 @@ public sealed class RefreshToken : ValueObject
     public string Token { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
+    public bool IsRememberMe { get; set; }
 
     public RefreshToken() { }
 
     /// <summary>
     /// Creates a new refresh token.
     /// </summary>
-    public static RefreshToken Create(string token, DateTime expiresAt)
+    /// <param name="token">The token string.</param>
+    /// <param name="expiresAt">When the token expires.</param>
+    /// <param name="isRememberMe">Whether this is a long-lived RememberMe token (true) or sliding-window token (false).</param>
+    public static RefreshToken Create(string token, DateTime expiresAt, bool isRememberMe = false)
     {
         if (string.IsNullOrWhiteSpace(token))
             throw new ArgumentException("Token cannot be empty");
@@ -26,7 +30,8 @@ public sealed class RefreshToken : ValueObject
         return new RefreshToken
         {
             Token = token,
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
+            IsRememberMe = isRememberMe
         };
     }
 

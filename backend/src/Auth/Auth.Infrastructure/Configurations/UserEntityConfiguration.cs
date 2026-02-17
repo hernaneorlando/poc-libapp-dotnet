@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore.Metadata;
+
 namespace Auth.Infrastructure.Configurations;
 
 /// <summary>
@@ -14,6 +16,17 @@ public sealed class UserEntityConfiguration : IEntityTypeConfiguration<UserEntit
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id)
             .ValueGeneratedNever();
+
+        // External ID (auto-increment, unique, indexed)
+        builder.Property(u => u.ExternalId)
+            .IsRequired()
+            .ValueGeneratedOnAdd()
+            .UseIdentityColumn(1, 1)
+            .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+
+        builder.HasIndex(u => u.ExternalId)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_ExternalId");
 
         // Properties
         builder.Property(u => u.FirstName)

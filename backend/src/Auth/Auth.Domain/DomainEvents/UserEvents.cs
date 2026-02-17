@@ -59,3 +59,12 @@ public sealed class RoleRemovedFromUserEvent(UserId userId, string roleName) : D
     public UserId UserId { get; } = userId;
     public string RoleName { get; } = roleName;
 }
+
+/// <summary>
+/// Domain event raised when a user explicitly logs out.
+/// Triggers revocation of ALL user's refresh tokens across all devices.
+/// </summary>
+public sealed class UserLoggedOutEvent(UserId userId) : DomainEvent, MediatR.INotification
+{
+    public UserId UserId { get; } = userId;
+}

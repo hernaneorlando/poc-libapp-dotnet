@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>LibraryApp.API</RootNamespace>
+    <AssemblyName>LibraryApp.API</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Auth\Auth.Application\Auth.Application.csproj" />
     <ProjectReference Include="..\Auth\Auth.Infrastructure\Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\BackgroundServices\BackgroundServices.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Catalog\Catalog.Application\Catalog.Application.csproj" />
     <ProjectReference Include="..\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />

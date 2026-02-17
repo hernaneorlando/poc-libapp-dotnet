@@ -1,0 +1,48 @@
+@using LibraryApp.Web.Design
+
+<div class="flex flex-col h-full rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-200 hover:-translate-y-1">
+    <!-- Image Container -->
+    <div class="relative w-full h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center overflow-hidden">
+        @if (!string.IsNullOrEmpty(ImageUrl))
+        {
+            <img src="@ImageUrl" alt="@Title" class="w-full h-full object-cover" />
+        }
+        else
+        {
+            <div class="text-center text-primary-400">
+                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747 0-6.002-4.5-10.747-10-10.747z"></path>
+                </svg>
+                <p class="mt-2 text-sm font-semibold">No Cover</p>
+            </div>
+        }
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 p-4 flex flex-col">
+        <h3 class="font-semibold text-sm text-neutral-900 line-clamp-2 mb-1">@Title</h3>
+        <p class="text-xs text-neutral-600 mb-3 line-clamp-1">@Author</p>
+
+        <!-- Metadata -->
+        <div class="flex items-center justify-between mb-auto text-xs text-neutral-500">
+            <span>@Category</span>
+            <span>⭐ @Rating.ToString("F1")</span>
+        </div>
+
+        <!-- Date Added -->
+        <div class="text-xs text-neutral-400 mt-2">
+            Added: @DateAdded.ToString("MM/dd/yyyy")
+        </div>
+    </div>
+
+    <!-- Button -->
+    <div class="p-4 bg-neutral-50 border-t border-neutral-100">
+        <Button 
+            Class="w-full" 
+            Variant="ButtonVariant.Primary" 
+            Size="ButtonSize.Small"
+            OnClick="HandleViewDetails">
+            View Details
+        </Button>
+    </div>
+</div>

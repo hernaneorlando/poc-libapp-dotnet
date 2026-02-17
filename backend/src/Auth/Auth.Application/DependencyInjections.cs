@@ -43,8 +43,9 @@ public static class DependencyInjections
             Issuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT:Issuer not configured"),
             Audience = configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT:Audience not configured"),
             SecretKey = configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey not configured"),
-            TokenExpiryInMinutes = int.Parse(configuration["Jwt:TokenExpiryInMinutes"] ?? "15"),
-            RefreshTokenExpiryInDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7")
+            TokenExpiryInMinutes = int.Parse(configuration["Jwt:TokenExpiryInMinutes"] ?? "10"),
+            RefreshTokenExpiryInDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "2"),
+            RefreshTokenSlidingExpiryInMinutes = int.Parse(configuration["Jwt:RefreshTokenSlidingExpiryInMinutes"] ?? "20")
         };
 
         services.AddSingleton(jwtSettings);

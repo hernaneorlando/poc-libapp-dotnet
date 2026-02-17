@@ -1,0 +1,54 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@{
+    var baseClasses = "w-full px-4 py-2 text-base font-medium transition-smooth rounded-lg " +
+                      "border-2 border-neutral-300 bg-white text-neutral-900 " +
+                      "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 " +
+                      "disabled:bg-neutral-100 disabled:text-neutral-500 disabled:cursor-not-allowed " +
+                      "placeholder-neutral-400";
+
+    var variantClasses = InputType switch
+    {
+        InputVariant.Error => "border-red-500 focus:ring-red-500 focus:border-red-500",
+        InputVariant.Success => "border-green-500 focus:ring-green-500 focus:border-green-500",
+        InputVariant.Warning => "border-yellow-500 focus:ring-yellow-500 focus:border-yellow-500",
+        _ => ""
+    };
+
+    var classes = $"{baseClasses} {variantClasses} {Class}";
+}
+
+<div class="w-full">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="block text-sm font-semibold text-neutral-700 mb-2">
+            @Label
+            @if (Required)
+            {
+                <span class="text-red-500 ml-1">*</span>
+            }
+        </label>
+    }
+
+    <input class="@classes"
+           type="@HtmlType"
+           placeholder="@Placeholder"
+           value="@Value"
+           @onchange="@((ChangeEventArgs e) => { var value = e.Value?.ToString(); Value = value; ValueChanged.InvokeAsync(value); })"
+           @oninput="@((ChangeEventArgs e) => OnInput.InvokeAsync(e.Value?.ToString()))"
+           @onkeyup="@((KeyboardEventArgs e) => OnKeyUp.InvokeAsync(e))"
+           disabled="@Disabled"
+           required="@Required">
+
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <p class="text-sm text-neutral-500 mt-1">@HelperText</p>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <p class="text-sm text-red-500 mt-1">@ErrorMessage</p>
+    }
+</div>

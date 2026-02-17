@@ -9,5 +9,8 @@ public enum UserType
     Customer = 1,
 
     /// <summary>Employee user type</summary>
-    Employee = 2
+    Employee = 2,
+
+    /// <summary>Administrator user type</summary>
+    Administrator = 3
 }

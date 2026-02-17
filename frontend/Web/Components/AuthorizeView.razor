@@ -1,0 +1,10 @@
+@using LibraryApp.Web.Services.Auth
+
+@if (IsAuthorized())
+{
+    @Authorized
+}
+else
+{
+    @NotAuthorized
+}

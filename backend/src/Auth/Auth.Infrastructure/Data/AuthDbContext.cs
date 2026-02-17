@@ -1,4 +1,5 @@
 using Core.Infrastructure;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Auth.Infrastructure.Data;
 
@@ -34,6 +35,8 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbC
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.AddInterceptors(new AuditInterceptor());
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

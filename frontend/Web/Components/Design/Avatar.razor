@@ -1,0 +1,34 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@{
+    var sizeClasses = Size switch
+    {
+        AvatarSize.Small => "w-8 h-8 text-xs",
+        AvatarSize.Large => "w-16 h-16 text-lg",
+        AvatarSize.ExtraLarge => "w-24 h-24 text-2xl",
+        _ => "w-12 h-12 text-sm" // Medium
+    };
+
+    var bgClasses = Variant switch
+    {
+        AvatarVariant.Primary => "bg-primary-500 text-white",
+        AvatarVariant.Secondary => "bg-secondary-500 text-white",
+        AvatarVariant.Accent => "bg-accent-500 text-white",
+        _ => "bg-neutral-300 text-neutral-700"
+    };
+
+    var classes = $"inline-flex items-center justify-center font-bold rounded-full transition-smooth {sizeClasses} {bgClasses} {Class}";
+}
+
+<div title="@FullName" class="@classes">
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <img src="@ImageUrl" alt="@FullName" class="w-full h-full rounded-full object-cover" />
+    }
+    else if (!string.IsNullOrEmpty(Initials))
+    {
+        <span>@Initials</span>
+    }
+</div>

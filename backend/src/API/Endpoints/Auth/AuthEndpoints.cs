@@ -66,15 +66,17 @@ public static class AuthEndpoints
 
         // Handle result using pattern matching
         return result.Match(
-            onSuccess: loginResponse => Results.Ok(loginResponse),
+            onSuccess: loginResponse => Results.Ok(ApiResult<LoginResponse>.Ok(loginResponse)),
             onError: errorMessage => Results.Unauthorized(),
-            onValidationError: errors => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-                Errors = [.. errors]
-            })
+            onValidationError: errors => Results.BadRequest(ApiResult<LoginResponse>.Error(
+                new ErrorResponse
+                {
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = [.. errors]
+                }
+            ))
         );
     }
 
@@ -92,20 +94,23 @@ public static class AuthEndpoints
 
         // Handle result using pattern matching
         return result.Match(
-            onSuccess: logoutResponse => Results.Ok(logoutResponse),
-            onError: errorMessage => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Logout Failed",
-                Detail = errorMessage,
-                Status = StatusCodes.Status400BadRequest
-            }),
-            onValidationError: errors => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
+            onSuccess: logoutResponse => Results.Ok(ApiResult<LogoutResponse>.Ok(logoutResponse)),
+            onError: errorMessage => Results.BadRequest(ApiResult<LogoutResponse>.Error(
+                new ErrorResponse
+                {
+                    Title = "Logout Failed",
+                    Detail = errorMessage,
+                    Status = StatusCodes.Status400BadRequest
+                }
+            )),
+            onValidationError: errors => Results.BadRequest(ApiResult<LogoutResponse>.Error(
+                new ErrorResponse
+                {
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
                 Status = StatusCodes.Status400BadRequest,
                 Errors = [.. errors]
-            })
+            }))
         );
     }
 
@@ -123,15 +128,17 @@ public static class AuthEndpoints
 
         // Handle result using pattern matching
         return result.Match(
-            onSuccess: refreshResponse => Results.Ok(refreshResponse),
+            onSuccess: refreshResponse => Results.Ok(ApiResult<RefreshTokenResponse>.Ok(refreshResponse)),
             onError: errorMessage => Results.Unauthorized(),
-            onValidationError: errors => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-                Errors = [.. errors]
-            })
+            onValidationError: errors => Results.BadRequest(ApiResult<RefreshTokenResponse>.Error(
+                new ErrorResponse
+                {
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = [.. errors]
+                }
+            ))
         );
     }
 }

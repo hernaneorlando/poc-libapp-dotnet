@@ -7,11 +7,11 @@ using Auth.Domain.Aggregates.User;
 using Auth.Domain.Enums;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories.Interfaces;
+using Common;
 using Core.API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Common;
 
 namespace Auth.Tests.IntegrationTests.ApplicationHandlerTests.Auth;
 
@@ -27,7 +27,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
     private ILogger<LogoutCommandHandler> _logoutLogger = null!;
     private IUnitOfWork _unitOfWork = null!;
     private SimpleMediator<IUserRepository, LoginCommandHandler, LoginCommand, Result<LoginResponse>, IPasswordHasher, ITokenService, JwtSettings, IUnitOfWork> _loginMediator = null!;
-    private SimpleMediator<IUserRepository, LogoutCommandHandler, LogoutCommand, Result<LogoutResponse>, IUnitOfWork> _logoutMediator = null!;
+    private SimpleMediator<IUserRepository, LogoutCommandHandler, LogoutCommand, Result<LogoutResponse>, IUnitOfWork, MediatR.IMediator> _logoutMediator = null!;
 
     public async Task InitializeAsync()
     {
@@ -49,8 +49,9 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         _loginMediator = new SimpleMediator<IUserRepository, LoginCommandHandler, LoginCommand, Result<LoginResponse>, IPasswordHasher, ITokenService, JwtSettings, IUnitOfWork>(
             _userRepository, _loginLogger, _passwordHasher, _tokenService, _jwtSettings, _unitOfWork);
 
-        _logoutMediator = new SimpleMediator<IUserRepository, LogoutCommandHandler, LogoutCommand, Result<LogoutResponse>, IUnitOfWork>(
-            _userRepository, _logoutLogger, _unitOfWork);
+        var mediatorForHandler = scope.ServiceProvider.GetRequiredService<MediatR.IMediator>();
+        _logoutMediator = new SimpleMediator<IUserRepository, LogoutCommandHandler, LogoutCommand, Result<LogoutResponse>, IUnitOfWork, MediatR.IMediator>(
+            _userRepository, _logoutLogger, _unitOfWork, mediatorForHandler);
     }
 
     public async Task DisposeAsync()
@@ -99,7 +100,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
         var command = new LogoutCommand(
-            UserId: user.Id.Value,
+            ExternalId: user.ExternalId,
             RefreshToken: refreshToken);
 
         // Act
@@ -119,7 +120,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         // Arrange
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
-        var logoutCommand = new LogoutCommand(user.Id.Value, refreshToken);
+        var logoutCommand = new LogoutCommand(user.ExternalId, refreshToken);
 
         // Act
         var result = await _logoutMediator.Send(logoutCommand);
@@ -140,13 +141,47 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Handle_Logout_RevokesAllActiveRefreshTokens_ForUser()
+    {
+        // Arrange - create user and two active refresh tokens (multi-device)
+        var (user, firstToken) = await CreateUserWithRefreshTokenAsync();
+
+        // Generate a second refresh token by logging in again (second device)
+        var loginResult = await _loginMediator.Send(new LoginCommand(user.Username.Value, "SecurePass123!"));
+        var secondToken = ((Result<LoginResponse>.Success)loginResult).Data.RefreshToken;
+
+        // Sanity check: both tokens exist in DB
+        _dbContext.ChangeTracker.Clear();
+        var userEntityBefore = await _dbContext.Users
+            .Include(u => u.RefreshTokens)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == user.Id.Value);
+        var savedUserBefore = (User)userEntityBefore!;
+        savedUserBefore.RefreshTokens.Select(t => t.Token).Should().Contain(new[] { firstToken, secondToken });
+
+        // Act - logout using the first token
+        var logoutCommand = new LogoutCommand(user.ExternalId, firstToken);
+        var result = await _logoutMediator.Send(logoutCommand);
+
+        // Assert - both tokens must be revoked for that user
+        result.Should().BeOfType<Result<LogoutResponse>.Success>();
+
+        _dbContext.ChangeTracker.Clear();
+        var userEntityAfter = await _dbContext.Users
+            .Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.Id == user.Id.Value);
+
+        var updatedUser = (User)userEntityAfter!;
+        updatedUser.RefreshTokens.Should().OnlyContain(t => t.IsRevoked);
+    }
+    [Fact]
     public async Task Handle_MultipleLogoutsWithSameToken_ThrowsException()
     {
         // Arrange
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
         // Act - Logout first token
-        var logoutCommand = new LogoutCommand(user.Id.Value, refreshToken);
+        var logoutCommand = new LogoutCommand(user.ExternalId, refreshToken);
         var logoutResult1 = await _logoutMediator.Send(logoutCommand);
 
         // Assert first logout
@@ -175,7 +210,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         // Arrange
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
-        var command = new LogoutCommand(user.Id.Value, refreshToken);
+        var command = new LogoutCommand(user.ExternalId, refreshToken);
 
         // Act
         var result = await _logoutMediator.Send(command);
@@ -197,29 +232,34 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
     public async Task Handle_NonexistentUser_ThrowsException()
     {
         // Arrange
-        var nonexistentUserId = Guid.NewGuid();
         var command = new LogoutCommand(
-            UserId: nonexistentUserId,
+            ExternalId: 999999L,
             RefreshToken: "some-token");
 
         // Act & Assert
-        await FluentActions.Invoking(async () => await _logoutMediator.Send(command))
-            .Should()
-            .ThrowAsync<InvalidOperationException>();
+        var response = await _logoutMediator.Send(command);
+
+        response.Should().NotBeNull();
+        response.Should().BeOfType<Result<LogoutResponse>.ErrorState>();
+        var errorResponse = (Result<LogoutResponse>.ErrorState)response;
+        errorResponse.Message.Should().Be("User not found");
     }
 
     [Fact]
     public async Task Handle_InvalidUserId_ThrowsException()
     {
-        // Arrange - Use an empty/default Guid
+        // Arrange - Use an invalid ExternalId
         var command = new LogoutCommand(
-            UserId: Guid.Empty,
+            ExternalId: 0L,
             RefreshToken: "some-token");
 
         // Act & Assert
-        await FluentActions.Invoking(async () => await _logoutMediator.Send(command))
-            .Should()
-            .ThrowAsync<ArgumentException>();
+        var response = await _logoutMediator.Send(command);
+
+        response.Should().NotBeNull();
+        response.Should().BeOfType<Result<LogoutResponse>.ErrorState>();
+        var errorResponse = (Result<LogoutResponse>.ErrorState)response;
+        errorResponse.Message.Should().Be("User not found");
     }
 
     #endregion
@@ -233,7 +273,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         var (user, _) = await CreateUserWithRefreshTokenAsync();
 
         var command = new LogoutCommand(
-            UserId: user.Id.Value,
+            ExternalId: user.ExternalId,
             RefreshToken: "invalid-token");
 
         // Act & Assert
@@ -249,7 +289,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         var (user, _) = await CreateUserWithRefreshTokenAsync();
 
         var command = new LogoutCommand(
-            UserId: user.Id.Value,
+            ExternalId: user.ExternalId,
             RefreshToken: string.Empty);
 
         // Act & Assert
@@ -265,11 +305,11 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
         // First logout
-        var firstLogoutCommand = new LogoutCommand(user.Id.Value, refreshToken);
+        var firstLogoutCommand = new LogoutCommand(user.ExternalId, refreshToken);
         await _logoutMediator.Send(firstLogoutCommand);
 
         // Try to logout again with same token
-        var secondLogoutCommand = new LogoutCommand(user.Id.Value, refreshToken);
+        var secondLogoutCommand = new LogoutCommand(user.ExternalId, refreshToken);
 
         // Act & Assert
         await FluentActions.Invoking(async () => await _logoutMediator.Send(secondLogoutCommand))
@@ -289,7 +329,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         var (user2, token2) = await CreateUserWithRefreshTokenAsync("User", "Two", "user2@example.com");
 
         // Act - Logout user1
-        var logoutCommand = new LogoutCommand(user1.Id.Value, token1);
+        var logoutCommand = new LogoutCommand(user1.ExternalId, token1);
         await _logoutMediator.Send(logoutCommand);
 
         // Assert - User1 has no tokens
@@ -317,7 +357,7 @@ public class LogoutHandlerIntegrationTests : IAsyncLifetime
         // Arrange
         var (user, refreshToken) = await CreateUserWithRefreshTokenAsync();
 
-        var command = new LogoutCommand(user.Id.Value, refreshToken);
+        var command = new LogoutCommand(user.ExternalId, refreshToken);
 
         // Act
         var result = await _logoutMediator.Send(command);

@@ -1,0 +1,51 @@
+@namespace LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Components.Design
+@using LibraryApp.Web.Design
+
+@if (IsOpen)
+{
+    <div class="fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 @(IsOpen ? "opacity-100" : "opacity-0")"
+         @onclick="OnBackdropClick"
+         role="presentation">
+    </div>
+
+    <div class="fixed z-50 bg-white rounded-lg shadow-lg max-h-[90vh] overflow-y-auto @GetPositionClass()"
+         @onclick:stopPropagation="true"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="modal-title">
+
+        @if (ShowHeader)
+        {
+            <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+                <h2 id="modal-title" class="text-xl font-semibold text-neutral-900">
+                    @Title
+                </h2>
+                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neutral-100 transition-smooth text-neutral-600"
+                        @onclick="Close"
+                        aria-label="Fechar modal">
+                    ✕
+                </button>
+            </div>
+        }
+
+        <div class="px-6 py-4">
+            @ChildContent
+        </div>
+
+        @if (FooterContent != null || ShowDefaultFooter)
+        {
+            <div class="px-6 py-4 border-t border-neutral-200 bg-neutral-50 rounded-b-lg flex gap-3 justify-end">
+                @if (FooterContent != null)
+                {
+                    @FooterContent
+                }
+                else if (ShowDefaultFooter)
+                {
+                    <Button Variant="ButtonVariant.Ghost" OnClick="Close">Cancelar</Button>
+                    <Button Variant="ButtonVariant.Primary" OnClick="OnConfirm">Confirmar</Button>
+                }
+            </div>
+        }
+    </div>
+}

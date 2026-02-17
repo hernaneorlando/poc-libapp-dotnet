@@ -35,11 +35,28 @@ public sealed class UserRepository(AuthDbContext context)
         return userEntity is null ? null : (User)userEntity;
     }
 
+    public async Task<User?> GetByExternalIdAsync(long externalId, CancellationToken cancellationToken = default)
+    {
+        var userEntity = await _context.Users
+            .AsNoTracking()
+            .Include(u => u.RefreshTokens)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.ExternalId == externalId && u.IsActive, cancellationToken);
+
+        return userEntity is null ? null : (User)userEntity;
+    }
+
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var userEntity = await _context.Users
+        // Check if entity is already tracked with the same ID to avoid reload conflicts
+        // (useful for domain event handlers that load and update the same entity consecutively)
+        var trackedEntity = _context.Users.Local.FirstOrDefault(u => u.Id == user.Id.Value);
+        
+        var userEntity = trackedEntity ?? await _context.Users
+            .AsNoTracking()
             .Include(u => u.RefreshTokens)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
@@ -101,48 +118,41 @@ public sealed class UserRepository(AuthDbContext context)
             }
         }
 
-        // CRITICAL: Handle refresh token removal and updates
-        // Tokens should be removed from the database if they have been revoked in the domain
-        
+        // Synchronize refresh token changes (revocation status, expiration)
+        // Since entities are now tracked, changes will be detected automatically
         foreach (var entityToken in userEntity.RefreshTokens)
         {
             var domainToken = user.RefreshTokens.FirstOrDefault(t => t.Token == entityToken.Token);
-            if (domainToken is null)
+            if (domainToken is not null)
             {
-                continue; // Token has been removed in domain - skip
-            }
-            else if (domainToken.IsExpired)
-            {
-                // Token has been expired - remove it
-                user.RefreshTokens.Remove(domainToken);
-                _context.RefreshTokens.Remove(entityToken);
-                userEntity.RefreshTokens.Remove(entityToken);
-            }
-            else
-            {
-                // Token exists and is not expired - update it
+                // Synchronize revocation and expiration state from domain aggregate
                 entityToken.RevokedAt = domainToken.RevokedAt;
                 entityToken.ExpiresAt = domainToken.ExpiresAt;
+                entityToken.IsRememberMe = domainToken.IsRememberMe;
+                // Mark the collection entry as modified so EF Core detects the change
+                _context.Entry(entityToken).State = EntityState.Modified;
             }
         }
 
-        // Add any new tokens from the domain that aren't in the entity
-        foreach (var domainToken in user.RefreshTokens.Where(t => !t.IsRevoked))
+        // Add any new tokens created in domain aggregate that aren't in the database yet
+        foreach (var domainToken in user.RefreshTokens)
         {
-            var existingToken = userEntity.RefreshTokens.FirstOrDefault(rt => rt.Token == domainToken.Token);
-            if (existingToken is null)
+            var existingEntityToken = userEntity.RefreshTokens.FirstOrDefault(rt => rt.Token == domainToken.Token);
+            if (existingEntityToken is null)
             {
-                var tokenEntity = new RefreshTokenEntity
+                // New token from domain - add to database
+                var newTokenEntity = new RefreshTokenEntity
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id.Value,
                     Token = domainToken.Token,
                     ExpiresAt = domainToken.ExpiresAt,
                     RevokedAt = domainToken.RevokedAt,
+                    IsRememberMe = domainToken.IsRememberMe,
                     CreatedAt = DateTime.UtcNow
                 };
-                _context.RefreshTokens.Add(tokenEntity);
-                userEntity.RefreshTokens.Add(tokenEntity);
+                _context.RefreshTokens.Add(newTokenEntity);
+                userEntity.RefreshTokens.Add(newTokenEntity);
             }
         }
 

@@ -1,17 +1,20 @@
-using Auth.Infrastructure.Data;
-using Auth.Domain.Aggregates.User;
-using Auth.Domain.Aggregates.Role;
-using Auth.Domain.Aggregates.Permission;
-using Auth.Domain.Enums;
-using Microsoft.Extensions.DependencyInjection;
-using Auth.Domain;
-using Common;
-using Auth.Infrastructure.Repositories.Interfaces;
-using Auth.Application.Common.Security.Interfaces;
-using Auth.Domain.ValueObjects;
-using Auth.Application.Users.Commands.Login;
-using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Auth.Application.Common.Security;
+using Auth.Application.Common.Security.Interfaces;
+using Auth.Application.Users.Commands.Login;
+using Auth.Domain;
+using Auth.Domain.Aggregates.Permission;
+using Auth.Domain.Aggregates.Role;
+using Auth.Domain.Aggregates.User;
+using Auth.Domain.Enums;
+using Auth.Domain.ValueObjects;
+using Auth.Infrastructure.Data;
+using Auth.Infrastructure.Repositories.Interfaces;
+using Common;
+using Core.API;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Auth.Tests.IntegrationTests.ApiTests;
 
@@ -21,11 +24,65 @@ namespace Auth.Tests.IntegrationTests.ApiTests;
 /// Shared by all Auth-related API tests (Roles, Users, Authentication, etc.).
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the BaseAuthApiTests class.
+/// Initializes a new instance of the BaseApiTests class.
 /// Configures the test environment with in-memory SQL and NoSQL databases.
 /// </remarks>
-public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
+public abstract class BaseApiTests : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
+    protected readonly TestWebApplicationFactory _webFactory;
+    protected readonly User UserTest;
+    protected readonly string TestUserPassword = "Test@123!";
+
+    public BaseApiTests(TestWebApplicationFactory factory)
+    {
+        _webFactory = factory;
+        
+        UserTest = User.Create(
+                firstName: "Test",
+                lastName: "User",
+                email: $"test.{Guid.NewGuid()}@example.com",
+                userType: UserType.Employee,
+                username: null,
+                phoneNumber: null);
+
+        UserTest.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestUserPassword, workFactor: PasswordHasher.WorkFactor);
+    }
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        if (_webFactory?.Services == null) return;
+
+        try
+        {
+            using var scope = _webFactory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+
+            // Delete test users by username pattern to prevent state leakage between tests
+            var testUsers = await dbContext.Users.ToListAsync();
+
+            if (testUsers.Count != 0)
+            {
+                foreach (var user in testUsers)
+                {
+                    dbContext.Users.Remove(user);
+                }
+                await dbContext.SaveChangesAsync();
+            }
+
+            // Clear the change tracker
+            dbContext.ChangeTracker.Clear();
+        }
+        catch
+        {
+            // Ignore errors during cleanup
+        }
+    }
+
     /// <summary>
     /// Creates a new HttpClient configured for the test.
     /// </summary>
@@ -86,6 +143,7 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
         var user = User.Create(firstName, lastName, email, UserType.Customer, username: usernameValueObject);
         var passwordHash = passwordHasher.Hash(password);
         user.SetPasswordHash(passwordHash);
+        user.ExternalId = 1L; // Set a fixed ExternalId for testing purposes
 
         // Persist user
         await userRepository.AddAsync(user);
@@ -95,10 +153,11 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
     /// <summary>
     /// Creates a test user and logs them in, returning userId, access token and refresh token.
     /// </summary>
-    protected async Task<LoginResponse> LoginTestUserAsync(string username, string password)
+    protected async Task<LoginResponse> LoginTestUserAsync(string username, string password, bool createNewUser = true)
     {
         // Create user
-        await CreateTestUserAsync(username, password);
+        if (createNewUser)
+            await CreateTestUserAsync(username, password);
 
         // Login to get tokens
         var client = CreateHttpClient();
@@ -108,10 +167,12 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
         );
 
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<ApiResult<LoginResponse>>();
 
         loginResult.Should().NotBeNull();
-        return loginResult!;
+        loginResult!.IsSuccess.Should().BeTrue();
+        loginResult.Value.Should().NotBeNull();
+        return loginResult!.Value!;
     }
 
     /// <summary>
@@ -132,10 +193,8 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
         using (var scope = _webFactory.Services.CreateScope())
         {
             var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-            var roleRepository = scope.ServiceProvider.GetRequiredService<IRoleRepository>();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
 
             // Create a role with the specified permissions
             var role = Role.Create($"Test Role {Guid.NewGuid()}", "Role for testing API endpoints");
@@ -147,30 +206,23 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
             }
 
             // Create a user with the role
-            var user = User.Create(
-                firstName: "Test",
-                lastName: "User",
-                email: $"test.{Guid.NewGuid()}@example.com",
-                userType: UserType.Employee,
-                username: null,
-                phoneNumber: null);
-            user.AssignRole(role);
-            await userRepository.AddAsync(user);
+            UserTest.AssignRole(role);
+            await userRepository.AddAsync(UserTest);
 
             // Persist changes with explicit save
             await unitOfWork.SaveChangesAsync();
 
             // Verify user was actually saved
-            if (await userRepository.GetByIdAsync(user.Id) is null)
+            if (await userRepository.GetByIdAsync(UserTest.Id) is null)
             {
-                throw new InvalidOperationException($"User with ID {user.Id} was not saved to the database!");
+                throw new InvalidOperationException($"User with ID {UserTest.Id} was not saved to the database!");
             }
 
             // Generate JWT token for the user
-            var token = tokenService.GenerateAccessToken(user);
+            var token = tokenService.GenerateAccessToken(UserTest);
 
             // Add authentication header to the client
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         // Scope is disposed here, but client is still valid and has the Bearer token set
 
@@ -207,4 +259,6 @@ public abstract class BaseAuthApiTests(TestWebApplicationFactory factory) : Base
             (PermissionFeature.User.ToString(), PermissionAction.Read.ToString())
         );
     }
+
+
 }

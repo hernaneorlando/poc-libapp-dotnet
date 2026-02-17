@@ -29,7 +29,8 @@ public sealed class TokenService(JwtSettings _jwtSettings, ILogger<TokenService>
                 new(ClaimTypes.NameIdentifier, user.Id.Value.ToString()),
                 new(ClaimTypes.Email, user.Contact.Email),
                 new(ClaimTypes.Name, user.GetFullName()),
-                new("username", user.Username.Value)
+                new("username", user.Username.Value),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Unique JWT ID
             };
 
             // Add roles as claims (prepared for PBAC authorization)

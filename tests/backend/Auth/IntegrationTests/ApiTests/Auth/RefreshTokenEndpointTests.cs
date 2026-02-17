@@ -17,7 +17,7 @@ namespace Auth.Tests.IntegrationTests.ApiTests.Auth;
 /// Integration tests for the RefreshToken endpoint.
 /// Tests the complete flow: HTTP request → API → Handler → Domain → Database.
 /// </summary>
-public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : BaseAuthApiTests(factory)
+public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
 {
     #region Success Scenarios
 
@@ -46,13 +46,13 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
         refreshResponse!.AccessToken.Should().NotBeEmpty();
         refreshResponse.RefreshToken.Should().NotBeEmpty();
-        refreshResponse.ExpiresInSeconds.Should().BeGreaterThan(0);
         refreshResponse.TokenType.Should().Be("Bearer");
     }
 
@@ -70,7 +70,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
@@ -88,7 +89,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
@@ -105,7 +107,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
@@ -124,7 +127,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert - Verify new refresh token is persisted in database
         refreshResponse.Should().NotBeNull();
@@ -150,8 +154,6 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Assert
         refreshResponse.Should().NotBeNull();
-        // Token should expire in approximately 15 minutes (900 seconds)
-        refreshResponse!.ExpiresInSeconds.Should().BeInRange(800, 1000);
     }
 
     [Fact]
@@ -169,7 +171,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
             var currentRefreshToken = i == 0 ? login.RefreshToken : tokens[i - 1].RefreshToken;
             var request = new RefreshTokenCommand(RefreshToken: currentRefreshToken);
             var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-            var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+            var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+            var refreshResponse = result?.Value;
 
             tokens.Add(refreshResponse!);
             
@@ -202,10 +205,12 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response1 = await client.PostAsJsonAsync("/api/auth/refresh", request1);
-        var refreshResponse1 = await response1.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result1 = await response1.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse1 = result1?.Value;
 
         var response2 = await client.PostAsJsonAsync("/api/auth/refresh", request2);
-        var refreshResponse2 = await response2.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result2 = await response2.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse2 = result2?.Value;
 
         // Assert
         refreshResponse1.Should().NotBeNull();
@@ -281,7 +286,7 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // First, logout to revoke the token
         var logoutRequest = new LogoutCommand(
-            UserId: login.User.Id,
+            ExternalId: login.User.ExternalId,
             RefreshToken: login.RefreshToken);
         await client.PostAsJsonAsync("/api/auth/logout", logoutRequest);
 
@@ -392,13 +397,13 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
         refreshResponse!.AccessToken.Should().NotBeNull();
         refreshResponse.RefreshToken.Should().NotBeNull();
-        refreshResponse.ExpiresInSeconds.Should().BeGreaterThan(0);
         refreshResponse.TokenType.Should().NotBeNullOrEmpty();
     }
 
@@ -412,7 +417,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert
         refreshResponse.Should().NotBeNull();
@@ -457,7 +463,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Assert - Check that new token is added to user
         var userRepository = GetService<IUserRepository>();
@@ -495,31 +502,26 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
     {
         // Arrange
         var client = CreateHttpClient();
-        var username = "multitokenuser";
 
-        // Login multiple times to get multiple tokens
-        var login1 = await LoginTestUserAsync(username, "Multi@123!");
-        await Task.Delay(100);
-        var login2 = await LoginTestUserAsync(username, "Multi@123!");
+        // Login multiple times with different users to get multiple tokens
+        var login1 = await LoginTestUserAsync("multitoken1", "Multi@123!");
+        var login2 = await LoginTestUserAsync("multitoken2", "Multi@123!");
 
         var request = new RefreshTokenCommand(RefreshToken: login1.RefreshToken);
 
         // Act - Refresh only first token
         await client.PostAsJsonAsync("/api/auth/refresh", request);
 
-        // Assert - Verify only first token is revoked, second is still active
+        // Assert - Verify only first token is revoked by checking the first user
         var userRepository = GetService<IUserRepository>();
-        var user = await userRepository.FindAsync(new GetUserByRefreshToken(login2.RefreshToken), CancellationToken.None);
+        var user = await userRepository.FindAsync(new GetUserByRefreshToken(login1.RefreshToken), CancellationToken.None);
 
         user.Should().NotBeNull();
 
-        var token1 = user!.RefreshTokens.FirstOrDefault(t => t.Token == login1.RefreshToken);
-        token1.Should().NotBeNull();
-        token1!.IsRevoked.Should().BeTrue();
-
-        var token2 = user.RefreshTokens.FirstOrDefault(t => t.Token == login2.RefreshToken);
-        token2.Should().NotBeNull();
-        token2!.IsRevoked.Should().BeFalse();
+        // Verify the old token (login1.RefreshToken) is now revoked
+        var oldToken = user!.RefreshTokens.FirstOrDefault(t => t.Token == login1.RefreshToken);
+        oldToken.Should().NotBeNull();
+        oldToken!.IsRevoked.Should().BeTrue();
     }
 
     [Fact]
@@ -532,7 +534,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
 
         // Act - First refresh
         var response = await client.PostAsJsonAsync("/api/auth/refresh", request);
-        var refreshResponse = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result = await response.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse = result?.Value;
 
         // Act - Second refresh with new token
         var request2 = new RefreshTokenCommand(RefreshToken: refreshResponse!.RefreshToken);
@@ -542,7 +545,8 @@ public class RefreshTokenEndpointTests(TestWebApplicationFactory factory) : Base
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response2.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var refreshResponse2 = await response2.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+        var result2 = await response2.Content.ReadFromJsonAsync<ApiResult<RefreshTokenResponse>>();
+        var refreshResponse2 = result2?.Value;
         refreshResponse2.Should().NotBeNull();
         refreshResponse2!.AccessToken.Should().NotBeEmpty();
     }

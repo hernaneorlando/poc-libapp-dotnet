@@ -7,7 +7,7 @@ namespace Auth.Application.Users.Commands.Logout;
 /// Represents the Logout operation in the authentication flow.
 /// </summary>
 public sealed record LogoutCommand(
-    Guid UserId,
+    long ExternalId,
     string RefreshToken) : IRequest<Result<LogoutResponse>>;
 
 /// <summary>

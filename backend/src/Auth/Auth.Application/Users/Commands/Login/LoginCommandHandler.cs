@@ -45,11 +45,16 @@ public sealed class LoginCommandHandler(
         // Step 3: Generate JWT access token
         var accessToken = _tokenService.GenerateAccessToken(user);
 
-        // Step 4: Generate refresh token
+        // Step 4: Generate refresh token with appropriate expiry
         var refreshTokenString = _tokenService.GenerateRefreshToken(user.Id.Value);
-        var refreshToken = RefreshToken.Create(
-            refreshTokenString,
-            DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays));
+        
+        // Use sliding expiry (short session) if RememberMe is false, otherwise long-lived token
+        var refreshTokenExpiry = request.RememberMe
+            ? DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryInDays)
+            : DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenSlidingExpiryInMinutes);
+        
+        // Pass RememberMe flag to token so it persists and can be checked reliably later
+        var refreshToken = RefreshToken.Create(refreshTokenString, refreshTokenExpiry, isRememberMe: request.RememberMe);
 
         // Step 5: Add refresh token to user
         user.AddRefreshToken(refreshToken);
@@ -64,9 +69,8 @@ public sealed class LoginCommandHandler(
         var response = new LoginResponse(
             AccessToken: accessToken,
             RefreshToken: refreshTokenString,
-            ExpiresInSeconds: _jwtSettings.TokenExpiryInMinutes * 60,
             User: new UserLoginInfo(
-                Id: user.Id.Value,
+                ExternalId: user.ExternalId,
                 Username: user.Username.Value,
                 Email: user.Contact.Email,
                 FullName: user.GetFullName(),

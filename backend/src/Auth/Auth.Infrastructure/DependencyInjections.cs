@@ -6,6 +6,7 @@ using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Repositories;
 using Auth.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 /// <summary>
 /// Dependency injection extensions for the Auth infrastructure layer.
@@ -39,6 +40,10 @@ public static class DependencyInjections
 
             // Enable query tracking prevention for read-only queries
             options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
+            
+            // Suppress pending model changes warning for development
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
         // Register repositories
