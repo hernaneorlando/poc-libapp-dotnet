@@ -1,8 +1,10 @@
 namespace Auth.Application.Common.Security;
 
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Auth.Application.Common.Security.Interfaces;
 using Auth.Domain.Aggregates.User;
 using Microsoft.IdentityModel.Tokens;
@@ -26,26 +28,29 @@ public sealed class TokenService(JwtSettings _jwtSettings, ILogger<TokenService>
             // Build claims with user info and roles (for PBAC support)
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.Id.Value.ToString()),
+                new(ClaimTypes.NameIdentifier, user.ExternalId.ToString()),
                 new(ClaimTypes.Email, user.Contact.Email),
                 new(ClaimTypes.Name, user.GetFullName()),
                 new("username", user.Username.Value),
+                new("userType", user.UserType.ToString()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Unique JWT ID
             };
 
             // Add roles as claims (prepared for PBAC authorization)
-            foreach (var role in user.Roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role.Name));
-            }
+            
+                var roleClaimValue = user.Roles.Select(role =>
+                {
+                    return new
+                    {
+                        role.Name,
+                        Permissions = role.Permissions
+                            .Where(p => !user.DeniedPermissions.Any(dp => dp.Code == p.Code)) // Exclude denied permissions
+                            .Select(p => p.Code).ToList()
+                    };    
+                });
 
-            // Add permissions as claims (for PBAC authorization in next phase)
-            // This will be populated when permission evaluation is implemented
-            var permissions = GetUserPermissions(user);
-            foreach (var permission in permissions)
-            {
-                claims.Add(new Claim("permission", permission));
-            }
+                var roleJson = JsonSerializer.Serialize(roleClaimValue);
+                claims.Add(new Claim(ClaimTypes.Role, roleJson, JsonClaimValueTypes.Json));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -63,7 +68,7 @@ public sealed class TokenService(JwtSettings _jwtSettings, ILogger<TokenService>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating access token for user {UserId}", user.Id);
+            _logger.LogError(ex, "Error generating access token for user {UserId}", user.ExternalId);
             throw;
         }
     }
@@ -108,36 +113,5 @@ public sealed class TokenService(JwtSettings _jwtSettings, ILogger<TokenService>
             _logger.LogWarning(ex, "Token validation failed");
             return null;
         }
-    }
-
-    /// <summary>
-    /// Helper method to extract permissions from user and their roles.
-    /// Prepared for PBAC implementation - will be extended in authorization phase.
-    /// </summary>
-    private static List<string> GetUserPermissions(User user)
-    {
-        var permissions = new List<string>();
-
-        // Get permissions from all user roles
-        foreach (var role in user.Roles)
-        {
-            foreach (var permission in role.Permissions)
-            {
-                var permissionString = $"{permission.Feature}:{permission.Action}";
-                if (!permissions.Contains(permissionString))
-                {
-                    permissions.Add(permissionString);
-                }
-            }
-        }
-
-        // Remove any explicitly denied permissions
-        foreach (var deniedPermission in user.DeniedPermissions)
-        {
-            var permissionString = $"{deniedPermission.Feature}:{deniedPermission.Action}";
-            permissions.Remove(permissionString);
-        }
-
-        return permissions;
     }
 }

@@ -1,7 +1,8 @@
-using LibraryApp.Web.Model.Auth;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using LibraryApp.Web.Model.Auth;
+using LibraryApp.Web.Model.Auth.Enums;
 
 namespace LibraryApp.Web.Services.Auth;
 
@@ -33,7 +34,7 @@ public sealed class AuthService : IAuthService
         _httpClient = httpClient;
         _tokenStorage = tokenStorage;
         _authState = authState;
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -45,16 +46,13 @@ public sealed class AuthService : IAuthService
         try
         {
             var request = new LoginRequestDto(username, password, rememberMe);
-            
             var response = await _httpClient.PostAsJsonAsync("/api/auth/login", request);
-            
             if (!response.IsSuccessStatusCode)
             {
                 return (false, $"Login failed with status {response.StatusCode}");
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResultDto<LoginResponseDto>>(_jsonOptions);
-            
             if (result == null || result.IsFailure || result.Value == null)
             {
                 var error = result?.Errors.FirstOrDefault()?.Detail ?? "Login failed";
@@ -67,10 +65,10 @@ public sealed class AuthService : IAuthService
                 loginResponse.AccessToken,
                 loginResponse.RefreshToken,
                 rememberMe);
-            
+
             // Update global auth state
             _authState.SetUser(loginResponse.User);
-            
+
             return (true, null);
         }
         catch (Exception ex)
@@ -86,13 +84,13 @@ public sealed class AuthService : IAuthService
             var token = await _tokenStorage.GetAccessTokenAsync();
             var refreshToken = await _tokenStorage.GetRefreshTokenAsync();
             var currentUser = _authState.CurrentUser;
-            
+
             if (currentUser != null && !string.IsNullOrEmpty(refreshToken))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var request = new LogoutRequestDto(currentUser.ExternalId, refreshToken);
-                
+
                 // Call backend to revoke refresh token (don't wait for response)
                 _ = _httpClient.PostAsJsonAsync("/api/auth/logout", request);
             }
@@ -116,9 +114,9 @@ public sealed class AuthService : IAuthService
             }
 
             var request = new RefreshTokenRequestDto(refreshToken);
-            
+
             var response = await _httpClient.PostAsJsonAsync("/api/auth/refresh", request);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 await LogoutAsync();
@@ -126,7 +124,7 @@ public sealed class AuthService : IAuthService
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResultDto<RefreshTokenResponseDto>>(_jsonOptions);
-            
+
             if (result == null || result.IsFailure || result.Value == null)
             {
                 await LogoutAsync();
@@ -134,7 +132,7 @@ public sealed class AuthService : IAuthService
             }
 
             var refreshResponse = result.Value!;
-            
+
             // Update stored tokens (preserve rememberMe setting)
             var hasTokens = await _tokenStorage.HasTokensAsync();
             if (hasTokens)
@@ -142,13 +140,13 @@ public sealed class AuthService : IAuthService
                 // Determine if using localStorage (rememberMe) or sessionStorage
                 var storageType = await GetCurrentStorageTypeAsync();
                 var rememberMe = storageType == "localStorage";
-                
+
                 await _tokenStorage.SaveTokensAsync(
                     refreshResponse.AccessToken,
                     refreshResponse.RefreshToken,
                     rememberMe);
             }
-            
+
             return true;
         }
         catch
@@ -163,7 +161,7 @@ public sealed class AuthService : IAuthService
         try
         {
             var accessToken = await _tokenStorage.GetAccessTokenAsync();
-            
+
             if (string.IsNullOrEmpty(accessToken))
             {
                 return false;
@@ -195,7 +193,7 @@ public sealed class AuthService : IAuthService
             if (parts.Length != 3) return null;
 
             var payload = parts[1];
-            
+
             // Add padding if needed
             var padding = payload.Length % 4;
             if (padding > 0)
@@ -205,71 +203,56 @@ public sealed class AuthService : IAuthService
 
             var payloadBytes = Convert.FromBase64String(payload);
             var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
-            
+
             var claims = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(payloadJson, _jsonOptions);
-            
+
             if (claims == null) return null;
 
             // Extract claims from JWT
-            var externalId = claims.TryGetValue("externalId", out JsonElement value3) 
-                ? value3.GetInt64() 
+            var externalId = claims.TryGetValue("nameid", out JsonElement externalIdElement)
+                ? long.TryParse(externalIdElement.GetString(), out var parsedExternalId) ? parsedExternalId : 0L
                 : 0L;
-            
-            var username = claims.TryGetValue("sub", out JsonElement value2) 
-                ? value2.GetString() ?? string.Empty 
-                : string.Empty;
-            
-            var email = claims.TryGetValue("email", out JsonElement value1) 
-                ? value1.GetString() ?? string.Empty 
-                : string.Empty;
-            
-            var fullName = claims.TryGetValue("name", out JsonElement value) 
-                ? value.GetString() ?? string.Empty 
+
+            var username = claims.TryGetValue("username", out JsonElement usernameElement)
+                ? usernameElement.GetString() ?? string.Empty
                 : string.Empty;
 
-            var roles = new List<string>();
+            var email = claims.TryGetValue("email", out JsonElement emailElement)
+                ? emailElement.GetString() ?? string.Empty
+                : string.Empty;
+
+            var fullName = claims.TryGetValue("unique_name", out JsonElement nameElement)
+                ? nameElement.GetString() ?? string.Empty
+                : string.Empty;
+
+            var userType = claims.TryGetValue("userType", out JsonElement userTypeElement)
+                ? Enum.TryParse<UserType>(userTypeElement.GetString(), out var parsedUserType)
+                    ? parsedUserType
+                    : UserType.Customer
+                : UserType.Customer;
+
+            var roles = new List<RoleInfo>();
             if (claims.TryGetValue("role", out JsonElement roleElement))
             {
                 if (roleElement.ValueKind == JsonValueKind.Array)
                 {
-                    roles = [.. roleElement.EnumerateArray()
-                        .Select(r => r.GetString() ?? string.Empty)
-                        .Where(r => !string.IsNullOrEmpty(r))];
-                }
-                else if (roleElement.ValueKind == JsonValueKind.String)
-                {
-                    var role = roleElement.GetString();
-                    if (!string.IsNullOrEmpty(role))
+                    foreach (var roleJson in roleElement.EnumerateArray())
                     {
-                        roles.Add(role);
+                        var role = roleJson.Deserialize<RoleInfo>();
+                        if (role != null)
+                        {
+                            roles.Add(role);
+                        }
                     }
                 }
             }
 
-            // Extract permissions from JWT (format: "Feature:Action")
-            var permissions = new List<string>();
-            if (claims.TryGetValue("permission", out JsonElement permissionElement))
-            {
-                if (permissionElement.ValueKind == JsonValueKind.Array)
-                {
-                    permissions = [.. permissionElement.EnumerateArray()
-                        .Select(p => p.GetString() ?? string.Empty)
-                        .Where(p => !string.IsNullOrEmpty(p))];
-                }
-                else if (permissionElement.ValueKind == JsonValueKind.String)
-                {
-                    var permission = permissionElement.GetString();
-                    if (!string.IsNullOrEmpty(permission))
-                    {
-                        permissions.Add(permission);
-                    }
-                }
-            }
 
-            return new UserLoginInfoDto(externalId, username, email, fullName, roles, permissions);
+            return new UserLoginInfoDto(externalId, username, email, fullName, userType, roles);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error decoding JWT: {ex.Message}");
             return null;
         }
     }

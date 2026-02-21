@@ -33,7 +33,7 @@ public class AuthorizationMiddleware(
             // Extract user ID from claims
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
 
-            if (userIdClaim is null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            if (userIdClaim is null || !long.TryParse(userIdClaim.Value, out var userId))
             {
                 _logger.LogWarning("Unauthorized: Missing or invalid user ID in claims");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -44,8 +44,7 @@ public class AuthorizationMiddleware(
             try
             {
                 // Load user from repository with roles and permissions
-                var userIdValueObject = UserId.From(userId);
-                var user = await userRepository.GetByIdAsync(userIdValueObject, CancellationToken.None);
+                var user = await userRepository.GetByExternalIdAsync(userId, CancellationToken.None);
 
                 if (user is null)
                 {

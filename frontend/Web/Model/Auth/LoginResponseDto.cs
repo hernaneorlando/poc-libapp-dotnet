@@ -1,3 +1,5 @@
+using LibraryApp.Web.Model.Auth.Enums;
+
 namespace LibraryApp.Web.Model.Auth;
 
 public sealed record LoginResponseDto(
@@ -12,6 +14,11 @@ public sealed record UserLoginInfoDto(
     string Username,
     string Email,
     string FullName,
-    List<string> Roles,
+    UserType UserType,
+    List<RoleInfo> Roles
+);
+
+public sealed record RoleInfo(
+    string Name,
     List<string> Permissions
 );

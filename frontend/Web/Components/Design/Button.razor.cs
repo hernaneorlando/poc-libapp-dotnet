@@ -60,6 +60,12 @@ public partial class Button
     public string? Class { get; set; }
 
     /// <summary>
+    /// Índice de tabulação do botão
+    /// </summary>
+    [Parameter]
+    public int TabIndex { get; set; } = 0;
+
+    /// <summary>
     /// Callback ao clicar
     /// </summary>
     [Parameter]

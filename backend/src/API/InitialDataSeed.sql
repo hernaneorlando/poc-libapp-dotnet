@@ -61,11 +61,11 @@ BEGIN
      AddressStreet, AddressCity, AddressState, AddressZipCode, AddressCountry,
      UserType, Version, CreatedAt, UpdatedAt, IsActive)
     VALUES 
-    (@AdminUserId, 'Admin', 'User', 'admin', 'admin@libraryapp.local', 
+    (@AdminUserId, 'User', 'Admin', 'user.admin', 'admin@libraryapp.local', 
      '$2b$11$pzIFKtEjUmX/IOWJ4lWrdeUQ4kpXVwr.JP9g08VRCY1sQHT5QvDPy', 
      '+55 11 98765-4321',
      'Rua Admin, 123', 'São Paulo', 'SP', '01234-567', 'Brasil',
-     2, 1, GETUTCDATE(), GETUTCDATE(), 1);
+     3, 1, GETUTCDATE(), GETUTCDATE(), 1);
     PRINT 'Admin user created: username=admin, password=Admin@123!';
 END
 ELSE

@@ -3,14 +3,14 @@ using LibraryApp.Web.Model.CatalogManagement;
 using LibraryApp.Web.Services.CatalogManagement;
 using Microsoft.AspNetCore.Components;
 
-namespace LibraryApp.Web.Pages;
+namespace LibraryApp.Web.Pages.CatalogManagement;
 
 public partial class CategoriesOverview
 {
     [Inject]
     public ICategoryService CategoryService { get; set; } = null!;
 
-    private List<CategoryDto> categories = new();
+    private List<CategoryDto> categories = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -18,7 +18,7 @@ public partial class CategoriesOverview
         {
             var pagedRequest = new PagedRequest(1, 100);
             var response = await CategoryService.GetCategories(pagedRequest, CancellationToken.None);
-            categories = response.Data?.ToList() ?? new();
+            categories = response.Data?.ToList() ?? [];
         }
         catch (Exception ex)
         {

@@ -1,4 +1,3 @@
-using LibraryApp.Web.Design;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -73,6 +72,12 @@ public partial class Input
     public string? Class { get; set; }
 
     /// <summary>
+    ///  TabIndex para controle de foco via teclado 
+    /// </summary>
+    [Parameter]
+    public int TabIndex { get; set; } = 0;
+
+    /// <summary>
     /// Callback ao mudar valor
     /// </summary>
     [Parameter]
@@ -89,4 +94,17 @@ public partial class Input
     /// </summary>
     [Parameter]
     public EventCallback<KeyboardEventArgs> OnKeyUp { get; set; }
+
+    /// <summary>
+    /// Referência ao elemento HTML do input
+    /// </summary>
+    private ElementReference InputElement { get; set; }
+
+    /// <summary>
+    /// Foca o input programaticamente
+    /// </summary>
+    public async Task FocusAsync()
+    {
+        await InputElement.FocusAsync();
+    }
 }

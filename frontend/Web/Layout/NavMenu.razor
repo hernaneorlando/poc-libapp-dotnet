@@ -1,16 +1,33 @@
 ﻿﻿@using LibraryApp.Web.Components
+@using LibraryApp.Web.Model.Auth.Enums
 @using LibraryApp.Web.Services.Auth
 @using LibraryApp.Web.Model.Auth
 @using static LibraryApp.Web.Model.Auth.Permissions
 
 <nav class="w-full bg-neutral-900 text-white p-4">
     <ul class="space-y-2">
-        <li>
-            <a href="/" class="flex items-center gap-3 px-4 py-2 rounded-lg transition-smooth hover:bg-primary-600">
-                <span>📚</span>
-                <span>Home</span>
-            </a>
-        </li>
+
+        <!-- User Profile - Requires no specific permissions -->
+        @if (AuthState.IsAuthenticated)
+        {
+            <li>
+                <details class="group">
+                    <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                        <div class="flex items-center gap-3">
+                            <span>👤</span>
+                            <span>User Profile</span>
+                        </div>
+                        <span class="transition-transform group-open:rotate-180">▼</span>
+                    </summary>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        <li><a href="/user-profile" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">User Profile</a></li>
+                    </ul>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        <li><a href="/user-checkouts" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">My Checkouts</a></li>
+                    </ul>
+                </details>
+            </li>
+        }
         
         <!-- Catalog Management - Show submenu only with permissions -->
         @if (AuthState.IsAuthenticated && AuthState.HasAnyPermission(CategoryRead, BookRead, ContributorRead, PublisherRead))
@@ -28,6 +45,14 @@
                         @if (AuthState.HasPermission(CategoryRead))
                         {
                             <li><a href="/categories" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Categories</a></li>
+                        }
+                        @if (AuthState.HasPermission(ContributorRead))
+                        {
+                            <li><a href="/contributors" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Contributors</a></li>
+                        }
+                        @if (AuthState.HasPermission(PublisherRead))
+                        {
+                            <li><a href="/publishers" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Publishers</a></li>
                         }
                         @if (AuthState.HasPermission(BookRead))
                         {
@@ -51,58 +76,56 @@
                         <span class="transition-transform group-open:rotate-180">▼</span>
                     </summary>
                     <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
-                        <li><a href="/loans" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Loans</a></li>
+                        <li><a href="/checkouts" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Checkouts</a></li>
+                    </ul>
+                </details>
+            </li>
+        }
+
+        <!-- User Management - Administrator only -->
+        @if (AuthState.IsAuthenticated && AuthState.HasPermission(UserRead))
+        {
+            <li>
+                <details class="group">
+                    <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                        <div class="flex items-center gap-3">
+                            <span>👥</span>
+                            <span>User Management</span>
+                        </div>
+                        <span class="transition-transform group-open:rotate-180">▼</span>
+                    </summary>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        @if (AuthState.HasPermission(UserRead))
+                        {
+                            <li><a href="/users" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Users</a></li>
+                        }
+                        @if (AuthState.CurrentUser != null && AuthState.CurrentUser.UserType == UserType.Administrator)
+                        {
+                            <li><a href="/roles" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Roles</a></li>
+                        }
                     </ul>
                 </details>
             </li>
         }
 
         <!-- Report Management - Administrator or Employee role -->
-        <AuthorizeView Roles="Administrator,Employee">
-            <Authorized>
-                <li>
-                    <details class="group">
-                        <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
-                            <div class="flex items-center gap-3">
-                                <span>📊</span>
-                                <span>Report Management</span>
-                            </div>
-                            <span class="transition-transform group-open:rotate-180">▼</span>
-                        </summary>
-                        <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
-                            <li><a href="/reports" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Reports</a></li>
-                        </ul>
-                    </details>
-                </li>
-            </Authorized>
-        </AuthorizeView>
-
-        <!-- User Management - Administrator only -->
-        <AuthorizeView Roles="Administrator">
-            <Authorized>
-                <li>
-                    <details class="group">
-                        <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
-                            <div class="flex items-center gap-3">
-                                <span>👥</span>
-                                <span>User Management</span>
-                            </div>
-                            <span class="transition-transform group-open:rotate-180">▼</span>
-                        </summary>
-                        <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
-                            @if (AuthState.HasPermission(UserRead))
-                            {
-                                <li><a href="/users" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Users</a></li>
-                            }
-                            @if (AuthState.HasPermission(RoleRead))
-                            {
-                                <li><a href="/roles" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Roles</a></li>
-                            }
-                        </ul>
-                    </details>
-                </li>
-            </Authorized>
-        </AuthorizeView>
+        @if (AuthState.IsAuthenticated)
+        {
+            <li>
+                <details class="group">
+                    <summary class="flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition-smooth hover:bg-primary-600 select-none">
+                        <div class="flex items-center gap-3">
+                            <span>📊</span>
+                            <span>Report Management</span>
+                        </div>
+                        <span class="transition-transform group-open:rotate-180">▼</span>
+                    </summary>
+                    <ul class="ml-7 mt-2 space-y-1 border-l border-neutral-700 pl-3">
+                        <li><a href="/reports" class="block px-3 py-2 rounded-lg transition-smooth hover:bg-neutral-800">Reports</a></li>
+                    </ul>
+                </details>
+            </li>
+        }
 
         <li class="border-t border-neutral-700 mt-4 pt-4">
             <a href="/design-system" class="flex items-center gap-3 px-4 py-2 rounded-lg transition-smooth hover:bg-secondary-600 text-secondary-400 hover:text-white">

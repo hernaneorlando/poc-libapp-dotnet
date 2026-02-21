@@ -1,3 +1,4 @@
+using Auth.Domain.Enums;
 using Core.API;
 
 namespace Auth.Application.Users.Commands.Login;
@@ -12,6 +13,14 @@ public sealed record LoginCommand(
     bool RememberMe = false) : IRequest<Result<LoginResponse>>;
 
 /// <summary>
+/// Login response with JWT tokens and user info.
+/// </summary>
+public sealed record LoginResponse(
+    string AccessToken,
+    string RefreshToken,
+    UserLoginInfo User);
+
+/// <summary>
 /// User information in login response.
 /// </summary>
 public sealed record UserLoginInfo(
@@ -19,12 +28,9 @@ public sealed record UserLoginInfo(
     string Username,
     string Email,
     string FullName,
-    List<string> Roles);
+    UserType UserType,
+    List<RoleInfo> Roles);
 
-/// <summary>
-/// Login response with JWT tokens and expiration info.
-/// </summary>
-public sealed record LoginResponse(
-    string AccessToken,
-    string RefreshToken,
-    UserLoginInfo User);
+public sealed record RoleInfo(
+    string Name,
+    List<string> Permissions);

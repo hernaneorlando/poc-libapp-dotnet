@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using LibraryApp.Web.Services.Auth;
+using LibraryApp.Web.Components.Design;
 
 namespace LibraryApp.Web.Pages;
 
@@ -11,11 +12,13 @@ public partial class Login
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
+    private Input UsernameInput = null!;
     private string Username = string.Empty;
     private string Password = string.Empty;
     private bool RememberMe = false;
     private bool IsLoading = false;
     private string ErrorMessage = string.Empty;
+    private bool _firstRender = true;
 
     private async Task HandleSubmit()
     {
@@ -49,6 +52,20 @@ public partial class Login
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _firstRender)
+        {
+            _firstRender = false;
+            
+            // Foca automaticamente no campo Username quando a página carrega
+            if (UsernameInput != null)
+            {
+                await UsernameInput.FocusAsync();
+            }
         }
     }
 }

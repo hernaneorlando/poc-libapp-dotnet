@@ -1,4 +1,4 @@
-namespace LibraryApp.Web.Model.Auth;
+namespace LibraryApp.Web.Model.Auth.Enums;
 
 /// <summary>
 /// Represents the features/resources that can be protected by permissions.

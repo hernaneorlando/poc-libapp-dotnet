@@ -1,4 +1,5 @@
 using LibraryApp.Web.Model.Auth;
+using LibraryApp.Web.Model.Auth.Enums;
 
 namespace LibraryApp.Web.Services.Auth;
 
@@ -15,12 +16,7 @@ public interface IAuthStateService
     
     void SetUser(UserLoginInfoDto user);
     void ClearUser();
-    
-    // Role-based checks
-    bool HasRole(string role);
-    bool HasAnyRole(params string[] roles);
-    bool HasAllRoles(params string[] roles);
-    
+        
     // Permission-based checks (PBAC)
     bool HasPermission(string permission);
     bool HasAnyPermission(params string[] permissions);
@@ -56,39 +52,37 @@ public sealed class AuthStateService : IAuthStateService
         CurrentUser = null;
     }
 
-    // Role-based checks
-    public bool HasRole(string role)
-    {
-        return CurrentUser?.ContainsRole(role) ?? false;
-    }
-
-    public bool HasAnyRole(params string[] roles)
-    {
-        if (CurrentUser == null) return false;
-        return roles.Any(CurrentUser.ContainsRole);
-    }
-
-    public bool HasAllRoles(params string[] roles)
-    {
-        if (CurrentUser == null) return false;
-        return roles.All(CurrentUser.ContainsRole);
-    }
-
     // Permission-based checks (PBAC)
     public bool HasPermission(string permission)
     {
-        return CurrentUser?.ContainsPermission(permission) ?? false;
+        if (CurrentUser == null)
+            return false;
+
+        if (CurrentUser.UserType == UserType.Administrator)
+            return true; // Admins have all permissions
+
+        return CurrentUser.ContainsPermission(permission);
     }
 
     public bool HasAnyPermission(params string[] permissions)
     {
-        if (CurrentUser == null) return false;
+        if (CurrentUser == null)
+            return false;
+
+        if (CurrentUser.UserType == UserType.Administrator)
+            return true; // Admins have all permissions
+
         return permissions.Any(CurrentUser.ContainsPermission);
     }
 
     public bool HasAllPermissions(params string[] permissions)
     {
-        if (CurrentUser == null) return false;
+        if (CurrentUser == null)
+            return false;
+
+        if (CurrentUser.UserType == UserType.Administrator)
+            return true; // Admins have all permissions
+
         return permissions.All(CurrentUser.ContainsPermission);
     }
 

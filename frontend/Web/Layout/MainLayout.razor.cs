@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-
 namespace LibraryApp.Web.Layout;
 
 public partial class MainLayout

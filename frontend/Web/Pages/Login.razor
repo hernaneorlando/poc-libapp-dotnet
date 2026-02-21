@@ -21,12 +21,13 @@
                 <!-- Username -->
                 <div>
                     <label class="block text-sm font-semibold text-neutral-700 mb-2">Username</label>
-                    <Input 
+                    <Input @ref="UsernameInput"
                         @bind-Value="Username"
                         HtmlType="text"
                         Placeholder="username"
                         Required="true"
-                        Disabled="IsLoading" />
+                        Disabled="IsLoading"
+                        TabIndex="1" />
                 </div>
 
                 <!-- Password -->
@@ -42,7 +43,8 @@
                         HtmlType="password"
                         Placeholder="••••••••"
                         Required="true"
-                        Disabled="IsLoading" />
+                        Disabled="IsLoading"
+                        TabIndex="2" />
                 </div>
 
                 <!-- Remember Me -->
@@ -52,7 +54,8 @@
                         type="checkbox" 
                         id="remember" 
                         class="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                        disabled="@IsLoading" />
+                        disabled="@IsLoading"
+                        tabindex="3" />
                     <label for="remember" class="ml-2 text-sm text-neutral-700 cursor-pointer">
                         Remember me on this device
                     </label>
@@ -71,6 +74,7 @@
                     Class="w-full"
                     Variant="ButtonVariant.Primary"
                     Size="ButtonSize.Large"
+                    TabIndex="4"
                     Type="submit"
                     Disabled="IsLoading">
                     @if (IsLoading)

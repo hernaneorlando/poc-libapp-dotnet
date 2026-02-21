@@ -1,4 +1,5 @@
 ﻿@page "/categories"
+@layout MainLayout
 
 @inject ICategoryService categoryService
 @inject IAuthStateService AuthState
@@ -9,7 +10,7 @@
 
 <PageTitle>Categories - LibraryApp</PageTitle>
 
-<AuthorizeView Roles="Administrator" RedirectTo="/login">
+<AuthorizeView Permissions="@CategoryRead" RedirectTo="/login">
     <Authorized>
         <div>
             <div class="flex justify-between items-center mb-6">

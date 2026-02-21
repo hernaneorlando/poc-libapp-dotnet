@@ -74,7 +74,10 @@ public sealed class LoginCommandHandler(
                 Username: user.Username.Value,
                 Email: user.Contact.Email,
                 FullName: user.GetFullName(),
-                Roles: [.. user.Roles.Select(r => r.Name)]));
+                UserType: user.UserType,
+                Roles: [.. user.Roles.Select(r => 
+                    new RoleInfo(r.Name, [.. r.Permissions.Select(p => p.Code)]))] // Map domain roles to response DTO
+            ));
 
         return Result<LoginResponse>.Ok(response);
     }

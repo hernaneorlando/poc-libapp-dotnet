@@ -32,7 +32,8 @@
         </label>
     }
 
-    <input class="@classes"
+    <input @ref="InputElement"
+           class="@classes"
            type="@HtmlType"
            placeholder="@Placeholder"
            value="@Value"
@@ -40,7 +41,8 @@
            @oninput="@((ChangeEventArgs e) => OnInput.InvokeAsync(e.Value?.ToString()))"
            @onkeyup="@((KeyboardEventArgs e) => OnKeyUp.InvokeAsync(e))"
            disabled="@Disabled"
-           required="@Required">
+           required="@Required"
+           tabindex="@TabIndex">
 
     @if (!string.IsNullOrEmpty(HelperText))
     {

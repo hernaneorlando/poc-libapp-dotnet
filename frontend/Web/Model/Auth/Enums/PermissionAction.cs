@@ -1,4 +1,4 @@
-namespace LibraryApp.Web.Model.Auth;
+namespace LibraryApp.Web.Model.Auth.Enums;
 
 /// <summary>
 /// Represents the actions that can be performed on protected resources.

@@ -1,3 +1,5 @@
+using LibraryApp.Web.Model.Auth.Enums;
+
 namespace LibraryApp.Web.Model.Auth;
 
 /// <summary>
@@ -71,13 +73,8 @@ public static class Permissions
     public static readonly string PermissionUpdate = Build(PermissionFeature.Permission, PermissionAction.Update);
     public static readonly string PermissionDelete = Build(PermissionFeature.Permission, PermissionAction.Delete);
 
-    public static bool ContainsRole(this UserLoginInfoDto user, string role)
-    {
-        return user.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
-    }
-
     public static bool ContainsPermission(this UserLoginInfoDto user, string permission)
     {
-        return user.Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+        return user.Roles.SelectMany(r => r.Permissions).Contains(permission, StringComparer.OrdinalIgnoreCase);
     }
 }

@@ -10,7 +10,7 @@ public partial class AuthorizeView : ComponentBase, IDisposable
 
     [Parameter] public RenderFragment? Authorized { get; set; }
     [Parameter] public RenderFragment? NotAuthorized { get; set; }
-    [Parameter] public string? Roles { get; set; }
+    [Parameter] public string? Permissions { get; set; }
     [Parameter] public string? RedirectTo { get; set; } = "/login";
     [Parameter] public bool RedirectIfUnauthorized { get; set; } = true;
 
@@ -28,10 +28,14 @@ public partial class AuthorizeView : ComponentBase, IDisposable
     {
         if (!AuthState.IsAuthenticated)
             return false;
-        if (!string.IsNullOrWhiteSpace(Roles))
+        
+        if (AuthState.CurrentUser?.UserType == Model.Auth.Enums.UserType.Administrator)
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(Permissions))
         {
-            var roles = Roles.Split(',').Select(r => r.Trim()).ToArray();
-            return AuthState.HasAnyRole(roles);
+            var permissions = Permissions.Split(',').Select(p => p.Trim()).ToArray();
+            return AuthState.HasAnyPermission(permissions);
         }
         return true;
     }

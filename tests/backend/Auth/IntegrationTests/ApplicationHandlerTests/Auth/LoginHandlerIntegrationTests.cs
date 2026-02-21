@@ -456,7 +456,7 @@ public class LoginHandlerIntegrationTests : IAsyncLifetime
         successResult.Data.User.Username.Should().Be(user.Username.Value);
         successResult.Data.User.FullName.Should().NotBeNullOrWhiteSpace();
         successResult.Data.User.Roles.Should().HaveCount(1);
-        successResult.Data.User.Roles.Should().Contain("Admin");
+        successResult.Data.User.Roles.Should().Contain(r => r.Name == "Admin");
     }
 
     [Fact]
