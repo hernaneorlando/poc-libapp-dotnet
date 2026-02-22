@@ -260,5 +260,16 @@ public abstract class BaseApiTests : IClassFixture<TestWebApplicationFactory>, I
         );
     }
 
+    /// <summary>
+    /// Creates an authenticated HttpClient for role read operations (list roles).
+    /// Includes Role.Read permission.
+    /// </summary>
+    protected async Task<HttpClient> CreateAuthenticatedHttpClientForRoleRead()
+    {
+        return await CreateAuthenticatedHttpClientWithPermissions(
+            (PermissionFeature.Role.ToString(), PermissionAction.Read.ToString())
+        );
+    }
+
 
 }

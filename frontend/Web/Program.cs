@@ -1,8 +1,9 @@
 using LibraryApp.Web.Services.CatalogManagement;
-using LibraryApp.Web.Services.Auth;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using LibraryApp.Web;
+using LibraryApp.Web.Services.UserManagement;
+using LibraryApp.Web.Services.AuthManagement;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -18,6 +19,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationHandler>();
 
 // Business Services
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddTransient<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBookService, BookService>();
 

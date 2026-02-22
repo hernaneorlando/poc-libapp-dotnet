@@ -69,7 +69,6 @@ public sealed record ApiResult<T>
     public T? Value { get; init; }
     public List<ErrorResponse> Errors { get; init; } = [];
     public bool IsSuccess { get; init; }
-    public bool IsFailure => !IsSuccess;
 
     /// <summary>
     /// Factory method to create a successful result.

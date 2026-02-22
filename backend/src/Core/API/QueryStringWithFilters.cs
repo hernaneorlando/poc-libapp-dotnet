@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Http;
 
 namespace Core.API;
 
@@ -9,6 +10,17 @@ public class QueryStringWithFilters<TQuery, TResponse> : Dictionary<string, List
     private const string PageNumberKey = "_page";
     private const string PageSizeKey = "_size";
     private const string OrderByKey = "_order";
+
+    /// <summary>
+    /// Enables automatic binding from HttpContext in ASP.NET Core minimal APIs.
+    /// This method is automatically discovered and called by the minimal API framework.
+    /// </summary>
+    public static ValueTask<QueryStringWithFilters<TQuery, TResponse>> BindAsync(HttpContext context)
+    {
+        var queryString = context.Request.QueryString.Value ?? string.Empty;
+        TryParse(queryString, null, out var result);
+        return ValueTask.FromResult(result ?? []);
+    }
 
     public BasePagedQuery<TResponse> GetQuery()
     {

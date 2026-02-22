@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
-using LibraryApp.Web.Services.Auth;
 using LibraryApp.Web.Components.Design;
+using LibraryApp.Web.Services.AuthManagement;
 
 namespace LibraryApp.Web.Pages;
 

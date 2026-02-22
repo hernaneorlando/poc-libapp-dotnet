@@ -1,2 +1,121 @@
 ﻿@page "/roles"
 @layout MainLayout
+
+@using LibraryApp.Web.Components
+@using LibraryApp.Web.Services.AuthManagement
+@using static LibraryApp.Web.Model.AuthManagement.Permissions
+
+@inject IAuthStateService AuthState
+
+<PageTitle>Roles</PageTitle>
+
+<AuthorizeView Permissions="@RoleRead" RedirectTo="/login">
+    <Authorized>
+        <div>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-primary-900">📚 Roles</h1>
+                
+                <!-- Action buttons with permission-based visibility -->
+                <div class="flex gap-3">
+                    <AuthorizePermission Feature="Role" Action="Create">
+                        <Authorized>
+                            <Button Variant="ButtonVariant.Primary" OnClick="@(() => Console.WriteLine("Create role"))">
+                                ➕ New Role
+                            </Button>
+                        </Authorized>
+                    </AuthorizePermission>
+                    
+                    <AuthorizePermission Permissions="@RoleRead">
+                        <Authorized>
+                            <Button Variant="ButtonVariant.Outline" OnClick="@(() => Console.WriteLine("Export roles"))">
+                                📄 Export
+                            </Button>
+                        </Authorized>
+                    </AuthorizePermission>
+                </div>
+            </div>
+
+            @if (roles.Count > 0)
+            {
+                <Card>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-neutral-200">
+                            <thead class="bg-neutral-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Name</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Description</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Active</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Created</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Updated</th>
+                                    <!-- Only show Actions column if user has Update or Delete permissions -->
+                                    @if (AuthState.HasAnyPermission(RoleUpdate, RoleDelete))
+                                    {
+                                        <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">Actions</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-200">
+                                @foreach (var role in roles)
+                                {
+                                    <tr class="hover:bg-neutral-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm font-medium text-neutral-900">@role.Name</td>
+                                        <td class="px-6 py-4 text-sm text-neutral-700">@role.Description</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            @if (role.IsActive)
+                                            {
+                                                <Badge Variant="BadgeVariant.Success">Active</Badge>
+                                            }
+                                            else
+                                            {
+                                                <Badge Variant="BadgeVariant.Warning">Inactive</Badge>
+                                            }
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-neutral-600">@role.CreatedAt.ToString()</td>
+                                        <td class="px-6 py-4 text-sm text-neutral-600">@role.UpdatedAt.ToString()</td>
+                                        
+                                        <!-- Row actions based on permissions -->
+                                        @if (AuthState.HasAnyPermission(RoleUpdate, RoleDelete))
+                                        {
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="flex gap-2">
+                                                    @if (AuthState.HasPermission(RoleUpdate))
+                                                    {
+                                                        <button @onclick="@(() => EditRole(role.Id))" 
+                                                                class="text-primary-600 hover:text-primary-800 transition-colors"
+                                                                title="Edit">
+                                                            ✏️
+                                                        </button>
+                                                    }
+                                                    
+                                                    @if (AuthState.HasPermission(RoleDelete))
+                                                    {
+                                                        <button @onclick="@(() => DeleteRole(role.Id))" 
+                                                                class="text-red-600 hover:text-red-800 transition-colors"
+                                                                title="Delete">
+                                                            🗑️
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            }
+            else
+            {
+                <Alert AlertType="AlertVariant.Info" Title="No Roles">
+                    No roles found. Add a new one to get started.
+                </Alert>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <Alert AlertType="AlertVariant.Warning" Title="Access Denied">
+            You do not have permission to view this page.
+        </Alert>
+    </NotAuthorized>
+</AuthorizeView>

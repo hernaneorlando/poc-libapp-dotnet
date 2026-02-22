@@ -1,25 +1,17 @@
 using System.Net;
 using System.Net.Http.Headers;
 
-namespace LibraryApp.Web.Services.Auth;
+namespace LibraryApp.Web.Services.AuthManagement;
 
 /// <summary>
 /// HTTP message handler that automatically adds the Authorization header with JWT token
 /// and handles 401 Unauthorized responses by attempting to refresh the token.
 /// </summary>
-public sealed class AuthenticationHandler : DelegatingHandler
+public sealed class AuthenticationHandler(
+    ITokenStorageService _tokenStorage,
+    IAuthService _authService) : DelegatingHandler
 {
-    private readonly ITokenStorageService _tokenStorage;
-    private readonly IAuthService _authService;
     private bool _isRefreshing = false;
-
-    public AuthenticationHandler(
-        ITokenStorageService tokenStorage,
-        IAuthService authService)
-    {
-        _tokenStorage = tokenStorage;
-        _authService = authService;
-    }
 
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,

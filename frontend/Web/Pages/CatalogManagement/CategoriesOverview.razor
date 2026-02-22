@@ -1,14 +1,13 @@
 ﻿@page "/categories"
 @layout MainLayout
 
-@inject ICategoryService categoryService
+@using LibraryApp.Web.Components
+@using LibraryApp.Web.Services.AuthManagement
+@using static LibraryApp.Web.Model.AuthManagement.Permissions
+
 @inject IAuthStateService AuthState
 
-@using LibraryApp.Web.Components
-@using LibraryApp.Web.Services.Auth
-@using static LibraryApp.Web.Model.Auth.Permissions
-
-<PageTitle>Categories - LibraryApp</PageTitle>
+<PageTitle>Categories</PageTitle>
 
 <AuthorizeView Permissions="@CategoryRead" RedirectTo="/login">
     <Authorized>
@@ -62,7 +61,7 @@
                                         <td class="px-6 py-4 text-sm font-medium text-neutral-900">@category.Name</td>
                                         <td class="px-6 py-4 text-sm text-neutral-700">@category.Description</td>
                                         <td class="px-6 py-4 text-sm">
-                                            @if (category.Active)
+                                            @if (category.IsActive)
                                             {
                                                 <Badge Variant="BadgeVariant.Success">Active</Badge>
                                             }
@@ -120,17 +119,3 @@
         </Alert>
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-    private void EditCategory(Guid id)
-    {
-        Console.WriteLine($"Edit category: {id}");
-        // TODO: Implement edit functionality
-    }
-
-    private void DeleteCategory(Guid id)
-    {
-        Console.WriteLine($"Delete category: {id}");
-        // TODO: Implement delete functionality
-    }
-}

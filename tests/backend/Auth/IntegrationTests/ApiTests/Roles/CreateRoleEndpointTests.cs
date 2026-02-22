@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Auth.Application.Roles.Commands.CreateRole;
 using Auth.Application.Roles.DTOs;
 using Common;
+using Core.API;
 
 namespace Auth.Tests.IntegrationTests.ApiTests.Roles;
 
@@ -12,6 +13,12 @@ namespace Auth.Tests.IntegrationTests.ApiTests.Roles;
 /// </summary>
 public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseApiTests(factory)
 {
+    // Helper method to extract RoleDTO from ApiResult<RoleDTO> response
+    private static async Task<RoleDTO?> ExtractRoleDtoFromResponse(HttpResponseMessage response)
+    {
+        var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<RoleDTO>>();
+        return apiResult?.Value;
+    }
     #region Success Scenarios
 
     [Fact]
@@ -54,7 +61,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -82,7 +89,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert - Verify persistence
         response.EnsureSuccessStatusCode();
@@ -109,7 +116,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -132,7 +139,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -309,7 +316,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -359,7 +366,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -380,7 +387,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
         var afterRequest = DateTime.UtcNow;
 
         // Assert
@@ -403,7 +410,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Act
         var response = await client.PostAsJsonAsync("/api/auth/roles", request);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
 
         // Assert
         Assert.NotNull(roleDto);
@@ -491,7 +498,7 @@ public class CreateRoleEndpointTests(TestWebApplicationFactory factory) : BaseAp
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var roleDto = await response.Content.ReadFromJsonAsync<RoleDTO>();
+        var roleDto = await ExtractRoleDtoFromResponse(response);
         Assert.NotNull(roleDto);
         Assert.Equal("AuthorizedTest", roleDto.Name);
     }

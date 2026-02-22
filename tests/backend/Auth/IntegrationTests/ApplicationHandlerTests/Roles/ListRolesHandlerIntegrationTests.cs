@@ -45,10 +45,25 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         _logger = _serviceProvider.GetRequiredService<ILogger<ListRolesQueryHandler>>();
 
         // Create a simple command dispatcher without MediatR licensing
-        _mediator = new SimpleMediator<IRoleRepository, ListRolesQueryHandler, ListRolesQuery, PaginatedResponse<RoleDTO>>(_roleRepository, _logger);
+        _mediator = new SimpleMediator<IRoleRepository, ListRolesQueryHandler, ListRolesQuery, Result<PaginatedResponse<RoleDTO>>>(_roleRepository, _logger);
 
         // Ensure database is created
         await _dbContext.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Helper method to extract data from Result<PaginatedResponse<RoleDTO>>
+    /// Throws exception if result is not successful for test assertion purposes
+    /// </summary>
+    private PaginatedResponse<RoleDTO> ExtractResultData(Result<PaginatedResponse<RoleDTO>> result)
+    {
+        return result switch
+        {
+            Result<PaginatedResponse<RoleDTO>>.Success success => success.Data,
+            Result<PaginatedResponse<RoleDTO>>.ErrorState error => throw new InvalidOperationException($"Query failed with error: {error.Message}"),
+            Result<PaginatedResponse<RoleDTO>>.ValidationError validError => throw new InvalidOperationException($"Validation error: {string.Join(", ", validError.Errors)}"),
+            _ => throw new InvalidOperationException("Unknown result type")
+        };
     }
 
     #region Basic Listing
@@ -60,13 +75,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Should().NotBeNull();
-        result.Data.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
-        result.TotalPages.Should().Be(0);
+        resultData.Should().NotBeNull();
+        resultData.Data.Should().BeEmpty();
+        resultData.TotalCount.Should().Be(0);
+        resultData.TotalPages.Should().Be(0);
     }
 
     [Fact]
@@ -81,14 +96,14 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Should().NotBeNull();
-        result.Data.Should().HaveCount(1);
-        result.TotalCount.Should().Be(1);
-        result.TotalPages.Should().Be(1);
-        result.Data!.First().Name.Should().Be("Admin");
+        resultData.Should().NotBeNull();
+        resultData.Data.Should().HaveCount(1);
+        resultData.TotalCount.Should().Be(1);
+        resultData.TotalPages.Should().Be(1);
+        resultData.Data!.First().Name.Should().Be("Admin");
     }
 
     [Fact]
@@ -111,11 +126,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(3);
-        result.TotalCount.Should().Be(3);
+        resultData.Data.Should().HaveCount(3);
+        resultData.TotalCount.Should().Be(3);
     }
 
     #endregion
@@ -137,13 +152,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 5 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(5);
-        result.CurrentPage.Should().Be(1);
-        result.TotalPages.Should().Be(3);
-        result.TotalCount.Should().Be(15);
+        resultData.Data.Should().HaveCount(5);
+        resultData.CurrentPage.Should().Be(1);
+        resultData.TotalPages.Should().Be(3);
+        resultData.TotalCount.Should().Be(15);
     }
 
     [Fact]
@@ -161,12 +176,12 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 2, PageSize = 5 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(5);
-        result.CurrentPage.Should().Be(2);
-        result.TotalPages.Should().Be(3);
+        resultData.Data.Should().HaveCount(5);
+        resultData.CurrentPage.Should().Be(2);
+        resultData.TotalPages.Should().Be(3);
     }
 
     [Fact]
@@ -184,13 +199,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 4, PageSize = 5 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(2);
-        result.CurrentPage.Should().Be(4);
-        result.TotalPages.Should().Be(4);
-        result.TotalCount.Should().Be(17);
+        resultData.Data.Should().HaveCount(2);
+        resultData.CurrentPage.Should().Be(4);
+        resultData.TotalPages.Should().Be(4);
+        resultData.TotalCount.Should().Be(17);
     }
 
     [Fact]
@@ -208,11 +223,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 20 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(20);
-        result.TotalPages.Should().Be(1);
+        resultData.Data.Should().HaveCount(20);
+        resultData.TotalPages.Should().Be(1);
     }
 
     [Fact]
@@ -230,11 +245,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 1 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(1);
-        result.TotalPages.Should().Be(5);
+        resultData.Data.Should().HaveCount(1);
+        resultData.TotalPages.Should().Be(5);
     }
 
     [Fact]
@@ -252,11 +267,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 20 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(5);
-        result.TotalPages.Should().Be(1);
+        resultData.Data.Should().HaveCount(5);
+        resultData.TotalPages.Should().Be(1);
     }
 
     #endregion
@@ -285,11 +300,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(1);
-        result.Data!.First().Name.Should().Be("Active");
+        resultData.Data.Should().HaveCount(1);
+        resultData.Data!.First().Name.Should().Be("Active");
     }
 
     [Fact]
@@ -320,11 +335,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(1);
-        result.Data!.First().Name.Should().Be("Editor");
+        resultData.Data.Should().HaveCount(1);
+        resultData.Data!.First().Name.Should().Be("Editor");
     }
 
     [Fact]
@@ -355,12 +370,12 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(2);
-        result.Data.Should().Contain(r => r.Name == "SystemAdmin");
-        result.Data.Should().Contain(r => r.Name == "DataAdmin");
+        resultData.Data.Should().HaveCount(2);
+        resultData.Data.Should().Contain(r => r.Name == "SystemAdmin");
+        resultData.Data.Should().Contain(r => r.Name == "DataAdmin");
     }
 
     [Fact]
@@ -391,11 +406,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(2);
-        result.Data.Should().AllSatisfy(r => r.Name.Should().StartWith("Admin"));
+        resultData.Data.Should().HaveCount(2);
+        resultData.Data.Should().AllSatisfy(r => r.Name.Should().StartWith("Admin"));
     }
 
     [Fact]
@@ -426,11 +441,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(2);
-        result.Data.Should().AllSatisfy(r => r.Name.Should().EndWith("Editor"));
+        resultData.Data.Should().HaveCount(2);
+        resultData.Data.Should().AllSatisfy(r => r.Name.Should().EndWith("Editor"));
     }
 
     [Fact]
@@ -458,11 +473,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        resultData.Data.Should().BeEmpty();
+        resultData.TotalCount.Should().Be(0);
     }
 
     [Fact]
@@ -490,13 +505,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(3);
-        result.TotalCount.Should().Be(8);
-        result.TotalPages.Should().Be(3);
-        result.Data.Should().AllSatisfy(r => r.Name.Should().StartWith("Manager"));
+        resultData.Data.Should().HaveCount(3);
+        resultData.TotalCount.Should().Be(8);
+        resultData.TotalPages.Should().Be(3);
+        resultData.Data.Should().AllSatisfy(r => r.Name.Should().StartWith("Manager"));
     }
 
     #endregion
@@ -523,13 +538,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10, OrderBy = "Name" };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(3);
-        result.Data!.First().Name.Should().Be("Alpha");
-        result.Data!.ElementAt(1).Name.Should().Be("Beta");
-        result.Data!.ElementAt(2).Name.Should().Be("Zebra");
+        resultData.Data.Should().HaveCount(3);
+        resultData.Data!.First().Name.Should().Be("Alpha");
+        resultData.Data!.ElementAt(1).Name.Should().Be("Beta");
+        resultData.Data!.ElementAt(2).Name.Should().Be("Zebra");
     }
 
     [Fact]
@@ -552,13 +567,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10, OrderBy = "Name DESC" };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(3);
-        result.Data!.First().Name.Should().Be("Zebra");
-        result.Data!.ElementAt(1).Name.Should().Be("Beta");
-        result.Data!.ElementAt(2).Name.Should().Be("Alpha");
+        resultData.Data.Should().HaveCount(3);
+        resultData.Data!.First().Name.Should().Be("Zebra");
+        resultData.Data!.ElementAt(1).Name.Should().Be("Beta");
+        resultData.Data!.ElementAt(2).Name.Should().Be("Alpha");
     }
 
     [Fact]
@@ -578,13 +593,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10, OrderBy = "CreatedAt" };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(5);
+        resultData.Data.Should().HaveCount(5);
         // Verify they are in ascending order by checking first and last
-        var firstDate = result.Data!.First().CreatedAt;
-        var lastDate = result.Data!.Last().CreatedAt;
+        var firstDate = resultData.Data!.First().CreatedAt;
+        var lastDate = resultData.Data!.Last().CreatedAt;
         (lastDate >= firstDate).Should().BeTrue();
     }
 
@@ -605,20 +620,20 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query2 = new ListRolesQuery { PageNumber = 2, PageSize = 5, OrderBy = "Name" };
 
         // Act
-        var result1 = await _mediator.Send(query1);
-        var result2 = await _mediator.Send(query2);
+        var result1Data = ExtractResultData(await _mediator.Send(query1));
+        var result2Data = ExtractResultData(await _mediator.Send(query2));
 
         // Assert
-        result1.Data.Should().HaveCount(5);
-        result2.Data.Should().HaveCount(5);
+        result1Data.Data.Should().HaveCount(5);
+        result2Data.Data.Should().HaveCount(5);
         
         // Verify first page items are in order
-        result1.Data!.First().Name.Should().Be("Role01");
-        result1.Data!.Last().Name.Should().Be("Role05");
+        result1Data.Data!.First().Name.Should().Be("Role01");
+        result1Data.Data!.Last().Name.Should().Be("Role05");
         
         // Verify second page items are in order
-        result2.Data!.First().Name.Should().Be("Role06");
-        result2.Data!.Last().Name.Should().Be("Role10");
+        result2Data.Data!.First().Name.Should().Be("Role06");
+        result2Data.Data!.Last().Name.Should().Be("Role10");
     }
 
     [Fact]
@@ -639,14 +654,14 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query3 = new ListRolesQuery { PageNumber = 3, PageSize = 3, OrderBy = "Name" };
 
         // Act
-        var result1 = await _mediator.Send(query1);
-        var result2 = await _mediator.Send(query2);
-        var result3 = await _mediator.Send(query3);
+        var result1Data = ExtractResultData(await _mediator.Send(query1));
+        var result2Data = ExtractResultData(await _mediator.Send(query2));
+        var result3Data = ExtractResultData(await _mediator.Send(query3));
 
         // Assert - Verify order is maintained across pages
-        var allNames = result1.Data!
-            .Concat(result2.Data!)
-            .Concat(result3.Data!)
+        var allNames = result1Data.Data!
+            .Concat(result2Data.Data!)
+            .Concat(result3Data.Data!)
             .Select(r => r.Name)
             .ToList();
 
@@ -673,14 +688,14 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Should().NotBeNull();
-        result.Data.Should().NotBeNull();
-        result.CurrentPage.Should().Be(1);
-        result.TotalPages.Should().BeGreaterThanOrEqualTo(1);
-        result.TotalCount.Should().BeGreaterThanOrEqualTo(1);
+        resultData.Should().NotBeNull();
+        resultData.Data.Should().NotBeNull();
+        resultData.CurrentPage.Should().Be(1);
+        resultData.TotalPages.Should().BeGreaterThanOrEqualTo(1);
+        resultData.TotalCount.Should().BeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
@@ -695,10 +710,10 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        var roleDto = result.Data!.First();
+        var roleDto = resultData.Data!.First();
         roleDto.Id.Should().NotBeEmpty();
         roleDto.Name.Should().Be("CompleteRole");
         roleDto.Description.Should().Be("Complete role with all properties");
@@ -729,10 +744,10 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        var roleDto = result!.Data!.First();
+        var roleDto = resultData.Data!.First();
         roleDto.Permissions.Should().HaveCount(2);
     }
 
@@ -761,11 +776,11 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().HaveCount(1);
-        result.Data!.First().Name.Should().Be("Role2");
+        resultData.Data.Should().HaveCount(1);
+        resultData.Data!.First().Name.Should().Be("Role2");
     }
 
     [Fact]
@@ -784,13 +799,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 5, PageSize = 25 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.TotalCount.Should().Be(totalRoles);
-        result.TotalPages.Should().Be(10);
-        result.CurrentPage.Should().Be(5);
-        result.Data.Should().HaveCount(25);
+        resultData.TotalCount.Should().Be(totalRoles);
+        resultData.TotalPages.Should().Be(10);
+        resultData.CurrentPage.Should().Be(5);
+        resultData.Data.Should().HaveCount(25);
     }
 
     [Fact]
@@ -808,12 +823,12 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 100, PageSize = 10 };
 
         // Act
-        var result = await _mediator.Send(query);
+        var resultData = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result.Data.Should().BeEmpty();
-        result.TotalCount.Should().Be(5);
-        result.TotalPages.Should().Be(1);
+        resultData.Data.Should().BeEmpty();
+        resultData.TotalCount.Should().Be(5);
+        resultData.TotalPages.Should().Be(1);
     }
 
     #endregion
@@ -832,13 +847,13 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result1 = await _mediator.Send(query);
-        var result2 = await _mediator.Send(query);
+        var result1Data = ExtractResultData(await _mediator.Send(query));
+        var result2Data = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result1.Data.Should().HaveCount(result2.Data!.Count());
-        result1.TotalCount.Should().Be(result2.TotalCount);
-        result1.Data!.First().Id.Should().Be(result2.Data!.First().Id);
+        result1Data.Data.Should().HaveCount(result2Data.Data!.Count());
+        result1Data.TotalCount.Should().Be(result2Data.TotalCount);
+        result1Data.Data!.First().Id.Should().Be(result2Data.Data!.First().Id);
     }
 
     [Fact]
@@ -847,7 +862,7 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         // Arrange
         var query = new ListRolesQuery { PageNumber = 1, PageSize = 10 };
 
-        var result1 = await _mediator.Send(query);
+        var result1Data = ExtractResultData(await _mediator.Send(query));
 
         // Add a new role
         var cmd = RoleTestDataBuilder.GenerateCreateRoleCommand(name: "NewRole", description: "New role added");
@@ -856,12 +871,12 @@ public class ListRolesHandlerIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         // Act
-        var result2 = await _mediator.Send(query);
+        var result2Data = ExtractResultData(await _mediator.Send(query));
 
         // Assert
-        result1.TotalCount.Should().Be(0);
-        result2.TotalCount.Should().Be(1);
-        result2.Data!.First().Name.Should().Be("NewRole");
+        result1Data.TotalCount.Should().Be(0);
+        result2Data.TotalCount.Should().Be(1);
+        result2Data.Data!.First().Name.Should().Be("NewRole");
     }
 
     #endregion

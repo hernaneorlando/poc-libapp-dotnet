@@ -1,7 +1,7 @@
-using LibraryApp.Web.Model.Auth;
-using LibraryApp.Web.Model.Auth.Enums;
+using LibraryApp.Web.Model.AuthManagement;
+using LibraryApp.Web.Model.AuthManagement.Enums;
 
-namespace LibraryApp.Web.Services.Auth;
+namespace LibraryApp.Web.Services.AuthManagement;
 
 /// <summary>
 /// Service for managing the global authentication state.

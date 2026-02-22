@@ -1,18 +1,31 @@
 using Microsoft.AspNetCore.Components;
-using LibraryApp.Web.Services.Auth;
+using LibraryApp.Web.Services.AuthManagement;
+using LibraryApp.Web.Model.AuthManagement.Enums;
 
 namespace LibraryApp.Web.Components;
 
 public partial class AuthorizeView : ComponentBase, IDisposable
 {
-    [Inject] public IAuthStateService AuthState { get; set; } = default!;
-    [Inject] public NavigationManager Navigation { get; set; } = default!;
+    [Inject]
+    public IAuthStateService AuthState { get; set; } = default!;
 
-    [Parameter] public RenderFragment? Authorized { get; set; }
-    [Parameter] public RenderFragment? NotAuthorized { get; set; }
-    [Parameter] public string? Permissions { get; set; }
-    [Parameter] public string? RedirectTo { get; set; } = "/login";
-    [Parameter] public bool RedirectIfUnauthorized { get; set; } = true;
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    [Parameter] 
+    public RenderFragment? Authorized { get; set; }
+
+    [Parameter] 
+    public RenderFragment? NotAuthorized { get; set; }
+
+    [Parameter] 
+    public string? Permissions { get; set; }
+
+    [Parameter] 
+    public string? RedirectTo { get; set; } = "/login";
+
+    [Parameter] 
+    public bool RedirectIfUnauthorized { get; set; } = true;
 
     protected override void OnInitialized()
     {
@@ -29,7 +42,7 @@ public partial class AuthorizeView : ComponentBase, IDisposable
         if (!AuthState.IsAuthenticated)
             return false;
         
-        if (AuthState.CurrentUser?.UserType == Model.Auth.Enums.UserType.Administrator)
+        if (AuthState.CurrentUser?.UserType == UserType.Administrator)
             return true;
 
         if (!string.IsNullOrWhiteSpace(Permissions))

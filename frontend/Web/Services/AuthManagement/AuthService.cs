@@ -1,10 +1,10 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using LibraryApp.Web.Model.Auth;
-using LibraryApp.Web.Model.Auth.Enums;
+using LibraryApp.Web.Model.AuthManagement;
+using LibraryApp.Web.Model.AuthManagement.Enums;
 
-namespace LibraryApp.Web.Services.Auth;
+namespace LibraryApp.Web.Services.AuthManagement;
 
 /// <summary>
 /// Service for handling authentication operations.
@@ -53,7 +53,7 @@ public sealed class AuthService : IAuthService
             }
 
             var result = await response.Content.ReadFromJsonAsync<ApiResultDto<LoginResponseDto>>(_jsonOptions);
-            if (result == null || result.IsFailure || result.Value == null)
+            if (result == null || !result.IsSuccess || result.Value == null)
             {
                 var error = result?.Errors.FirstOrDefault()?.Detail ?? "Login failed";
                 return (false, error);
@@ -125,7 +125,7 @@ public sealed class AuthService : IAuthService
 
             var result = await response.Content.ReadFromJsonAsync<ApiResultDto<RefreshTokenResponseDto>>(_jsonOptions);
 
-            if (result == null || result.IsFailure || result.Value == null)
+            if (result == null || !result.IsSuccess || result.Value == null)
             {
                 await LogoutAsync();
                 return false;

@@ -1,8 +1,8 @@
+using System.Security.Claims;
+using Auth.Domain.Aggregates.User;
 using Auth.Domain.Attributes;
 using Auth.Domain.Services;
-using System.Security.Claims;
 using Auth.Infrastructure.Repositories.Interfaces;
-using Auth.Domain.Aggregates.User;
 
 namespace LibraryApp.API.Middlewares;
 
@@ -16,7 +16,7 @@ public class AuthorizationMiddleware(
     ILogger<AuthorizationMiddleware> _logger)
 {
     public async Task InvokeAsync(
-        HttpContext context, 
+        HttpContext context,
         IAuthorizationService authorizationService,
         IUserRepository userRepository)
     {
@@ -54,6 +54,13 @@ public class AuthorizationMiddleware(
                     return;
                 }
 
+                if (user.UserType == UserType.Administrator)
+                {
+                    _logger.LogInformation("Administrator access granted for user {UserId}", userId);
+                    await _next(context);
+                    return;
+                }
+
                 // Check if user has the required permission
                 var hasPermission = authorizationService.IsGranted(
                     user,
@@ -69,9 +76,9 @@ public class AuthorizationMiddleware(
                         requirePermission.Action);
 
                     context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    await context.Response.WriteAsJsonAsync(new 
-                    { 
-                        error = $"Forbidden: You do not have permission to {requirePermission.Action} {requirePermission.Feature}" 
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        error = $"Forbidden: You do not have permission to {requirePermission.Action} {requirePermission.Feature}"
                     });
                     return;
                 }

@@ -10,9 +10,9 @@ using Core.API;
 /// </summary>
 public sealed class ListRolesQueryHandler(
     IRoleRepository _roleRepository,
-    ILogger<ListRolesQueryHandler> _logger) : IRequestHandler<ListRolesQuery, PaginatedResponse<RoleDTO>>
+    ILogger<ListRolesQueryHandler> _logger) : IRequestHandler<ListRolesQuery, Result<PaginatedResponse<RoleDTO>>>
 {
-    public async Task<PaginatedResponse<RoleDTO>> Handle(
+    public async Task<Result<PaginatedResponse<RoleDTO>>> Handle(
         ListRolesQuery request,
         CancellationToken cancellationToken)
     {
@@ -33,12 +33,12 @@ public sealed class ListRolesQueryHandler(
             request.PageNumber,
             result.TotalPages);
 
-        return new PaginatedResponse<RoleDTO>
+        return Result<PaginatedResponse<RoleDTO>>.Ok(new PaginatedResponse<RoleDTO>
         {
             Data = result.Select(r => (RoleDTO)r),
             CurrentPage = request.PageNumber,
             TotalPages = result.TotalPages,
             TotalCount = result.TotalCount,
-        };
+        });
     }
 }

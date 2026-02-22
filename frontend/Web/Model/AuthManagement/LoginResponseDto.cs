@@ -1,6 +1,6 @@
-using LibraryApp.Web.Model.Auth.Enums;
+using LibraryApp.Web.Model.AuthManagement.Enums;
 
-namespace LibraryApp.Web.Model.Auth;
+namespace LibraryApp.Web.Model.AuthManagement;
 
 public sealed record LoginResponseDto(
     string AccessToken,

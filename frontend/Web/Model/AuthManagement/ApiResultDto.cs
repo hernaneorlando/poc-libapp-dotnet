@@ -1,4 +1,4 @@
-namespace LibraryApp.Web.Model.Auth;
+namespace LibraryApp.Web.Model.AuthManagement;
 
 /// <summary>
 /// Represents the Result pattern response from the backend API.
@@ -9,7 +9,6 @@ public sealed record ApiResultDto<T>
     public T? Value { get; init; }
     public List<ErrorDto> Errors { get; init; } = [];
     public bool IsSuccess { get; init; }
-    public bool IsFailure => !IsSuccess;
 }
 
 public sealed record ErrorDto(

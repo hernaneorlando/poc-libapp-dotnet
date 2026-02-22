@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Core.API;
 
-public record BasePagedQuery<TResponse> : IRequest<PaginatedResponse<TResponse>>
+public record BasePagedQuery<TResponse> : IRequest<Result<PaginatedResponse<TResponse>>>
     where TResponse : class
 {
     [JsonPropertyName("_page")]

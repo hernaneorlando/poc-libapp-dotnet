@@ -1,4 +1,4 @@
-namespace LibraryApp.Web.Model.Auth.Enums;
+namespace LibraryApp.Web.Model.AuthManagement.Enums;
 
 /// <summary>
 /// Enum representing the type of user in the system.

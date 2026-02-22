@@ -55,21 +55,26 @@ public static class RoleEndpoints
         return result.Match(
             onSuccess: roleResponse =>
             {
-                return Results.CreatedAtRoute("CreateRole", null, roleResponse);
+                var result = ApiResult<RoleDTO>.Ok(roleResponse);
+                return Results.CreatedAtRoute("CreateRole", null, result);
             },
-            onError: errorMessage => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Role Creation Failed",
-                Detail = errorMessage,
-                Status = StatusCodes.Status400BadRequest
-            }),
-            onValidationError: errors => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-                Errors = [.. errors]
-            })
+            onError: errorMessage => Results.BadRequest(ApiResult<RoleDTO>.Error(
+                new ErrorResponse
+                {
+                    Title = "Role Creation Failed",
+                    Detail = errorMessage,
+                    Status = StatusCodes.Status400BadRequest
+                }
+            )),
+            onValidationError: errors => Results.BadRequest(ApiResult<RoleDTO>.Error(
+                new ErrorResponse
+                {
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = [.. errors]
+                }
+            ))
         );
     }
 
@@ -79,10 +84,10 @@ public static class RoleEndpoints
     [RequirePermission(PermissionFeature.Role, PermissionAction.Read)]
     private static async Task<IResult> ListRoles(
         [FromServices] IMediator mediator,
-        [FromQuery] QueryStringWithFilters<ListRolesQuery, RoleDTO> filters,
+        QueryStringWithFilters<ListRolesQuery, RoleDTO> filters,
         CancellationToken cancellationToken = default)
     {
-        // Create query from parameters
+        // Create query from parameters (filters binding is done automatically via QueryStringWithFilters.BindAsync)
         var query = filters.GetQuery();
 
         // Send query through MediatR pipeline
@@ -90,20 +95,24 @@ public static class RoleEndpoints
 
         // Handle result using pattern matching
         return result.Match(
-            onSuccess: listResponse => Results.Ok(listResponse),
-            onError: errorMessage => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Failed to Retrieve Roles",
-                Detail = errorMessage,
-                Status = StatusCodes.Status400BadRequest
-            }),
-            onValidationError: errors => Results.BadRequest(new ErrorResponse
-            {
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-                Errors = [.. errors]
-            })
+            onSuccess: listResponse => Results.Ok(ApiResult<PaginatedResponse<RoleDTO>>.Ok(listResponse)),
+            onError: errorMessage => Results.BadRequest(ApiResult<PaginatedResponse<RoleDTO>>.Error(
+                new ErrorResponse
+                {
+                    Title = "Failed to Retrieve Roles",
+                    Detail = errorMessage,
+                    Status = StatusCodes.Status400BadRequest
+                }
+            )),
+            onValidationError: errors => Results.BadRequest(ApiResult<PaginatedResponse<RoleDTO>>.Error(
+                new ErrorResponse
+                {
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = [.. errors]
+                }
+            ))
         );
     }
 }

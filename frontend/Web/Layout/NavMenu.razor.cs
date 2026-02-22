@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using LibraryApp.Web.Services.Auth;
+using LibraryApp.Web.Services.AuthManagement;
 
 namespace LibraryApp.Web.Layout;
 

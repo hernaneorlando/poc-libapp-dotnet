@@ -32,6 +32,8 @@
 
   <ItemGroup>
     <Folder Include="Components\" />
+    <Folder Include="Model\UserManagement\" />
+    <Folder Include="Services\UserManagement\" />
   </ItemGroup>
 
 </Project>

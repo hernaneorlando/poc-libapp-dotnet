@@ -25,4 +25,16 @@ public partial class CategoriesOverview
             Console.WriteLine($"Erro ao carregar categorias: {ex.Message}");
         }
     }
+
+    private void EditCategory(Guid id)
+    {
+        Console.WriteLine($"Edit category: {id}");
+        // TODO: Implement edit functionality
+    }
+
+    private void DeleteCategory(Guid id)
+    {
+        Console.WriteLine($"Delete category: {id}");
+        // TODO: Implement delete functionality
+    }
 }

@@ -1,6 +1,6 @@
 using Microsoft.JSInterop;
 
-namespace LibraryApp.Web.Services.Auth;
+namespace LibraryApp.Web.Services.AuthManagement;
 
 /// <summary>
 /// Service for managing authentication tokens in browser storage.
